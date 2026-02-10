@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
-<title>生技展訂購系統 V29（v2.8 加價購導引＋宅配免運提示）</title>
+<title>生技展訂購系統 v29</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -169,23 +169,125 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .ms-card-v.shrinking { animation: shrinkToFab 0.6s ease-in forwards; }
 @keyframes shrinkToFab { 0% { transform: scale(1) translate(0, 0); opacity: 1; } 100% { transform: scale(0.1) translate(-120vw, 100vh); opacity: 0; } }
 
-.ms-header { background: #fff; padding: 16px; border-bottom: 1px solid #eee; }
+.ms-header { background: #fff; padding: 16px 50px 16px 16px; border-bottom: 1px solid #eee; position: relative; }
+
+.ms-close{
+  position:absolute; top: 12px; right: 12px;
+  width: 34px; height: 34px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  color: #607d8b;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+.ms-close:hover{ background:#fafafa; }
+.ms-close:active{ transform: translateY(1px); }
+
 .ms-title-v { font-size: 18px; font-weight: 900; color: #37474f; margin-bottom: 10px; text-align: center; }
 .ms-summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
 .ms-sum-all { background: #fff8e1; color: var(--accent); }
 .ms-sum-beauty { background: #fce4ec; color: var(--beauty); }
-.ms-dual-body { flex: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fafafa; overscroll-behavior: contain; }
-.ms-track-col { display: flex; flex-direction: column; gap: 12px; position: relative; }
+.ms-dual-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 6px; background: #fafafa; overscroll-behavior: contain; }
+.ms-track-col { display: flex; flex-direction: column; gap: 10px; position: relative; min-width: 0; }
 .ms-track-title { text-align: center; font-size: 12px; color: #90a4ae; font-weight: 700; margin-bottom: 4px; }
 .ms-dual-item { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.5; transition: 0.3s; text-align: center; }
 .ms-dual-item.active { opacity: 1; border-color: var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 .ms-track-col.beauty .ms-dual-item.active { border-color: var(--beauty); }
-.ms-d-name { font-size: 11px; color: #37474f; line-height: 1.3; height: auto; min-height: 2.6em; overflow: visible; }
-.ms-d-th { font-size: 10px; color: #fff; background: #bdbdbd; padding: 2px 6px; border-radius: 10px; font-weight: 700; }
+
+/* --- V29: Milestone '下一門檻差額' 標籤 + 動效（3.1秒） --- */
+/* 版面：每張卡片改成「上：門檻 + 標籤」「下：圖左文字右」以提升可讀性 */
+.ms-dual-item{ position: relative; text-align:left; align-items:stretch; padding: 10px; gap: 8px; }
+.ms-dual-item.next{
+  opacity: 1;
+  border-color: rgba(230,81,0,0.26);
+  box-shadow: 0 10px 22px rgba(230,81,0,0.10);
+}
+.ms-track-col.beauty .ms-dual-item.next{
+  border-color: rgba(216,27,96,0.26);
+  box-shadow: 0 10px 22px rgba(216,27,96,0.10);
+}
+
+.ms-d-head{ display:flex; align-items:flex-start; justify-content:space-between; flex-wrap: wrap; gap: 6px; width: 100%; }
+.ms-d-body{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  width: 100%;
+}
+.ms-d-media{ flex: 0 0 64px; }
+.ms-d-media .g-img-row{ display:flex; gap:6px; align-items:center; }
+.ms-d-media .g-thumb{ width:64px; height:64px; object-fit:contain; border:1px solid #eee; border-radius: 12px; background:#fff; }
+.ms-d-media .g-thumb:not(:first-child){ display:none; } /* 只秀第一張，避免擠爆欄寬 */
+
+.ms-d-th{
+  font-size: 12px;
+  color: #fff;
+  background: #bdbdbd;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  line-height: 1;
+  white-space: nowrap;
+}
 .ms-dual-item.active .ms-d-th { background: var(--accent); }
 .ms-track-col.beauty .ms-dual-item.active .ms-d-th { background: var(--beauty); }
-.ms-footer { padding: 16px; border-top: 1px solid #eee; background: #fff; }
-.ms-back-btn { width: 100%; padding: 12px; background: #f5f5f5; color: #546e7a; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; }
+
+.ms-d-name{
+  font-size: 13px;
+  color: #37474f;
+  line-height: 1.25;
+  font-weight: 900;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ms-tag{
+  position: static;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,111,0,0.16);
+  color: #e65100;
+  border: 1px solid rgba(230,81,0,0.26);
+  font-weight: 900;
+  letter-spacing: .2px;
+  pointer-events:none;
+  transform-origin: center;
+  white-space: nowrap;
+  box-shadow: 0 0 0 rgba(230,81,0,0);
+}
+.ms-track-col.beauty .ms-tag{
+  background: rgba(216,27,96,0.12);
+  color: #ad1457;
+  border-color: rgba(216,27,96,0.22);
+}
+.ms-tag.done{
+  background: rgba(0,137,123,0.14);
+  color:#00695c;
+  border-color: rgba(0,137,123,0.22);
+  box-shadow: none;
+}
+.ms-tag.flash{
+  animation: msTagGlow .95s ease-in-out infinite, msTagShake .42s ease-in-out infinite;
+}
+@keyframes msTagGlow{
+  0%{ box-shadow: 0 0 0 rgba(230,81,0,0); filter: saturate(1); }
+  50%{ box-shadow: 0 10px 26px rgba(230,81,0,0.25); filter: saturate(1.35); }
+  100%{ box-shadow: 0 0 0 rgba(230,81,0,0); filter: saturate(1); }
+}
+@keyframes msTagShake{
+  0%{ transform: translate(0,0) rotate(0deg); }
+  20%{ transform: translate(0.5px,-0.5px) rotate(-1deg); }
+  50%{ transform: translate(-0.5px,0.5px) rotate(1deg); }
+  80%{ transform: translate(0.5px,0.2px) rotate(-0.5deg); }
+  100%{ transform: translate(0,0) rotate(0deg); }
+}
 
 /* FIX: Multi-Image CSS */
 .g-img-row { display: flex; gap: 4px; align-items: center; }
@@ -257,6 +359,21 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 2; align-items: flex-start; }
 .badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; color: #fff; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); letter-spacing: 0.5px; backdrop-filter: blur(4px); }
 .bg-red { background: rgba(239, 83, 80, 0.95); }
+.new-badge{
+  position:absolute; right:8px; bottom:8px;
+  z-index:2;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:0.8px;
+  color: var(--new-badge-text, #ffffff);
+  background: var(--new-badge-bg, linear-gradient(135deg, #ff5a8a, #ff8fb3));
+  box-shadow: 0 8px 18px rgba(0,0,0,0.14);
+  border: 1px solid rgba(255,255,255,0.35);
+  pointer-events:none;
+}
+
 .bg-blue { background: rgba(66, 165, 245, 0.95); }
 .bg-gold { background: linear-gradient(135deg, #ffa726, #fb8c00); }
 .bg-purple { background: rgba(171, 71, 188, 0.95); }
@@ -750,6 +867,101 @@ body.drawer-open { overflow:hidden; }
 .pm-arrow{ color:#90a4ae; font-size: 18px; line-height:1; }
 
 
+/* --- V29: Promo Map Tabs (優惠分類 / 贈品門檻) --- */
+.pm-head-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+.pm-tabs{
+  display:flex; align-items:center;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+}
+.pm-tab{
+  border:0; background:transparent;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  color:#335c5a;
+  cursor:pointer;
+  white-space:nowrap;
+  line-height:1;
+}
+.pm-tab.active{
+  background: rgba(0,137,123,0.22);
+  color:#003b35;
+}
+.pm-tab:active{ transform: translateY(1px); }
+
+.pm-pane{ min-height: 1px; }
+
+.pm-scope{ display:flex; gap:8px; margin: 10px 2px 12px; }
+.pm-scope-btn{
+  border:1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.80);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  color:#335c5a;
+  cursor:pointer;
+  line-height:1;
+}
+.pm-scope-btn.active{
+  background: rgba(230,81,0,0.14);
+  border-color: rgba(230,81,0,0.24);
+  color:#b54a00;
+}
+.pm-scope-btn:active{ transform: translateY(1px); }
+
+.pm-gift-list{ display:flex; flex-direction:column; gap:10px; }
+.pm-gift-item{
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 18px;
+  padding: 12px 12px;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+}
+.pm-gift-row{ display:flex; gap:12px; align-items:center; }
+.pm-gift-media{ flex: 0 0 90px; }
+.pm-gift-media .g-img-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.pm-gift-media .g-thumb{ width: 78px; height: 78px; object-fit: contain; border: 1px solid #eee; border-radius: 14px; background:#fff; }
+.pm-gift-media .g-thumb:not(:first-child){ display:none; } /* 只秀第一張，保持版面乾淨 */
+.pm-gift-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.pm-gift-amt{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  align-self:flex-start;
+  font-weight: 900;
+  font-size: 13px;
+  color:#263238;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,137,123,0.10);
+  border: 1px solid rgba(0,137,123,0.16);
+  line-height: 1;
+}
+.pm-gift-name{
+  font-weight: 900;
+  font-size: 14px;
+  color:#263238;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.pm-empty{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.75);
+  color:#607d8b;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+
 /* --- V2.8.11: Promo Map styling (配色＋卡片層次) --- */
 .pm-overlay{
   background: rgba(9,30,29,0.34);
@@ -850,14 +1062,12 @@ body.cfg-error .btn-bundle{
 <div id="milestone-overlay">
   <div class="ms-card-v" id="msCard">
     <div class="ms-header">
+       <button class="ms-close" onclick="closeMilestoneCard()" aria-label="關閉"><span class="material-icons-round">close</span></button>
        <div class="ms-title-v">🎁 滿額贈進度</div>
        <div class="ms-summary-row ms-sum-all"><div>全站滿額</div><div id="ms-val-all">$0</div></div>
        <div class="ms-summary-row ms-sum-beauty"><div>美容滿額</div><div id="ms-val-beauty">$0</div></div>
     </div>
     <div class="ms-dual-body" id="msNodes"></div>
-    <div class="ms-footer">
-       <button class="ms-back-btn" onclick="closeMilestoneCard()">返回購物</button>
-    </div>
   </div>
 </div>
 
@@ -1632,52 +1842,106 @@ function renderMilestoneContent() {
     const data = calcCart();
     const currentTotal = data.finalTotal;
     const currentBeauty = data.beautyTotal;
-    
+
     document.getElementById('ms-val-all').innerText = `$${Math.round(Number(currentTotal)||0).toLocaleString()}`;
     document.getElementById('ms-val-beauty').innerText = `$${Math.round(Number(currentBeauty)||0).toLocaleString()}`;
 
     const giftsAll = RULES.spend.filter(r => r.scope === 'all').sort((a,b) => a.amt - b.amt);
     const giftsBeauty = RULES.spend.filter(r => r.scope === 'zone_prefix').sort((a,b) => a.amt - b.amt);
 
+    const nextAll = giftsAll.find(x => Number(currentTotal||0) < Number(x.amt||0));
+    const nextBeauty = giftsBeauty.find(x => Number(currentBeauty||0) < Number(x.amt||0));
+    const nextAllAmt = nextAll ? Number(nextAll.amt||0) : null;
+    const nextBeautyAmt = nextBeauty ? Number(nextBeauty.amt||0) : null;
+
+    const allDone = (nextAllAmt === null && giftsAll.length > 0);
+    const beautyDone = (nextBeautyAmt === null && giftsBeauty.length > 0);
+
     const container = document.getElementById('msNodes');
     container.innerHTML = '';
-    
+
     const leftCol = document.createElement('div');
     leftCol.className = 'ms-track-col';
     leftCol.innerHTML = '<div class="ms-track-title">全站滿額</div>';
-    
+
     const rightCol = document.createElement('div');
     rightCol.className = 'ms-track-col beauty';
     rightCol.innerHTML = '<div class="ms-track-title" style="color:var(--beauty)">美容滿額</div>';
-    
-    giftsAll.forEach(g => {
-        const isReached = currentTotal >= g.amt;
-        leftCol.appendChild(createDualItem(g, isReached));
+
+    giftsAll.forEach((g, idx) => {
+        const isReached = Number(currentTotal||0) >= Number(g.amt||0);
+        const isNext = (!isReached && nextAllAmt !== null && Number(g.amt||0) === nextAllAmt);
+        const isDoneTag = (allDone && idx === giftsAll.length - 1);
+        const diff = isNext ? Math.max(0, Math.ceil(nextAllAmt - Number(currentTotal||0))) : 0;
+
+        leftCol.appendChild(createDualItem(g, isReached, {
+          isNext: isNext || isDoneTag,
+          diff,
+          tagText: isDoneTag ? '已達最高門檻 🎉' : '',
+          flash: isDoneTag ? false : true,
+          kind: isDoneTag ? 'done' : 'next'
+        }));
     });
-    
-    giftsBeauty.forEach(g => {
-        const isReached = currentBeauty >= g.amt;
-        rightCol.appendChild(createDualItem(g, isReached));
+
+    giftsBeauty.forEach((g, idx) => {
+        const isReached = Number(currentBeauty||0) >= Number(g.amt||0);
+        const isNext = (!isReached && nextBeautyAmt !== null && Number(g.amt||0) === nextBeautyAmt);
+        const isDoneTag = (beautyDone && idx === giftsBeauty.length - 1);
+        const diff = isNext ? Math.max(0, Math.ceil(nextBeautyAmt - Number(currentBeauty||0))) : 0;
+
+        rightCol.appendChild(createDualItem(g, isReached, {
+          isNext: isNext || isDoneTag,
+          diff,
+          tagText: isDoneTag ? '已達最高門檻 🎉' : '',
+          flash: isDoneTag ? false : true,
+          kind: isDoneTag ? 'done' : 'next'
+        }));
     });
-    
+
     container.appendChild(leftCol);
     container.appendChild(rightCol);
+
+    // 動效：每次更新閃 3.1 秒（只針對「下一門檻」標籤）
+    try{
+      if(window.__msTagTimer) clearTimeout(window.__msTagTimer);
+      const tags = Array.from(container.querySelectorAll('.ms-tag.flash'));
+      window.__msTagTimer = setTimeout(() => {
+        try{ tags.forEach(t => t.classList.remove('flash')); }catch(e){}
+      }, 3100);
+    }catch(e){}
 }
 
-function createDualItem(g, isReached) {
+function createDualItem(g, isReached, opts) {
+    const o = opts || {};
     let gName = (PRODUCT_MAP.get(g.gift) || {}).name || g.gift;
-    gName = gName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, "");
-    
-    // Use the Grid Renderer, but maybe wrap it?
-    let imgHtml = renderGiftImages(g.gift); 
+    gName = String(gName||'').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, "");
+
+    let imgHtml = '';
+    try{ imgHtml = renderGiftImages(g.gift); }catch(e){}
     if(!imgHtml) imgHtml = '<div class="g-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px">🎁</div>';
 
+    const isNext = !!o.isNext;
+    const diff = Math.max(0, Number(o.diff||0));
+    const tagText = (o.tagText && String(o.tagText).trim()) ? String(o.tagText).trim() : (isNext ? `還差 NT$${Math.round(diff).toLocaleString()}` : '');
+    const wantFlash = (o.flash === false) ? false : true;
+    const kind = (o.kind === 'done') ? 'done' : 'next';
+    const tagClass = `ms-tag ${kind === 'done' ? 'done' : ''} ${(!wantFlash || kind==='done') ? '' : 'flash'}`.trim();
+
+    const tagHtml = (tagText && isNext) ? `<div class="${tagClass}">${String(tagText).replace(/[<>]/g,'')}</div>` : ``;
+
     const item = document.createElement('div');
-    item.className = `ms-dual-item ${isReached ? 'active' : ''}`;
+    item.className = `ms-dual-item ${isReached ? 'active' : ''} ${isNext ? 'next' : ''}`;
     item.innerHTML = `
-      <div class="ms-d-th">$${(g.amt).toLocaleString()}</div>
-      ${imgHtml}
-      <div class="ms-d-name">${gName}</div>
+      <div class="ms-d-head">
+        <div class="ms-d-th">滿 $${(Number(g.amt)||0).toLocaleString()}</div>
+        ${tagHtml}
+      </div>
+      <div class="ms-d-body">
+        <div class="ms-d-media">${imgHtml}</div>
+        <div class="ms-d-info">
+          <div class="ms-d-name">${String(gName||'').replace(/[<>]/g,'')}</div>
+        </div>
+      </div>
     `;
     return item;
 }
@@ -1727,7 +1991,7 @@ function loadState() {
     const data = JSON.parse(raw);
     CART = data.cart.map(oldItem => {
       const freshItem = PRODUCT_MAP.get(oldItem.code);
-      if(freshItem) {
+      if(freshItem && !freshItem.is_hidden) {
           return { ...freshItem, qty: oldItem.qty, bundleSelection: oldItem.bundleSelection };
       }
       return null;
@@ -1851,6 +2115,20 @@ function applyUiThemeVars(){
     }
     const annIcon = acc['ui|announce_icon']?.c1 || acc['announce_icon']?.c1 || acc['ui|promo_map_cta_icon']?.c1 || acc['promo_map_cta_icon']?.c1 || '';
     if(annIcon) root.style.setProperty('--ann-icon-fg', annIcon);
+
+// NEW badge theming (sheet-configurable)
+const nb = acc['ui|new_badge'] || acc['new_badge'] || null;
+if(nb && (nb.c1 || nb.c2)){
+  const c1 = String(nb.c1 || '').trim();
+  const c2 = String(nb.c2 || '').trim();
+  let bg = '';
+  if(c1 && c2) bg = `linear-gradient(135deg, ${c1}, ${c2})`;
+  else if(c1) bg = c1;
+  if(bg) root.style.setProperty('--new-badge-bg', bg);
+}
+const nbt = (acc['ui|new_badge_text']?.c1) || (acc['new_badge_text']?.c1) || '';
+if(nbt) root.style.setProperty('--new-badge-text', String(nbt).trim());
+
 
   }catch(e){}
 }
@@ -2018,10 +2296,117 @@ try{
   }catch(e){}
 }
 
+/* --- V29: Promo Map '贈品門檻' 分頁 --- */
+function pmLsGet(key, defVal){
+  try{
+    const v = localStorage.getItem(key);
+    return (v === null || v === undefined || v === '') ? defVal : v;
+  }catch(e){ return defVal; }
+}
+function pmLsSet(key, val){
+  try{ localStorage.setItem(key, String(val)); }catch(e){}
+}
+function pmFormatGiftName(gift){
+  try{
+    let gName = (PRODUCT_MAP.get(gift) || {}).name || gift;
+    gName = String(gName||'').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, "");
+    return gName;
+  }catch(e){ return String(gift||''); }
+}
+
+function buildPromoGiftList(scope){
+  try{
+    const listEl = document.getElementById('promoGiftList');
+    if(!listEl) return;
+    listEl.innerHTML = '';
+    const gifts = (RULES && Array.isArray(RULES.spend)) ? RULES.spend.filter(r => r && r.scope === scope).sort((a,b)=> (a.amt||0)-(b.amt||0)) : [];
+    if(!gifts.length){
+      listEl.innerHTML = '<div class="pm-empty">目前沒有可顯示的贈品門檻</div>';
+      return;
+    }
+    gifts.forEach(g => {
+      const item = document.createElement('div');
+      item.className = 'pm-gift-item';
+      const amt = Number(g.amt||0);
+      const gName = pmFormatGiftName(g.gift);
+      let imgHtml = '';
+      try{ imgHtml = renderGiftImages(g.gift) || ''; }catch(e){}
+      if(!imgHtml) imgHtml = '<div class="g-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px">🎁</div>';
+
+      item.innerHTML = `
+        <div class="pm-gift-row">
+          <div class="pm-gift-media">${imgHtml}</div>
+          <div class="pm-gift-info">
+            <div class="pm-gift-amt">滿 $${Math.round(amt).toLocaleString()}</div>
+            <div class="pm-gift-name">${String(gName||'').replace(/[<>]/g,'')}</div>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  }catch(e){}
+}
+
+function setPromoGiftScope(scope, opts){
+  const o = opts || {};
+  const sc = (scope === 'zone_prefix') ? 'zone_prefix' : 'all';
+  const btns = Array.from(document.querySelectorAll('#promoMapPaneGifts .pm-scope-btn'));
+  btns.forEach(b=>{
+    const isOn = (String(b.getAttribute('data-scope')) === sc);
+    b.classList.toggle('active', isOn);
+    b.setAttribute('aria-selected', isOn ? 'true' : 'false');
+  });
+  if(!o.skipSave) pmLsSet('ttl_pm_gift_scope', sc);
+  buildPromoGiftList(sc);
+}
+
+function setPromoMapTab(tab, opts){
+  const o = opts || {};
+  const t = (tab === 'gifts') ? 'gifts' : 'nav';
+  const navBtn = document.getElementById('pmTabNav');
+  const giftsBtn = document.getElementById('pmTabGifts');
+  const paneNav = document.getElementById('promoMapPaneNav');
+  const paneGifts = document.getElementById('promoMapPaneGifts');
+  if(navBtn){ navBtn.classList.toggle('active', t==='nav'); navBtn.setAttribute('aria-selected', t==='nav' ? 'true' : 'false'); }
+  if(giftsBtn){ giftsBtn.classList.toggle('active', t==='gifts'); giftsBtn.setAttribute('aria-selected', t==='gifts' ? 'true' : 'false'); }
+  if(paneNav) paneNav.style.display = (t==='nav') ? 'block' : 'none';
+  if(paneGifts) paneGifts.style.display = (t==='gifts') ? 'block' : 'none';
+  if(!o.skipSave) pmLsSet('ttl_pm_tab', t);
+
+  if(t==='nav'){
+    buildPromoMapList();
+  }else{
+    const scope = pmLsGet('ttl_pm_gift_scope', 'all');
+    setPromoGiftScope(scope, {skipSave:true});
+  }
+}
+
+function initPromoMapTabsOnce(){
+  try{
+    const drawer = document.getElementById('promoMapDrawer');
+    if(!drawer) return;
+    if(drawer.dataset.pmTabsInited === '1') return;
+
+    const navBtn = document.getElementById('pmTabNav');
+    const giftsBtn = document.getElementById('pmTabGifts');
+    if(navBtn) navBtn.onclick = () => setPromoMapTab('nav');
+    if(giftsBtn) giftsBtn.onclick = () => setPromoMapTab('gifts');
+
+    const scopeBtns = Array.from(document.querySelectorAll('#promoMapPaneGifts .pm-scope-btn'));
+    scopeBtns.forEach(b=>{
+      b.onclick = () => setPromoGiftScope(b.getAttribute('data-scope'));
+    });
+
+    drawer.dataset.pmTabsInited = '1';
+  }catch(e){}
+}
+
 function openPromoMap(){
   try{
     if(!ensurePromoMapDom()) return;
-    buildPromoMapList();
+    initPromoMapTabsOnce();
+    const prefTab = pmLsGet('ttl_pm_tab','nav');
+    setPromoMapTab(prefTab, {skipSave:true});
     document.body.classList.add('drawer-open');
     const overlay = document.getElementById('promoMapOverlay');
     const drawer = document.getElementById('promoMapDrawer');
@@ -2289,6 +2674,27 @@ function jumpToProduct(pid) {
   }, 100);
 }
 
+function jumpToGroupByCode(groupCode){
+  const gc = String(groupCode||'').trim();
+  if(!gc) return false;
+  const g = PRODUCT_MAP.get(gc);
+  if(g && !g.is_hidden){
+    jumpToProduct(g._id);
+    return true;
+  }
+  try{ showPromoHint(`找不到商品組：${gc}`); }catch(e){}
+  return false;
+}
+function handleRankingClick(p){
+  try{
+    if(p && p.is_hidden && p.group_code){
+      if(jumpToGroupByCode(p.group_code)) return;
+    }
+  }catch(e){}
+  jumpToProduct(p._id);
+}
+
+
 // FIX: Improved Highlight Logic
 function highlightText(text, query) {
   if (!query) return text;
@@ -2322,6 +2728,15 @@ const pData = Papa.parse(pText, { header: true, skipEmptyLines: true }).data;
       if(!code || !name) return null;
       const isGift = String(pick("is_gift")||"").toLowerCase();
 
+const _bool = (v) => {
+  const s = String(v||'').trim().toLowerCase();
+  return (s === 'true' || s === '1' || s === 'y' || s === 'yes' || s === 't');
+};
+const isNew = _bool(pick("is_new"));
+const isHidden = _bool(pick("is_hidden"));
+const groupCode = String(pick("group_code")||"").trim();
+
+
       let bundle = [];
       for(let k=1; k<=4; k++) {
         let sn = String(pick(`spec_${k}`)||"").trim();
@@ -2340,7 +2755,8 @@ const pData = Papa.parse(pText, { header: true, skipEmptyLines: true }).data;
       }
       const p = {
         _id: i, code: code, name: name, category: pick("category").trim(),
-        price: Number((pick("list_price")||"0").replace(/,/g,'')), spec: pick("spec"), photo: pick("photos url"), bundle: bundle
+        price: Number((pick("list_price")||"0").replace(/,/g,'')), spec: pick("spec"), photo: pick("photos url"), bundle: bundle,
+        is_new: isNew, is_hidden: isHidden, group_code: groupCode
       };
       if(p.code) PRODUCT_MAP.set(p.code, p);
       
@@ -2544,7 +2960,7 @@ function renderRanking(type) {
     const card = document.createElement("div");
     card.className = "r-card";
     card.dataset.rank = idx + 1; 
-    card.onclick = () => jumpToProduct(p._id);
+    card.onclick = () => handleRankingClick(p);
     let imgHtml = `<div class="p-no-img" style="height:100%;justify-content:center;font-size:10px">無圖</div>`;
     if(p.photo && p.photo.length > 5) imgHtml = `<img src="${p.photo}" class="r-img" loading="lazy">`;
     card.innerHTML = `<div class="r-img-wrap"><div class="r-badge">${idx + 1}</div><div class="r-sold-tag">售${p.sold.toLocaleString()}件</div>${imgHtml}</div><div class="r-name">${p.name}</div>`;
@@ -2636,7 +3052,7 @@ function renderList() {
   
   if (q) {
     if(sectionObserver) sectionObserver.disconnect();
-    const filtered = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q));
+    const filtered = PRODUCTS.filter(p => !p.is_hidden && (p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q)));
     document.getElementById("empty-state").style.display = filtered.length === 0 ? "block" : "none";
     const container = document.createElement("div");
     container.className = "grid-layout";
@@ -2651,6 +3067,7 @@ function renderList() {
 
     categories.forEach(cat => {
         const catProducts = PRODUCTS.filter(p => {
+            if(p.is_hidden) return false;
             if (cat.includes("清潔-")) {
                 if (!p.category.includes("清潔")) return false;
                 if (cat === "清潔-洗潔" && !p.name.includes("洗潔")) return false;
@@ -2769,7 +3186,12 @@ const L_tier  = getBadgeName('tier','多件優惠');
     })();
         const codeChipHtml = (p.code && String(p.code).trim()) ? `<div class="p-code-chip">${escapeHtml(p.code)}</div>` : '';
     const pillRowHtml = pricePack.pillHtml ? `<div class="p-pill-row">${pricePack.pillHtml}</div>` : '';
-    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}</div><div class="p-body">${codeChipHtml}<div><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}<div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div></div></div>`;
+
+const newBadgeLabel = (function(){
+  try{ return escapeHtml(getBadgeName('new', 'NEW')); }catch(e){ return 'NEW'; }
+})();
+const newBadgeHtml = (p.is_new) ? `<div class="new-badge">${newBadgeLabel}</div>` : '';
+    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}<div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div></div></div>`;
     return card;
 }
 
@@ -3646,12 +4068,29 @@ return showPromoHint('本分類目前無優惠訊息');
 <div id="promoMapOverlay" class="pm-overlay"></div>
 <aside id="promoMapDrawer" class="pm-drawer" aria-hidden="true">
   <div class="pm-header">
-    <div class="pm-title">優惠地圖</div>
+    <div class="pm-head-left">
+      <div class="pm-title">優惠地圖</div>
+      <div class="pm-tabs" role="tablist" aria-label="優惠地圖切換">
+        <button type="button" class="pm-tab active" id="pmTabNav" data-tab="nav" role="tab" aria-selected="true">優惠分類</button>
+        <button type="button" class="pm-tab" id="pmTabGifts" data-tab="gifts" role="tab" aria-selected="false">贈品門檻</button>
+      </div>
+    </div>
     <button type="button" class="pm-close" id="promoMapCloseBtn" aria-label="關閉">✕</button>
   </div>
   <div class="pm-body">
-    <div class="pm-sub">點擊可快速跳轉</div>
-    <div id="promoMapList" class="pm-list"></div>
+    <div id="promoMapPaneNav" class="pm-pane">
+      <div class="pm-sub">點擊可快速跳轉</div>
+      <div id="promoMapList" class="pm-list"></div>
+    </div>
+
+    <div id="promoMapPaneGifts" class="pm-pane" style="display:none">
+      <div class="pm-sub">查看各階滿額贈品</div>
+      <div class="pm-scope" role="tablist" aria-label="贈品範圍">
+        <button type="button" class="pm-scope-btn active" data-scope="all" role="tab" aria-selected="true">全區</button>
+        <button type="button" class="pm-scope-btn" data-scope="zone_prefix" role="tab" aria-selected="false">美容</button>
+      </div>
+      <div id="promoGiftList" class="pm-gift-list"></div>
+    </div>
   </div>
 </aside>
 
