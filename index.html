@@ -68,6 +68,31 @@ body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%;
 /* --- LAYOUT --- */
 main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; width: 100%; }
+
+/* --- Global: Two-stage checkout collapse (desktop + mobile) --- */
+.checkout-details{
+  margin-top: 12px;
+  overflow: hidden;
+  transform-origin: top;
+  transition: max-height .38s cubic-bezier(.2,.9,.2,1), opacity .22s ease, transform .38s cubic-bezier(.2,.9,.2,1);
+  max-height: 720px;
+}
+.checkout-details.collapsed{
+  max-height: 0px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  margin-top: 0px;
+}
+.checkout-details:not(.collapsed){
+  opacity: 1;
+  transform: translateY(0px);
+  pointer-events: auto;
+}
+
+/* Keep space tidy when collapsed */
+.checkout-details.collapsed + .btn-bar{ margin-top: 12px; }
+
 @media (max-width: 480px) { .grid-layout { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; } }
 
 /* Ranking UI */
@@ -763,6 +788,24 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 /* Form controls only inside cart drawer */
   #drawer-panel input, #drawer-panel select{ padding:12px; font-size:13px; }
   .form-grid{ gap:10px; margin-top:12px; }
+.checkout-details{
+  margin-top: 12px;
+  overflow: hidden;
+  transform-origin: top;
+  transition: max-height .38s cubic-bezier(.2,.9,.2,1), opacity .22s ease, transform .38s cubic-bezier(.2,.9,.2,1);
+  max-height: 720px;
+}
+.checkout-details.collapsed{
+  max-height: 0px;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+}
+.checkout-details:not(.collapsed){
+  opacity: 1;
+  transform: translateY(0px);
+  pointer-events: auto;
+}
 
   /* Buttons */
   .btn-bar{ margin-top:14px; }
@@ -788,15 +831,27 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 }
 .sys-ann .title{ font-weight: 800; margin-bottom: 4px; }
 
+@media (max-width:380px){
+  .sys-ann--row{ flex-wrap:nowrap; }
+  .sys-ann-main{ flex:1 1 auto; }
+  .sys-ann-cta .cta-text{ display:none; }
+  .sys-ann-cta{ padding: 8px 10px; }
+}
+
+
 /* --- V2.8.9: Promo Map (優惠地圖) entry + drawer --- */
 .sys-ann--row{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
 }
-.sys-ann-main{ flex: 1 1 200px; min-width: 180px; }
+.sys-ann-main{ flex: 1 1 200px; min-width: 0;
+  overflow:hidden;
+}
+.sys-ann-main .title{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.sys-ann-main .desc{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .sys-ann-cta{
   flex: 0 0 auto;
   border: 1px solid rgba(0,137,123,0.35);
@@ -971,6 +1026,11 @@ body.drawer-open { overflow:hidden; }
   border-color: rgba(216,27,96,0.22);
   color:#ad1457;
 }
+.pm-scope-btn[data-scope="series"].active{
+  background: rgba(67,160,71,0.12);
+  border-color: rgba(67,160,71,0.22);
+  color:#2e7d32;
+}
 .pm-scope-btn:active{ transform: translateY(1px); }
 
 /* 贈品門檻（全區/美容）視覺區隔：徽章 + 摘要 */
@@ -1003,17 +1063,24 @@ body.drawer-open { overflow:hidden; }
   border-color: rgba(216,27,96,0.20);
   color:#ad1457;
 }
+.pm-badge-series{
+  background: rgba(67,160,71,0.12);
+  border-color: rgba(67,160,71,0.22);
+  color:#2e7d32;
+}
 .pm-gh-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .pm-gh-title{ font-weight: 900; font-size: 13px; color:#263238; line-height:1.15; }
 .pm-gh-sub{ font-weight: 700; font-size: 11px; color:#607d8b; line-height:1.2; }
 
 #promoMapPaneGifts.scope-all .pm-gift-header{ background: rgba(255,243,224,0.70); }
 #promoMapPaneGifts.scope-beauty .pm-gift-header{ background: rgba(252,228,236,0.70); }
+#promoMapPaneGifts.scope-series .pm-gift-header{ background: rgba(232,245,233,0.78); }
 
 /* 贈品門檻清單卡：色帶＋標籤配色 */
 .pm-gift-item{ position: relative; overflow: hidden; }
 .pm-gift-item.pm-gift-all{ border-left: 4px solid rgba(230,81,0,0.55); }
 .pm-gift-item.pm-gift-beauty{ border-left: 4px solid rgba(216,27,96,0.45); }
+.pm-gift-item.pm-gift-series{ border-left: 4px solid rgba(46,125,50,0.38); }
 .pm-gift-item.pm-gift-all .pm-gift-amt{
   background: rgba(230,81,0,0.10);
   border-color: rgba(230,81,0,0.18);
@@ -1024,6 +1091,12 @@ body.drawer-open { overflow:hidden; }
   border-color: rgba(216,27,96,0.18);
   color:#ad1457;
 }
+.pm-gift-item.pm-gift-series .pm-gift-amt{
+  background: rgba(67,160,71,0.10);
+  border-color: rgba(67,160,71,0.18);
+  color:#2e7d32;
+}
+
 
 .pm-gift-list{ display:flex; flex-direction:column; gap:10px; }
 .pm-gift-item{
@@ -1060,6 +1133,8 @@ body.drawer-open { overflow:hidden; }
   line-height: 1.25;
   word-break: break-word;
 }
+
+.pm-gift-note{ font-weight: 800; font-size: 11px; color:#607d8b; line-height:1.2; }
 
 .pm-empty{
   padding: 12px 12px;
@@ -1147,6 +1222,317 @@ body.cfg-error .btn-bundle{
   opacity: .45;
 }
 
+
+/* --- V2.9.2: Star Hero (主打星) overlay + announcement dock --- */
+/* Star pulse highlight */
+.p-card.star-pulse{ outline: 2px solid rgba(255,143,0,0.55); box-shadow: 0 18px 40px rgba(255,143,0,0.18); }
+/* Navigation breathe highlight (source-colored) */
+.p-card.nav-breathe{ position: relative; }
+.p-card.nav-breathe::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  pointer-events:none;
+  background: rgba(var(--nav-breathe-rgb,255,143,0),0.055);
+  box-shadow: inset 0 0 0 1px rgba(var(--nav-breathe-rgb,255,143,0),0.16),
+              0 18px 34px rgba(var(--nav-breathe-rgb,255,143,0),0.10);
+  opacity:0;
+  transform: scale(0.998);
+  animation: navBreathe 3.2s ease-in-out 0s 2;
+}
+@keyframes navBreathe{
+  0%{ opacity:0; transform: scale(0.998); }
+  45%{ opacity:1; transform: scale(1); }
+  100%{ opacity:0; transform: scale(0.999); }
+}
+@media (prefers-reduced-motion: reduce){
+  .p-card.nav-breathe::after{ animation:none; opacity:1; }
+}
+
+.star-dock-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,167,38,0.55);
+  background: rgba(255,255,255,0.92);
+  color: #ff8f00;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+  cursor: pointer;
+  margin-right: 8px;
+  flex: 0 0 auto;
+  transform: translateZ(0);
+}
+
+.star-dock-btn{ position: relative; }
+.star-dock-badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255,111,0,0.95);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+  border: 2px solid rgba(255,255,255,0.95);
+}
+.star-dock-btn.hidden .star-dock-badge{ display:none; }
+
+.star-dock-btn.hidden{ display:none; }
+.star-dock-btn .material-icons-round{ font-size: 20px; }
+@keyframes starWiggle{
+  0%,100%{ transform: translateZ(0) rotate(-6deg) translateY(0px); }
+  50%{ transform: translateZ(0) rotate(6deg) translateY(-1px); }
+}
+@keyframes starTwinkle{
+  0%,100%{ box-shadow: 0 10px 22px rgba(0,0,0,0.08), 0 0 0 rgba(255,193,7,0.0); }
+  50%{ box-shadow: 0 12px 26px rgba(0,0,0,0.10), 0 0 18px rgba(255,193,7,0.38); }
+}
+.star-dock-btn.attn{
+  animation: starWiggle 1.05s ease-in-out infinite, starTwinkle 1.45s ease-in-out infinite;
+}
+
+/* Star hero overlay (appears after welcome) */
+#starHeroOverlay{
+  position: fixed; top:0; left:0; width:100vw; height:100vh;
+  display:none;
+  align-items:center; justify-content:center;
+  z-index: 9995;
+  background: radial-gradient(1200px 800px at 15% 10%, rgba(255,214,170,0.70), rgba(236,239,241,0.62) 55%, rgba(210, 236, 255, 0.55));
+  backdrop-filter: blur(9px) saturate(1.08);
+  transition: opacity .38s ease;
+  opacity: 0;
+  padding: 16px;
+}
+#starHeroOverlay.show{ display:flex; opacity: 1; }
+#starHeroOverlay.fade-out{ opacity: 0; }
+
+.star-hero-card{
+  width: min(980px, 92vw);
+  max-height: min(78vh, 660px);
+  overflow: hidden;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(255,143,0,0.14);
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.14);
+  padding: 16px 16px 14px;
+  transform: translateY(0) scale(1);
+  transition: transform .42s cubic-bezier(.2,.9,.2,1), opacity .42s ease;
+}
+.star-hero-card::before{
+  content:'';
+  position:absolute;
+  inset: 0;
+  pointer-events:none;
+  border-radius: 22px;
+  background: radial-gradient(220px 140px at 18% 18%, rgba(255,193,7,0.14), rgba(255,255,255,0.0) 70%),
+              radial-gradient(260px 160px at 86% 22%, rgba(255,111,0,0.10), rgba(255,255,255,0.0) 72%);
+}
+.star-hero-card{ position:relative; }
+
+#starHeroOverlay.fade-out .star-hero-card{
+  transform: translateY(6px) scale(0.92);
+  opacity: 0;
+}
+
+/* Staged entrance (A) */
+#starHeroOverlay.show.entering .sh-head,
+#starHeroOverlay.show.entering .sh-sub,
+#starHeroOverlay.show.entering .sh-carousel,
+#starHeroOverlay.show.entering .sh-dots,
+#starHeroOverlay.show.entering #starHeroBrowseBtn{
+  opacity: 0;
+  transform: translateY(10px);
+}
+@keyframes shFadeUp{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0px); }
+}
+#starHeroOverlay.show.entering .sh-head{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .06s; }
+#starHeroOverlay.show.entering .sh-sub{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .12s; }
+#starHeroOverlay.show.entering .sh-carousel{ animation: shFadeUp .52s cubic-bezier(.2,.9,.2,1) both; animation-delay: .18s; }
+#starHeroOverlay.show.entering .sh-dots{ animation: shFadeUp .50s cubic-bezier(.2,.9,.2,1) both; animation-delay: .26s; }
+#starHeroOverlay.show.entering #starHeroBrowseBtn{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .34s; }
+
+
+.sh-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sh-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight: 900;
+  font-size: 19px;
+  color: #111827;
+}
+.sh-title .material-icons-round{ color:#ff8f00; }
+
+.sh-title .material-icons-round{ color:#ff8f00; }
+.sh-sub{
+  margin-top: 6px;
+  color: rgba(17,24,39,0.70);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sh-carousel{
+  --sh-card-w: 184px;
+  --sh-side-pad: max(14px, calc((100% - var(--sh-card-w)) / 2));
+  margin-top: 12px;
+  display:flex;
+  gap: 10px;
+  overflow-x:auto;
+  padding: 2px var(--sh-side-pad) 12px var(--sh-side-pad);
+  scroll-padding-left: var(--sh-side-pad);
+  scroll-padding-right: var(--sh-side-pad);
+  scroll-snap-type: x mandatory;
+  scroll-snap-stop: always;
+  -webkit-overflow-scrolling: touch;
+}
+.sh-carousel::-webkit-scrollbar{ height: 8px; }
+.sh-carousel::-webkit-scrollbar-thumb{ background: rgba(255,143,0,0.18); border-radius: 999px; }
+.sh-dots{
+  margin-top: 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 7px;
+  padding-bottom: 6px;
+  user-select:none;
+}
+.sh-dot{
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(17,24,39,0.18);
+  transform: scale(0.92);
+  transition: transform .18s ease, background .18s ease, width .18s ease;
+}
+.sh-dot.active{
+  background: rgba(255,111,0,0.95);
+  transform: scale(1.05);
+  width: 16px;
+}
+
+.sh-carousel::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.12); border-radius: 999px; }
+
+
+.sh-item{
+  flex: 0 0 184px;
+  scroll-snap-align: center;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .14s ease, box-shadow .18s ease, filter .18s ease;
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  padding: 10px;
+}
+.sh-item:active{ transform: scale(0.985); }
+.sh-item:hover{ box-shadow: 0 14px 30px rgba(0,0,0,0.08); filter: brightness(1.01); }
+
+.sh-item .sh-img{
+  width: 100%;
+  height: 108px;
+  object-fit: contain;
+  display:block;
+  background: rgba(255,255,255,0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.sh-item .sh-meta{
+  flex: 1;
+  min-width: 0;
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+  padding: 0 2px 2px;
+}
+.sh-item .sh-amt{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(255,111,0,0.98);
+  background: rgba(255,143,0,0.10);
+  border: 1px solid rgba(255,143,0,0.14);
+  padding: 4px 8px;
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sh-item .sh-name{
+  font-size: 15px;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1.22;
+  word-break: break-word;
+  display:-webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sh-actions{
+  margin-top: 12px;
+  display:flex;
+  justify-content:flex-end;
+}
+#starHeroBrowseBtn{
+  width: 100%;
+  border: none;
+  margin-top: 12px;
+  background: linear-gradient(90deg, rgba(255,143,0,0.95), rgba(255,111,0,0.95));
+  color: #fff;
+  font-weight: 900;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 14px 26px rgba(255,111,0,0.20);
+  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+}
+#starHeroBrowseBtn:active{ transform: translateY(1px) scale(0.995); }
+#starHeroBrowseBtn:hover{ filter: brightness(1.02); box-shadow: 0 16px 30px rgba(255,111,0,0.24); }
+
+.star-fly{
+  position: fixed;
+  z-index: 10010;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(255,167,38,0.65);
+  color: #ff8f00;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.18);
+  transform: translateZ(0);
+  opacity: 0.0;
+  pointer-events:none;
+  will-change: transform, opacity;
+}
+.star-fly .material-icons-round{ font-size: 24px; }
+
 </style>
 </head>
 <body>
@@ -1159,6 +1545,20 @@ body.cfg-error .btn-bundle{
     <button class="w-btn" onclick="closeWelcome()">開始訂購</button>
   </div>
 </div>
+
+
+<div id="starHeroOverlay" aria-hidden="true">
+  <div class="star-hero-card" role="dialog" aria-modal="true" aria-label="主打星推薦">
+    <div class="sh-head">
+      <div class="sh-title"><span class="material-icons-round">auto_awesome</span> <span id="starHeroTitleText"></span></div>
+    </div>
+    <div class="sh-sub" id="starHeroSubtitleText"></div>
+    <div class="sh-carousel" id="starHeroCarousel"></div>
+    <div class="sh-dots" id="starHeroDots" aria-hidden="true"></div>
+    <button type="button" id="starHeroBrowseBtn">先去逛逛</button>
+  </div>
+</div>
+
 
 <div id="gift-fab" onclick="showMilestoneCard()">
   <span class="material-icons-round" style="color:#ffca28">card_giftcard</span>
@@ -1298,6 +1698,7 @@ body.cfg-error .btn-bundle{
       <div style="display:flex;justify-content:space-between;margin-bottom:5px;color:var(--accent)"><span>折扣與優惠</span><span id="sumDisc">-$0</span></div>
       <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px dashed #cfd8dc;font-size:22px;font-weight:800;color:#263238"><span>應付金額</span><span id="sumPay">$0</span></div>
 
+      <div id="checkoutDetails" class="checkout-details collapsed">
       <div class="delivery-toggle-wrap">
         <label class="d-toggle-label">
           <input type="checkbox" id="chkDelivery" onchange="toggleDelivery()">
@@ -1324,9 +1725,10 @@ body.cfg-error .btn-bundle{
         </select>
         <input id="fNote" placeholder="訂單備註">
       </div>
+    </div>
       <div class="btn-bar">
         <button class="btn-clear" onclick="clearCart()"><span class="material-icons-round">delete_outline</span></button>
-        <button class="btn-submit" onclick="submitOrder()">確認訂購</button>
+        <button class="btn-submit" id="btnCheckoutSubmit" onclick="handleCheckoutSubmit()">結帳去</button>
       </div>
       <div id="warnMsg" style="color:#ef5350;font-size:13px;text-align:center;margin-top:10px;display:none;font-weight:700;background:#ffebee;padding:8px;border-radius:8px;"></div>
     </div>
@@ -1347,7 +1749,7 @@ body.cfg-error .btn-bundle{
 
 <div id="giftModal" class="modal">
   <div class="m-box">
-    <div class="m-head" style="margin-bottom:20px">🎁 滿額贈達標清單</div>
+    <div class="m-head" style="margin-bottom:20px">全站獲得贈品</div>
     <div class="gift-list" id="giftListGrid"></div>
     <button class="m-btn" style="background:#f5f5f5;color:#546e7a;margin-top:20px;flex-shrink:0" onclick="closeGiftList()">關閉</button>
   </div>
@@ -1707,8 +2109,12 @@ function cleanupUI() {
 
 window.closeWelcome = function() {
   const el = document.getElementById('welcome-overlay');
+  if(!el) return;
   el.classList.add('fade-out');
-  setTimeout(() => el.style.display = 'none', 500);
+  setTimeout(() => {
+    try{ el.style.display = 'none'; }catch(e){}
+    try{ requestStarHeroAutoShow(); }catch(e){}
+  }, 520);
 };
 
 window.safeOpenCart = function() {
@@ -1719,7 +2125,45 @@ window.safeOpenCart = function() {
   openCart();
 };
 
+
+/* --- V2.9.3: Two-stage checkout (二階結帳 + 收合) --- */
+let __CHECKOUT_STAGE__ = 1;
+function setCheckoutStage(stage){
+  try{
+    const details = document.getElementById('checkoutDetails');
+    const btn = document.getElementById('btnCheckoutSubmit');
+    __CHECKOUT_STAGE__ = (stage===2 ? 2 : 1);
+
+    if(details){
+      if(__CHECKOUT_STAGE__ === 2){
+        details.classList.remove('collapsed');
+      }else{
+        details.classList.add('collapsed');
+      }
+    }
+    if(btn){
+      btn.textContent = (__CHECKOUT_STAGE__ === 2) ? '確認訂購' : '結帳去';
+    }
+  }catch(e){}
+}
+function handleCheckoutSubmit(){
+  try{
+    if(__CHECKOUT_STAGE__ !== 2){
+      setCheckoutStage(2);
+      const details = document.getElementById('checkoutDetails');
+      if(details){
+        details.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      }
+      const f = document.getElementById('fName');
+      if(f) setTimeout(()=>{ try{ f.focus(); }catch(e){} }, 260);
+      return;
+    }
+    submitOrder();
+  }catch(e){}
+}
+
 window.openCart = function() {
+  setCheckoutStage(1);
   document.getElementById("drawer").classList.add("open"); 
   document.getElementById("float-bar").classList.add("hidden"); 
   document.body.classList.add('modal-open');
@@ -1728,6 +2172,7 @@ window.openCart = function() {
 };
 
 window.closeCart = function() {
+  setCheckoutStage(1);
   document.getElementById("drawer").classList.remove("open");
   document.getElementById("float-bar").classList.remove("hidden");
   cleanupUI(); 
@@ -1777,7 +2222,16 @@ window.openGiftList = function() {
         seriesRules.forEach(g => {
             const prefixes = splitPrefixes(g.prefix);
             const qty = prefixes.length ? sumQtyByPrefixes(CART, prefixes) : 0;
-            const reached = qty > 0;
+            let reached = false;
+        try{
+          const thr = Number(g.amt);
+          if(Number.isFinite(thr) && thr > 0){
+            const times = g.mult ? Math.floor(qty / thr) : (qty >= thr ? 1 : 0);
+            reached = (times > 0);
+          } else {
+            reached = qty > 0;
+          }
+        }catch(e){ reached = (qty > 0); }
             grid.appendChild(createSeriesGiftItem(g, reached, qty));
         });
     }
@@ -2347,6 +2801,34 @@ function ensurePromoMapDom(){
   return !!(overlay && drawer);
 }
 
+// Promo Map: pending category jump (avoid triggering root-back logic)
+let __PM_PENDING_SCROLL_ID__ = null;
+function pmScrollToTargetId(id){
+  try{
+    const tid = String(id||'').trim();
+    if(!tid) return;
+    const target = document.getElementById(tid);
+    if(!target) return;
+
+    const header = document.getElementById('header');
+    const headerH = header ? header.getBoundingClientRect().height : 110;
+    const offset = Math.min(140, Math.max(78, (headerH || 110) - 18));
+
+    const y = target.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: Math.max(0, y), behavior:'smooth' });
+  }catch(e){}
+}
+
+// Defer scroll until after drawer close/layout settle (prevents partial scroll / wrong stop)
+function pmDeferredScroll(id){
+  try{
+    const tid = String(id||'').trim();
+    if(!tid) return;
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ try{ pmScrollToTargetId(tid); }catch(e){} }); });
+  }catch(e){}
+}
+
+
 function buildPromoMapList(){
   try{
     const listEl = document.getElementById('promoMapList');
@@ -2411,13 +2893,9 @@ try{
       `;
       item.onclick = () => {
         const id = item.getAttribute('data-target');
-        if(id){
-          const target = document.getElementById(id);
-          if(target){
-            try{ target.scrollIntoView({ behavior:'smooth', block:'start' }); }catch(e){}
-          }
-        }
-        closePromoMap();
+        // Set pending target and close via history (so onpopstate can close drawer without triggering root-back logic)
+        __PM_PENDING_SCROLL_ID__ = id || null;
+        try{ closePromoMap(); }catch(e){}
       };
       listEl.appendChild(item);
     });
@@ -2447,14 +2925,73 @@ function buildPromoGiftList(scope){
     const listEl = document.getElementById('promoGiftList');
     if(!listEl) return;
     listEl.innerHTML = '';
-    const gifts = (RULES && Array.isArray(RULES.spend)) ? RULES.spend.filter(r => r && r.scope === scope).sort((a,b)=> (a.amt||0)-(b.amt||0)) : [];
+
+    const sc = String(scope||'all');
+
+    // Series gift rules (explain-only)
+    if(sc === 'series'){
+      const rules = (RULES && Array.isArray(RULES.series_gift)) ? RULES.series_gift.filter(r => r && r.gift) : [];
+      rules.sort((a,b)=>{
+        const pa = String(a.prefix||'');
+        const pb = String(b.prefix||'');
+        if(pa !== pb) return pa.localeCompare(pb, 'zh-Hant');
+        return (Number(a.amt)||0) - (Number(b.amt)||0);
+      });
+
+      if(!rules.length){
+        listEl.innerHTML = '<div class="pm-empty">目前沒有可顯示的系列搭贈規則</div>';
+        return;
+      }
+
+      rules.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'pm-gift-item pm-gift-series';
+
+        const prefixes = (typeof splitPrefixes === 'function') ? splitPrefixes(g.prefix) : [String(g.prefix||'')];
+        const prefixLabel = prefixes.filter(Boolean).join('、');
+
+        const thr = Number(g.amt);
+        const unit = (typeof seriesGiftUnit === 'function') ? seriesGiftUnit(prefixLabel) : '件';
+        const giftQty = Number(g.qty)||0;
+
+        let ruleText = '';
+        if(Number.isFinite(thr) && thr > 0){
+          ruleText = `每 ${Math.round(thr)} ${unit}送 ${giftQty} 個`;
+        }else{
+          // threshold empty => treat as "每 1 單位送"
+          ruleText = `每 1 ${unit}送 ${giftQty} 個`;
+        }
+
+        const gName = pmFormatGiftName(g.gift);
+        let imgHtml = '';
+        try{ imgHtml = renderGiftImages(g.gift) || ''; }catch(e){}
+        if(!imgHtml) imgHtml = '<div class="g-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px">🎁</div>';
+
+        item.innerHTML = `
+          <div class="pm-gift-row">
+            <div class="pm-gift-media">${imgHtml}</div>
+            <div class="pm-gift-info">
+              <div class="pm-gift-amt">${ruleText}</div>
+              <div class="pm-gift-name">${String(gName||'').replace(/[<>]/g,'')}</div>
+              ${prefixLabel ? `<div class="pm-gift-note">適用系列：${String(prefixLabel).replace(/[<>]/g,'')}</div>` : ''}
+            </div>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+      return;
+    }
+
+    // Spend thresholds (all / beauty)
+    const gifts = (RULES && Array.isArray(RULES.spend)) ? RULES.spend.filter(r => r && r.scope === sc).sort((a,b)=> (a.amt||0)-(b.amt||0)) : [];
     if(!gifts.length){
       listEl.innerHTML = '<div class="pm-empty">目前沒有可顯示的贈品門檻</div>';
       return;
     }
+
     gifts.forEach(g => {
       const item = document.createElement('div');
-      item.className = `pm-gift-item ${scope === 'zone_prefix' ? 'pm-gift-beauty' : 'pm-gift-all'}`;
+      item.className = `pm-gift-item ${sc === 'zone_prefix' ? 'pm-gift-beauty' : 'pm-gift-all'}`;
       const amt = Number(g.amt||0);
       const gName = pmFormatGiftName(g.gift);
       let imgHtml = '';
@@ -2480,20 +3017,43 @@ function updatePromoGiftHeader(sc){
     const header = document.getElementById('pmGiftHeader');
     if(!header) return;
 
-    const isBeauty = (sc === 'zone_prefix');
-    header.classList.toggle('pm-gh-all', !isBeauty);
+    const mode = String(sc||'all');
+    const isBeauty = (mode === 'zone_prefix');
+    const isSeries = (mode === 'series');
+
+    header.classList.toggle('pm-gh-all', mode === 'all');
     header.classList.toggle('pm-gh-beauty', isBeauty);
+    header.classList.toggle('pm-gh-series', isSeries);
 
     const badge = header.querySelector('.pm-badge');
     const title = header.querySelector('.pm-gh-title');
     const sub = header.querySelector('.pm-gh-sub');
 
+    if(isSeries){
+      if(badge){
+        badge.classList.remove('pm-badge-all','pm-badge-beauty');
+        badge.classList.add('pm-badge-series');
+        badge.textContent = 'SERIES';
+      }
+      if(title) title.textContent = '系列贈品';
+      if(sub) sub.textContent = '依系列搭贈條件';
+      return;
+    }
+
     if(isBeauty){
-      if(badge){ badge.classList.remove('pm-badge-all'); badge.classList.add('pm-badge-beauty'); badge.textContent = 'BEAUTY'; }
+      if(badge){
+        badge.classList.remove('pm-badge-all','pm-badge-series');
+        badge.classList.add('pm-badge-beauty');
+        badge.textContent = 'BEAUTY';
+      }
       if(title) title.textContent = '美容區滿額贈';
       if(sub) sub.textContent = '僅美容區商品累計';
     }else{
-      if(badge){ badge.classList.remove('pm-badge-beauty'); badge.classList.add('pm-badge-all'); badge.textContent = 'ALL'; }
+      if(badge){
+        badge.classList.remove('pm-badge-beauty','pm-badge-series');
+        badge.classList.add('pm-badge-all');
+        badge.textContent = 'ALL';
+      }
       if(title) title.textContent = '全區滿額贈';
       if(sub) sub.textContent = '全站商品合併計算';
     }
@@ -2502,7 +3062,9 @@ function updatePromoGiftHeader(sc){
 
 function setPromoGiftScope(scope, opts){
   const o = opts || {};
-  const sc = (scope === 'zone_prefix') ? 'zone_prefix' : 'all';
+  const raw = String(scope||'');
+  const sc = (raw === 'zone_prefix' || raw === 'series' || raw === 'all') ? raw : 'all';
+
   const btns = Array.from(document.querySelectorAll('#promoMapPaneGifts .pm-scope-btn'));
   btns.forEach(b=>{
     const isOn = (String(b.getAttribute('data-scope')) === sc);
@@ -2511,17 +3073,19 @@ function setPromoGiftScope(scope, opts){
   });
   if(!o.skipSave) pmLsSet('ttl_pm_gift_scope', sc);
 
-  // 視覺區隔（全區 / 美容）
+  // Visual split (all / beauty / series)
   try{
     const pane = document.getElementById('promoMapPaneGifts');
     const list = document.getElementById('promoGiftList');
     if(pane){
       pane.classList.toggle('scope-all', sc === 'all');
       pane.classList.toggle('scope-beauty', sc === 'zone_prefix');
+      pane.classList.toggle('scope-series', sc === 'series');
     }
     if(list){
       list.classList.toggle('scope-all', sc === 'all');
       list.classList.toggle('scope-beauty', sc === 'zone_prefix');
+      list.classList.toggle('scope-series', sc === 'series');
     }
   }catch(e){}
 
@@ -2545,7 +3109,7 @@ function setPromoMapTab(tab, opts){
   if(t==='nav'){
     buildPromoMapList();
   }else{
-    const scope = pmLsGet('ttl_pm_gift_scope', 'all');
+    const scope = pmLsGet('ttl_pm_gift_scope', 'zone_prefix');
     setPromoGiftScope(scope, {skipSave:true});
   }
 }
@@ -2593,6 +3157,17 @@ overlay.onclick = () => closePromoMap();
 function closePromoMap(opts){
   const o = opts || {};
   const skipHistory = !!o.skipHistory;
+
+  // Preferred close path: if we are on the promoMap history entry,
+  // just go back and let onpopstate close the drawer (prevents root-back logic interference).
+  try{
+    if(!skipHistory && history.state && history.state.modal === 'promoMap' && isPromoMapOpen()){
+      history.back();
+      return;
+    }
+  }catch(e){}
+
+  // Hard close (no history interaction)
   try{
     const overlay = document.getElementById('promoMapOverlay');
     const drawer = document.getElementById('promoMapDrawer');
@@ -2600,9 +3175,13 @@ function closePromoMap(opts){
     if(drawer) drawer.classList.remove('open');
     document.body.classList.remove('drawer-open');
   }catch(e){}
+
+  // If we have a pending jump target (e.g., close without popstate), do it after close
   try{
-    if(!skipHistory && history.state && history.state.modal === 'promoMap'){
-      history.back();
+    const pending = __PM_PENDING_SCROLL_ID__;
+    __PM_PENDING_SCROLL_ID__ = null;
+    if(pending){
+      pmDeferredScroll(pending);
     }
   }catch(e){}
 }
@@ -2689,6 +3268,7 @@ function renderSystemAnnouncement(){
     slot.style.display='block';
     slot.innerHTML = `
       <div class="sys-ann sys-ann--row">
+        <button type="button" id="starDockBtn" class="star-dock-btn hidden" title="主打星"><span class="material-icons-round">star</span><span class="star-dock-badge" id="starDockBadge" style="display:none">0</span></button>
         ${safe ? `<div class="sys-ann-main">${safe}</div>` : `<div class="sys-ann-main"></div>`}
         <button type="button" id="promoMapCtaBtn" class="sys-ann-cta${attnCls}"><span class="cta-icon">👉</span><span class="cta-text">查看優惠地圖 ›</span></button>
       </div>
@@ -2716,6 +3296,745 @@ try{
   }catch(e){}
 }
 
+
+
+/* --- V2.9.2: Star Hero (主打星) behavior --- */
+let __STAR_AUTO_PENDING__ = false;
+let __STAR_OPEN__ = false;
+let __STAR_CLOSING__ = false;
+let __STAR_PENDING_NAV__ = null;
+let __STAR_ATT_TIMER__ = null;
+let __STAR_SCROLL_TIMER__ = null;
+let __STAR_ITEMS__ = [];
+let __STAR_ACTIVE_IDX__ = 0;
+let __STAR_SUBTITLE_TPL__ = '';
+
+
+// --- Star Hero DOM template reset (hard fix for "blur only" reopen) ---
+let __STAR_TEMPLATE_HTML__ = null;
+function __starCaptureTemplate(){
+  try{
+    const ov = document.getElementById('starHeroOverlay');
+    if(!ov) return;
+    if(__STAR_TEMPLATE_HTML__ == null){
+      __STAR_TEMPLATE_HTML__ = ov.innerHTML;
+    }
+  }catch(e){}
+}
+function __starRebuildDOM(){
+  try{
+    const ov = document.getElementById('starHeroOverlay');
+    if(!ov) return;
+    __starCaptureTemplate();
+    if(__STAR_TEMPLATE_HTML__ != null){
+      // Rebuild inner DOM to purge any lingering WAAPI fill-forwards / computed opacity issues
+      ov.innerHTML = __STAR_TEMPLATE_HTML__;
+    }
+  }catch(e){}
+}
+
+
+
+let __STAR_CLOSE_WATCHDOG__ = null;
+let __STAR_REOPEN_PENDING__ = false;
+function starIsDismissed(){
+  try{ return localStorage.getItem('ttl_star_hero_dismissed') === '1'; }catch(e){ return false; }
+}
+function setStarDismissed(){
+  try{ localStorage.setItem('ttl_star_hero_dismissed','1'); }catch(e){}
+}
+function getStarProducts(){
+  try{
+    const list = Array.isArray(PRODUCTS) ? PRODUCTS.slice() : [];
+    const vis = list.filter(p => p && !p.isGift && !p.isHidden && String(p.photo||'').trim() !== '');
+
+    const pickNew = ()=>{
+      const news = vis.filter(p => p.isNew);
+      const base = (news.length ? news : vis).slice();
+      base.sort((a,b)=>{
+        const aa = String(a.category||'').includes('加價購') ? 1 : 0;
+        const bb = String(b.category||'').includes('加價購') ? 1 : 0;
+        if(aa !== bb) return aa - bb;
+        return (String(a.name||'') > String(b.name||'')) ? 1 : -1;
+      });
+      return base.slice(0,8);
+    };
+
+    const codesRaw = uiGet('star|codes', uiGet('ui|star_codes','')).trim();
+    let picks = [];
+    if(codesRaw){
+      const codes = codesRaw.split(/[\s,;\n]+/).map(s=>s.trim()).filter(Boolean);
+      const set = new Set(codes);
+      picks = vis.filter(p => p && set.has(String(p.code||'').trim()));
+      const map = new Map(picks.map(p => [String(p.code||'').trim(), p]));
+      picks = codes.map(c => map.get(c)).filter(Boolean);
+      if(picks.length === 0) picks = pickNew();
+    }else{
+      picks = pickNew();
+    }
+    return picks.slice(0,8);
+  }catch(e){
+    return [];
+  }
+}
+
+
+function getStarHeroCopy(){
+  try{
+    const defTitle = '商城首選推薦｜超值特殺';
+    const defSub = '滑一下挑喜歡的，點一下就帶你去商品 ✨';
+    const title = (uiGet('star|title', uiGet('ui|star_title', defTitle)) || defTitle).trim();
+    const sub = (uiGet('star|subtitle', uiGet('star|sub', uiGet('ui|star_subtitle', defSub))) || defSub).trim();
+    return { title: title || defTitle, sub: sub || defSub };
+  }catch(e){
+    return { title:'商城首選推薦｜超值特殺', sub:'滑一下挑喜歡的，點一下就帶你去商品 ✨' };
+  }
+}
+function _formatStarSubtitle(tpl, name){
+  try{
+    const n = String(name||'').trim();
+    const s = String(tpl||'');
+    if(!n) return s;
+    // supports: {name} / {{name}} / {product} / {{product}} / %NAME%
+    if(/[\{\%](?:\s*(?:name|product)\s*)[\}\%]/i.test(s) || /\%NAME\%/i.test(s)){
+      return s
+        .replace(/\{\{\s*(name|product)\s*\}\}/gi, n)
+        .replace(/\{\s*(name|product)\s*\}/gi, n)
+        .replace(/\%NAME\%/gi, n);
+    }
+    return s;
+  }catch(e){
+    return String(tpl||'');
+  }
+}
+function updateStarHeroSubtitleByIdx(idx){
+  try{
+    __STAR_ACTIVE_IDX__ = Math.max(0, Number(idx)||0);
+    const el = document.getElementById('starHeroSubtitleText');
+    if(!el) return;
+    const item = (__STAR_ITEMS__ && __STAR_ITEMS__[__STAR_ACTIVE_IDX__]) ? __STAR_ITEMS__[__STAR_ACTIVE_IDX__] : null;
+    const name = item ? (item.name || '') : '';
+    const tpl = (__STAR_SUBTITLE_TPL__ && String(__STAR_SUBTITLE_TPL__).length) ? __STAR_SUBTITLE_TPL__ : getStarHeroCopy().sub;
+    el.textContent = _formatStarSubtitle(tpl, name);
+  }catch(e){}
+}
+function applyStarHeroCopy(){
+  try{
+    const c = getStarHeroCopy();
+    __STAR_SUBTITLE_TPL__ = c.sub;
+    const tEl = document.getElementById('starHeroTitleText');
+    const sEl = document.getElementById('starHeroSubtitleText');
+    if(tEl) tEl.textContent = c.title;
+    // show template first (will be replaced after carousel build)
+    if(sEl) sEl.textContent = c.sub;
+  }catch(e){}
+}
+
+
+function _starZoneOf(p){
+  const c = String((p && p.category) || '').toLowerCase();
+  if(c.includes('美容') || c.includes('beauty')) return 'beauty';
+  if(c.includes('清潔') || c.includes('clean')) return 'cleaning';
+  if(c.includes('保健') || c.includes('health')) return 'health';
+  if(c.includes('飲品') || c.includes('drink')) return 'drink';
+  return '';
+}
+function _starTierApplies(tZone, pZone){
+  const z = String(tZone||'').trim().toLowerCase();
+  const pz = String(pZone||'').trim().toLowerCase();
+  if(!z || z === 'all') return true;
+  if(!pz) return (z.includes('全') || z.includes('all'));
+  return (z === pz) || z.includes(pz) || pz.includes(z) || (pz==='beauty' && z.includes('美容')) || (z==='beauty' && pz.includes('美容'));
+}
+function calcStarDeal(p){
+  const base = Number(p && p.price || 0);
+  let bestRatio = (base > 0 && isFinite(base)) ? 1 : 1;
+  let bestUnit  = (base > 0 && isFinite(base)) ? base : 0;
+  let source = '';
+
+  // Bundle promo price (best absolute promo)
+  try{
+    const bundleRule = (RULES && Array.isArray(RULES.bundle)) ? RULES.bundle.find(r => r && r.code === (p && p.code) && isFinite(r.price) && r.price > 0) : null;
+    if(bundleRule){
+      const unit = Number(bundleRule.price);
+      if(unit > 0 && isFinite(unit)){
+        const ratio = (base > 0) ? (unit / base) : 1;
+        if(!isFinite(bestUnit) || bestUnit <= 0 || ratio < bestRatio){
+          bestRatio = (base > 0) ? ratio : 1;
+          bestUnit  = unit;
+          source = 'bundle';
+        }
+      }
+    }
+  }catch(e){}
+
+  // BOGO effective unit price
+  try{
+    const bg = (RULES && Array.isArray(RULES.bogo)) ? RULES.bogo.find(r => r && r.code === (p && p.code)) : null;
+    if(bg && bg.buy > 0 && bg.get > 0 && base > 0){
+      const ratio = bg.buy / (bg.buy + bg.get);
+      const unit = base * ratio;
+      if(ratio < bestRatio){
+        bestRatio = ratio;
+        bestUnit  = unit;
+        source = 'bogo';
+      }
+    }
+  }catch(e){}
+
+  // Tier discount range (use the BEST pct => lowest unit price)
+  try{
+    const tr = getTierDiscountRangeForProduct(p);
+    if(tr && isFinite(tr.low) && tr.low > 0 && base > 0){
+      const ratio = tr.low / base;
+      if(ratio < bestRatio){
+        bestRatio = ratio;
+        bestUnit  = tr.low;
+        source = 'tier';
+      }
+    }
+  }catch(e){}
+
+  const minPrice = (bestUnit > 0 && isFinite(bestUnit)) ? Math.round(bestUnit) : (base > 0 ? Math.round(base) : 0);
+
+  let foldStr = '10';
+  if(base > 0 && isFinite(bestRatio) && bestRatio > 0){
+    const fold = Math.round(bestRatio * 10 * 10) / 10; // 1 decimal
+    foldStr = (Math.abs(fold - Math.round(fold)) < 0.05) ? String(Math.round(fold)) : fold.toFixed(1);
+  }
+  return { minPrice, foldText: `${foldStr}折起`, ratio: bestRatio, source };
+}
+
+function buildStarHeroCarousel(){
+  const wrap = document.getElementById('starHeroCarousel');
+  const dots = document.getElementById('starHeroDots');
+  if(!wrap) return;
+
+  const items = (getStarProducts() || []).slice(0,8);
+  __STAR_ITEMS__ = items;
+  __STAR_ACTIVE_IDX__ = 0;
+
+  wrap.innerHTML = '';
+  if(dots) dots.innerHTML = '';
+
+  if(items.length === 0){
+    wrap.innerHTML = `<div style="padding:16px 6px;color:rgba(31,41,55,0.65);font-weight:800;">尚無可顯示商品</div>`;
+    updateStarDockBadge(0);
+    try{ updateStarHeroSubtitleByIdx(0); }catch(e){}
+    return;
+  }
+
+  updateStarDockBadge(items.length);
+
+  items.forEach((p, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'sh-item';
+    div.dataset.idx = String(idx);
+
+    const deal = calcStarDeal(p);
+    const base = Number(p && p.price || 0);
+    let line = '';
+    if(deal && deal.minPrice){
+      if(base > 0 && deal.ratio && deal.ratio < 0.999){
+        line = `最低${Number(deal.minPrice).toLocaleString('zh-TW')}元／${String(deal.foldText||'').replace(/[<>]/g,'')}`;
+      }else{
+        line = `售價${Number(deal.minPrice).toLocaleString('zh-TW')}元`;
+      }
+    }else if(base > 0){
+      line = `售價${Number(base).toLocaleString('zh-TW')}元`;
+    }
+
+    const img = (p.photo && String(p.photo).trim().length>5) ? String(p.photo) : '';
+    div.innerHTML = `
+      ${img ? `<img class="sh-img" src="${img}" loading="lazy" onerror="this.style.display='none'">`
+            : `<div class="sh-img" style="display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.35);font-weight:900;">無圖片</div>`}
+      <div class="sh-meta">
+        <div class="sh-amt">${String(line||'').replace(/[<>]/g,'')}</div>
+        <div class="sh-name">${String(p.name||'').replace(/[<>]/g,'')}</div>
+      </div>
+    `;
+
+    div.onclick = (ev)=>{
+      ev.preventDefault(); ev.stopPropagation();
+      try{
+        div.animate([{transform:'scale(1)'},{transform:'scale(0.975)'},{transform:'scale(1)'}], {duration: 190, easing:'cubic-bezier(.2,.85,.2,1)'});
+      }catch(e){}
+      __STAR_PENDING_NAV__ = String(p.code||'').trim();
+      dismissStarHero('nav');
+    };
+
+    wrap.appendChild(div);
+
+    if(dots){
+      const d = document.createElement('span');
+      d.className = 'sh-dot' + (idx===0 ? ' active' : '');
+      d.dataset.idx = String(idx);
+      d.onclick = (ev)=>{
+        ev.preventDefault(); ev.stopPropagation();
+        try{
+          const target = wrap.querySelector(`.sh-item[data-idx="${idx}"]`);
+          if(target){
+            const left = target.offsetLeft - (wrap.clientWidth - target.clientWidth)/2;
+            wrap.scrollTo({ left: Math.max(0, left), behavior:'smooth' });
+          }
+        }catch(e){}
+      };
+      dots.appendChild(d);
+    }
+  });
+
+  const updateDot = ()=>{
+    if(!dots) return;
+    const center = wrap.scrollLeft + wrap.clientWidth*0.5;
+    let best = 0, bestDist = Infinity;
+    wrap.querySelectorAll('.sh-item').forEach((el, i)=>{
+      const x = el.offsetLeft + el.clientWidth/2;
+      const d = Math.abs(x - center);
+      if(d < bestDist){ bestDist = d; best = i; }
+    });
+    dots.querySelectorAll('.sh-dot').forEach((el,i)=>{
+      el.classList.toggle('active', i===best);
+    });
+    try{ updateStarHeroSubtitleByIdx(best); }catch(e){}
+  };
+
+  const snapToNearest = ()=>{
+    const els = Array.from(wrap.querySelectorAll('.sh-item'));
+    if(els.length === 0) return;
+    const center = wrap.scrollLeft + wrap.clientWidth*0.5;
+    let bestEl = els[0], bestDist = Infinity;
+    els.forEach(el=>{
+      const x = el.offsetLeft + el.clientWidth/2;
+      const d = Math.abs(x - center);
+      if(d < bestDist){ bestDist = d; bestEl = el; }
+    });
+    try{ const left = bestEl.offsetLeft - (wrap.clientWidth - bestEl.clientWidth)/2;
+    wrap.scrollTo({ left: Math.max(0, left), behavior:'smooth' }); }catch(e){}
+  };
+
+  try{
+    if(wrap.__shScrollHandler){ wrap.removeEventListener('scroll', wrap.__shScrollHandler); }
+  }catch(e){}
+  wrap.__shScrollHandler = ()=>{
+    try{ updateDot(); }catch(e){}
+    try{ if(__STAR_SCROLL_TIMER__){ clearTimeout(__STAR_SCROLL_TIMER__); } }catch(e){}
+    __STAR_SCROLL_TIMER__ = setTimeout(()=>{ try{ snapToNearest(); }catch(e){} }, 110);
+  };
+  wrap.addEventListener('scroll', wrap.__shScrollHandler, { passive:true });
+
+  try{ updateDot(); }catch(e){}
+}
+
+
+function openStarHeroOverlay(isAuto=false){
+  try{
+    if(__STAR_CLOSING__) return;
+    if(isAuto && starIsDismissed()) return;
+    if(!Array.isArray(PRODUCTS) || PRODUCTS.length===0){
+      showToast('商品資料讀取中…', 'info', 2000);
+      return;
+    }
+    const overlay = document.getElementById('starHeroOverlay');
+    if(!overlay) return;
+
+    hardResetStarHeroOverlay();
+
+    __starRebuildDOM();
+
+    // Ensure inline hard-hide from previous close doesn't block re-open
+    overlay.style.display = '';
+    overlay.style.opacity = '';
+
+    applyStarHeroCopy();
+    buildStarHeroCarousel();
+
+    overlay.classList.remove('fade-out');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+    __STAR_OPEN__ = true;
+
+    overlay.classList.remove('entering');
+    void overlay.offsetWidth;
+    overlay.classList.add('entering');
+    setTimeout(()=>{ try{ overlay.classList.remove('entering'); }catch(e){} }, 720);
+
+    overlay.onclick = (ev)=>{
+      if(ev && ev.target === overlay){
+        dismissStarHero('backdrop');
+      }
+    };
+
+    const btn = document.getElementById('starHeroBrowseBtn');
+    if(btn){
+      btn.onclick = (ev)=>{
+        ev.preventDefault(); ev.stopPropagation();
+        dismissStarHero('browse');
+      };
+    }
+  }catch(e){}
+}
+
+function hardResetStarHeroOverlay(){
+  try{
+    const overlay = document.getElementById('starHeroOverlay');
+    if(!overlay) return;
+
+    // stop any in-flight close watchdog
+    try{ if(__STAR_CLOSE_WATCHDOG__){ clearTimeout(__STAR_CLOSE_WATCHDOG__); __STAR_CLOSE_WATCHDOG__ = null; } }catch(e){}
+
+    // force a clean visual baseline
+    overlay.style.pointerEvents = '';
+    overlay.onclick = null;
+    overlay.classList.remove('show','fade-out','entering');
+    overlay.setAttribute('aria-hidden','true');
+    // Hard-hide to guarantee backdrop is gone even if classes get stuck
+    overlay.style.display = 'none';
+    overlay.style.opacity = '';
+
+    const card = overlay.querySelector('.star-hero-card');
+    if(card){
+      try{ card.getAnimations().forEach(a=>a.cancel()); }catch(e){}
+      card.style.opacity = '';
+      card.style.transform = '';
+      card.style.filter = '';
+    }
+
+    const wrap = document.getElementById('starHeroCarousel');
+    if(wrap){
+      try{ wrap.getAnimations().forEach(a=>a.cancel()); }catch(e){}
+      wrap.querySelectorAll('.sh-item').forEach(el=>{
+        try{ el.getAnimations().forEach(a=>a.cancel()); }catch(e){}
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.filter = '';
+      });
+      // remove old scroll handler to avoid duplicates
+      try{ if(wrap.__shScrollHandler) wrap.removeEventListener('scroll', wrap.__shScrollHandler); }catch(e){}
+      wrap.__shScrollHandler = null;
+    }
+
+    // remove any leftover flying stars
+    try{ document.querySelectorAll('.star-fly').forEach(el=>el.remove()); }catch(e){}
+
+    const dockBtn = document.getElementById('starDockBtn');
+    if(dockBtn) dockBtn.style.opacity = '';
+
+    // if we were stuck in closing state, unlock it
+    __STAR_CLOSING__ = false;
+    __STAR_OPEN__ = false;
+  }catch(e){}
+}
+
+function forceCloseStarHeroNow(){
+  try{
+    // Cancel close watchdog/timers
+    try{ if(__STAR_CLOSE_WATCHDOG__){ clearTimeout(__STAR_CLOSE_WATCHDOG__); __STAR_CLOSE_WATCHDOG__ = null; } }catch(e){}
+    try{ if(__STAR_SCROLL_TIMER__){ clearTimeout(__STAR_SCROLL_TIMER__); __STAR_SCROLL_TIMER__ = null; } }catch(e){}
+
+    const overlay = document.getElementById('starHeroOverlay');
+    if(!overlay) return;
+
+    // Cancel animations + reset card
+    const card = overlay.querySelector('.star-hero-card');
+    if(card){
+      try{ card.getAnimations().forEach(a=>a.cancel()); }catch(e){}
+      card.style.opacity = '';
+      card.style.transform = '';
+      card.style.filter = '';
+    }
+
+    const wrap = document.getElementById('starHeroCarousel');
+    if(wrap){
+      try{ wrap.getAnimations().forEach(a=>a.cancel()); }catch(e){}
+      try{ if(wrap.__shScrollHandler) wrap.removeEventListener('scroll', wrap.__shScrollHandler); }catch(e){}
+      wrap.__shScrollHandler = null;
+    }
+
+    // Remove flying stars
+    try{ document.querySelectorAll('.star-fly').forEach(el=>el.remove()); }catch(e){}
+
+    // Hard hide overlay to kill backdrop-filter residue
+    overlay.classList.remove('show','fade-out','entering');
+    overlay.setAttribute('aria-hidden','true');
+    overlay.style.pointerEvents = '';
+    overlay.onclick = null;
+    overlay.style.display = 'none';
+    overlay.style.opacity = '';
+
+    // Ensure dock is visible
+    const dockBtn = document.getElementById('starDockBtn');
+    if(dockBtn){
+      dockBtn.style.opacity = '1';
+      dockBtn.style.visibility = 'visible';
+    }
+
+    __STAR_OPEN__ = false;
+    __STAR_CLOSING__ = false;
+    __STAR_REOPEN_PENDING__ = false;
+  }catch(e){}
+}
+
+
+
+function _finalizeStarHeroClose(){
+  try{ if(__STAR_CLOSE_WATCHDOG__){ clearTimeout(__STAR_CLOSE_WATCHDOG__); __STAR_CLOSE_WATCHDOG__ = null; } }catch(e){}
+
+  try{
+    const overlay = document.getElementById('starHeroOverlay');
+    if(overlay){
+      overlay.classList.remove('show','fade-out','entering');
+      overlay.setAttribute('aria-hidden','true');
+      overlay.style.pointerEvents='';
+      overlay.onclick = null;
+      // Hard-hide to prevent any backdrop-filter residue
+      overlay.style.display = 'none';
+      overlay.style.opacity = '';
+    }
+  }catch(e){}
+
+  try{ document.querySelectorAll('.star-fly').forEach(el=>el.remove()); }catch(e){}
+
+  __STAR_OPEN__ = false;
+  __STAR_CLOSING__ = false;
+
+  // Ensure dock icon is visible (fix: opacity stuck at 0)
+  try{
+    const dockBtn = document.getElementById('starDockBtn');
+    if(dockBtn){
+      dockBtn.style.opacity = '1';
+      dockBtn.style.visibility = 'visible';
+    }
+  }catch(e){}
+
+  try{ showStarDock(true); }catch(e){}
+  try{ setStarDismissed(); }catch(e){}
+
+  // If user clicked the star while we were closing, reopen smoothly
+  if(__STAR_REOPEN_PENDING__){
+    __STAR_REOPEN_PENDING__ = false;
+    setTimeout(()=>{ try{ openStarHeroOverlay(false); }catch(e){} }, 80);
+    return;
+  }
+
+  // Post-close navigation
+  if(__STAR_PENDING_NAV__){
+    const code = __STAR_PENDING_NAV__;
+    __STAR_PENDING_NAV__ = null;
+    try{ jumpToProductByCode(String(code||'')); }catch(e){}
+  }
+}
+
+
+function dismissStarHero(reason){
+  try{
+    const overlay = document.getElementById('starHeroOverlay');
+    if(!overlay) return;
+    if(__STAR_CLOSING__) return;
+    if(!overlay.classList.contains('show')) return;
+
+    __STAR_CLOSING__ = true;
+
+    const card = overlay.querySelector('.star-hero-card');
+    if(card){
+      try{
+        card.getAnimations().forEach(a=>a.cancel());
+        card.animate([
+          { transform:'translateY(0) scale(1)', opacity:1, filter:'blur(0px)' },
+          { transform:'translateY(-8px) scale(0.985)', opacity:0.0, filter:'blur(0.4px)' }
+        ], { duration: 260, easing:'cubic-bezier(.2,.85,.25,1)', fill:'forwards' });
+      }catch(e){}
+    }
+
+    overlay.classList.add('fade-out');
+    overlay.style.pointerEvents = 'none';
+
+    const r = card ? card.getBoundingClientRect() : null;
+
+    const dockBtn = document.getElementById('starDockBtn');
+    let dr = null;
+    if(dockBtn){
+      dockBtn.classList.remove('hidden');
+      dockBtn.style.opacity = '0';
+      dr = dockBtn.getBoundingClientRect();
+    }
+    const slot = document.getElementById('systemAnnouncementSlot');
+    const sr = slot ? slot.getBoundingClientRect() : null;
+
+    const size = 46;
+    const sx = r ? (r.left + r.width/2 - size/2) : 18;
+    const sy = r ? (r.top + r.height/2 - size/2) : 80;
+
+    const ex = dr ? (dr.left + dr.width/2 - size/2) : (sr ? (sr.left + 18) : 18);
+    const ey = dr ? (dr.top  + dr.height/2 - size/2) : (sr ? (sr.top + 14) : 90);
+
+    const dx = ex - sx;
+    const dy = ey - sy;
+
+    const fly = document.createElement('div');
+    fly.className = 'star-fly';
+    fly.innerHTML = `<span class="material-icons-round">star</span>`;
+    fly.style.left = sx + 'px';
+    fly.style.top  = sy + 'px';
+    document.body.appendChild(fly);
+
+    const midX = dx * 0.55;
+    const midY = dy * 0.55 - 64;
+
+    let anim;
+    try{
+      anim = fly.animate([
+        { transform:`translate(0px, 0px) scale(1.06) rotate(0deg)`, opacity:0.15 },
+        { transform:`translate(${midX}px, ${midY}px) scale(0.90) rotate(14deg)`, opacity:1.0 },
+        { transform:`translate(${dx}px, ${dy}px) scale(0.62) rotate(26deg)`, opacity:1.0 }
+      ], { duration: 740, easing:'cubic-bezier(.22,.86,.24,1)', fill:'forwards' });
+    }catch(e){
+      fly.style.transform = `translate(${dx}px, ${dy}px) scale(0.62)`;
+    }
+
+    let _starFinishDone = false;
+
+    const finish = ()=>{
+      if(_starFinishDone) return;
+      _starFinishDone = true;
+      try{ _finalizeStarHeroClose(); }catch(e){
+        try{ __STAR_OPEN__ = false; __STAR_CLOSING__ = false; }catch(ex){}
+      }
+    };
+
+    // Watchdog: if animation promise never resolves (rare), force-cleanup to avoid blur residue.
+    try{ if(__STAR_CLOSE_WATCHDOG__){ clearTimeout(__STAR_CLOSE_WATCHDOG__); } }catch(e){}
+    __STAR_CLOSE_WATCHDOG__ = setTimeout(()=>{
+      try{
+        const ov = document.getElementById('starHeroOverlay');
+        if(__STAR_CLOSING__) finish();
+      }catch(e){}
+    }, 1200);
+
+    // Safety net: always finalize close after fixed time (prevents stuck blur-only overlay)
+    try{ setTimeout(()=>{ finish(); }, 820); }catch(e){}
+
+
+
+
+    if(anim && anim.finished){
+      anim.finished.then(()=>{ finish(); }).catch(()=>{ finish(); });
+    }else{
+      setTimeout(()=>{ finish(); }, 780);
+    }
+  }catch(e){
+    try{ __STAR_OPEN__ = false; __STAR_CLOSING__ = false; }catch(ex){}
+  }
+}
+
+
+function showStarDock(show){
+  try{
+    const btn = document.getElementById('starDockBtn');
+    if(!btn) return;
+
+    try{ if(__STAR_ATT_TIMER__){ clearTimeout(__STAR_ATT_TIMER__); __STAR_ATT_TIMER__ = null; } }catch(e){}
+
+    if(show){
+      btn.classList.remove('hidden');
+      // Fix: button could be left at opacity:0 (clickable but invisible)
+      btn.style.opacity = '1';
+      btn.style.visibility = 'visible';
+      btn.classList.remove('attn');
+      __STAR_ATT_TIMER__ = setTimeout(()=>{ 
+        try{ if(!__STAR_OPEN__ && !__STAR_CLOSING__) btn.classList.add('attn'); }catch(e){} 
+      }, 1200);
+      btn.onclick = (ev)=>{ 
+        ev.preventDefault(); ev.stopPropagation(); 
+        // Always hard-reset before opening (prevents "blur only" stuck state after nav)
+        try{ forceCloseStarHeroNow(); }catch(e){}
+        openStarHeroOverlay(false); 
+      };
+    }else{
+      btn.classList.add('hidden');
+      btn.classList.remove('attn');
+    }
+  }catch(e){}
+}
+
+function updateStarDockBadge(n){
+  try{
+    const b = document.getElementById('starDockBadge');
+    if(!b) return;
+    const v = Math.max(0, Number(n||0));
+    if(v > 0){
+      b.textContent = String(v);
+      b.style.display = 'flex';
+    }else{
+      b.style.display = 'none';
+    }
+  }catch(e){}
+}
+
+function initStarHero(){
+  try{
+    // If previously dismissed, show dock immediately
+    if(starIsDismissed()){
+      showStarDock(true);
+    }
+    // If pending auto show requested earlier (e.g., user clicked Start before boot ready)
+    if(__STAR_AUTO_PENDING__){
+      __STAR_AUTO_PENDING__ = false;
+      openStarHeroOverlay(true);
+    }
+  }catch(e){}
+}
+function requestStarHeroAutoShow(){
+  try{
+    // if already open or dismissed, just ensure dock exists
+    if(starIsDismissed()){
+      try{ showStarDock(true); }catch(e){}
+      return;
+    }
+    // If app not ready yet, queue
+    if(!(window.__APP_READY__===true)){
+      __STAR_AUTO_PENDING__ = true;
+      return;
+    }
+    openStarHeroOverlay(true);
+  }catch(e){}
+}
+function applyNavBreathe(el, source){
+  try{
+    if(!el) return;
+    let rgb = '255,143,0';
+    if(source === 'star') rgb = '255,193,7';
+    if(source === 'rank') rgb = '216,27,96';
+    el.style.setProperty('--nav-breathe-rgb', rgb);
+
+    // restart animation reliably
+    try{ el.classList.remove('nav-breathe'); }catch(e){}
+    // force reflow
+    void el.offsetHeight;
+    el.classList.add('nav-breathe');
+
+    try{ if(el.__navBreatheTimer) clearTimeout(el.__navBreatheTimer); }catch(e){}
+    el.__navBreatheTimer = setTimeout(()=>{
+      try{ el.classList.remove('nav-breathe'); }catch(e){}
+    }, 6800);
+  }catch(e){}
+}
+
+function jumpToProductByCode(code){
+  try{
+    const c = String(code||'').trim();
+    if(!c) return;
+    const p = (Array.isArray(PRODUCTS) ? PRODUCTS.find(x => x && String(x.code||'').trim()===c) : null);
+    if(!p) return;
+    const el = document.getElementById(`p-${p._id}`);
+    if(el){
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+      applyNavBreathe(el, 'star');
+      const _tpl = uiGet('star|nav_toast', '已帶你到主打商品：{name} ✨');
+      const _msg = _formatStarSubtitle(_tpl, p.name || p.product_name || p.name_zh || '');
+      showToast(_msg, 'info', 1600);
+    }
+  }catch(e){}
+}
 
 // Determine tier badge kind for a category (order discount vs multi-tier)
 function getTierBadgeInfoByCategory(cat){
@@ -2826,7 +4145,7 @@ function animateGiftFly(giftName) {
   setTimeout(() => fly.remove(), 1600);
 }
 
-function jumpToProduct(pid) {
+function jumpToProduct(pid, source){
   const searchInp = document.getElementById("searchInp");
   if(searchInp.value) {
     searchInp.value = "";
@@ -2837,18 +4156,22 @@ function jumpToProduct(pid) {
     const el = document.getElementById(`p-${pid}`);
     if(el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("flash-highlight");
-      setTimeout(()=>el.classList.remove("flash-highlight"), 1300);
+      if(source === 'rank'){
+        applyNavBreathe(el, 'rank');
+      }else{
+        el.classList.add("flash-highlight");
+        setTimeout(()=>el.classList.remove("flash-highlight"), 1300);
+      }
     }
   }, 100);
 }
 
-function jumpToGroupByCode(groupCode){
+function jumpToGroupByCode(groupCode, source){
   const gc = String(groupCode||'').trim();
   if(!gc) return false;
   const g = PRODUCT_MAP.get(gc);
   if(g && !g.is_hidden){
-    jumpToProduct(g._id);
+    jumpToProduct(g._id, source);
     return true;
   }
   try{ showPromoHint(`找不到商品組：${gc}`); }catch(e){}
@@ -2857,10 +4180,10 @@ function jumpToGroupByCode(groupCode){
 function handleRankingClick(p){
   try{
     if(p && p.is_hidden && p.group_code){
-      if(jumpToGroupByCode(p.group_code)) return;
+      if(jumpToGroupByCode(p.group_code, 'rank')) return;
     }
   }catch(e){}
-  jumpToProduct(p._id);
+  jumpToProduct(p._id, 'rank');
 }
 
 
@@ -2929,14 +4252,9 @@ const groupCode = String(pick("group_code")||"").trim();
       };
       if(p.code) PRODUCT_MAP.set(p.code, p);
       
-      // Collect Multiple Images for Gift Map
+      // Gift Map Image (single source): use only "Photos url" to align with site-wide image logic
       if(p.photo && p.photo.length > 5) {
-          let imgs = [p.photo];
-          let p2 = pick("Photos url 2");
-          let p3 = pick("Photos url 3");
-          if(p2 && p2.length > 5) imgs.push(p2);
-          if(p3 && p3.length > 5) imgs.push(p3);
-          GIFT_MAP.set(p.code, imgs); 
+          GIFT_MAP.set(p.code, [p.photo]);
       }
       return p;
     }).filter(x => x);
@@ -3029,10 +4347,6 @@ if (gText) {
       const url = pick("photos url");
       if(code && url) {
           let imgs = [url];
-          let u2 = pick("Photos url 2");
-          let u3 = pick("Photos url 3");
-          if(u2) imgs.push(u2);
-          if(u3) imgs.push(u3);
           GIFT_MAP.set(code, imgs);
       }
   });
@@ -3046,7 +4360,9 @@ if (rankText) {
     try{ applyUiThemeVars(); }catch(e){}
 
     renderUI();
+    window.__APP_READY__=true;
     renderSystemAnnouncement();
+    try{ initStarHero(); }catch(e){}
 
 // V2 Sprint1: staged rendering (reduce perceived waiting)
 // Do NOT block the whole page on config fetch.
@@ -3174,23 +4490,75 @@ function renderUI() {
   setupScrollSpy();
 }
 
+function __mainScrollOffset(){
+  try{
+    const header = document.getElementById('header');
+    const headerH = header ? header.getBoundingClientRect().height : 110;
+    // Align with Promo Map jump offset (less "low" than scroll-margin-top)
+    const offset = Math.min(140, Math.max(78, (headerH || 110) - 18));
+    return offset;
+  }catch(e){ return 110; }
+}
+
+function __mainScrollToId(id, behavior){
+  try{
+    const el = document.getElementById(id);
+    if(!el) return false;
+    const offset = __mainScrollOffset();
+    const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: Math.max(0, y), behavior: behavior || 'smooth' });
+    return true;
+  }catch(e){ return false; }
+}
+
 function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if(el) {
-    if(document.getElementById("searchInp").value) {
-        document.getElementById("searchInp").value = "";
-        document.getElementById("clearSearch").style.display = 'none'; 
-        renderList();
-        setTimeout(() => {
-             const el2 = document.getElementById(id);
-             if(el2) el2.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 50);
-    } else {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  } else if (id === 'cat-all') {
-      window.scrollTo({ top:0, behavior:'smooth' });
+  const tid = String(id||'').trim();
+  if(!tid){ return; }
+
+  // Special: top
+  if (tid === 'cat-all') {
+    window.scrollTo({ top:0, behavior:'smooth' });
+    return;
   }
+
+  const go = () => {
+    if(__mainScrollToId(tid, 'smooth')){
+      // keep top pills state in sync
+      try{
+        document.querySelectorAll('.cat-pill').forEach(p => {
+          p.classList.toggle('active', p.dataset.target === tid);
+        });
+        const activePill = document.querySelector('.cat-pill.active');
+        if(activePill) activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }catch(e){}
+
+      // subtle flash on section title
+      try{
+        const sec = document.getElementById(tid);
+        const title = sec ? sec.querySelector('.cat-section-title') : null;
+        if(title){
+          title.classList.add('cat-flash');
+          setTimeout(()=>title.classList.remove('cat-flash'), 900);
+        }
+      }catch(e){}
+    }
+  };
+
+  // If searching, clear and re-render, then jump
+  try{
+    const searchInp = document.getElementById('searchInp');
+    if(searchInp && searchInp.value){
+      searchInp.value = '';
+      const clr = document.getElementById('clearSearch');
+      if(clr) clr.style.display = 'none';
+      renderList();
+      setTimeout(go, 120);
+      return;
+    }
+  }catch(e){}
+
+  // Normal jump
+  go();
 }
 
 function setupScrollSpy() {
@@ -3736,8 +5104,8 @@ function refreshCart() {
   return data;
 }
 
-window.openCart = () => { if(CART.length === 0) return; document.getElementById("drawer").classList.add("open"); document.getElementById("float-bar").classList.add("hidden"); isCartOpen = true; history.pushState({modal: 'cart'}, null, ""); };
-window.closeCart = () => { document.getElementById("drawer").classList.remove("open"); document.getElementById("float-bar").classList.remove("hidden"); cleanupUI(); isCartOpen = false; if(history.state && history.state.modal === 'cart') history.back(); };
+/* removed accidental override of openCart (kept core openCart with 2-stage checkout) */
+/* removed accidental override of closeCart (kept core closeCart with 2-stage checkout) */
 
 window.onpopstate = (e) => { 
     // CRITICAL FIX: Always ensure body is clean when returning to root state
@@ -3751,8 +5119,13 @@ window.onpopstate = (e) => {
     // Handle Promo Map Drawer (優惠地圖)
     if(isPromoMapOpen()){
         closePromoMap({skipHistory:true});
+        const pending = __PM_PENDING_SCROLL_ID__;
+        __PM_PENDING_SCROLL_ID__ = null;
         // keep guard so user doesn't leave app accidentally
         armBackGuard();
+        if(pending){
+          pmDeferredScroll(pending);
+        }
         return;
     }
 
@@ -4150,6 +5523,7 @@ document.getElementById("searchInp").addEventListener("input", renderList);
 window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"; };
 
 initApp();
+try{ __starCaptureTemplate(); }catch(e){}
 try{ initBackGuard(); }catch(e){}
 
 // --- V2.8.8: Click-to-explain for promo badges/pills (non-intrusive) ---
@@ -4266,6 +5640,7 @@ return showPromoHint('本分類目前無優惠訊息');
       <div class="pm-scope" role="tablist" aria-label="贈品範圍">
         <button type="button" class="pm-scope-btn active" data-scope="all" role="tab" aria-selected="true">全區</button>
         <button type="button" class="pm-scope-btn" data-scope="zone_prefix" role="tab" aria-selected="false">美容</button>
+        <button type="button" class="pm-scope-btn" data-scope="series" role="tab" aria-selected="false">系列</button>
       </div>
       <div id="promoGiftList" class="pm-gift-list"></div>
     </div>
