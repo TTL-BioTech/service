@@ -19,6 +19,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 20px);
   --price-size: 17px;
   --price-size-lg: calc(var(--price-size) + 2px);
+  --kb: 0px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 body {
@@ -116,6 +117,147 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .r-sold-tag { position: absolute; bottom: 3px; right: 3px; background: linear-gradient(135deg, #ff7043, #f4511e); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 8px; box-shadow: 0 2px 4px rgba(244, 81, 30, 0.2); z-index: 2; }
 .r-name { font-size: 10px; font-weight: 500; color: #37474f; text-align: center; line-height: 1.3; height: 2.6em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; width: 100%; }
 
+
+/* Promo Marquee (優惠導覽：排行榜與公告之間) */
+#promoMarqueeSlot{
+  margin: 0 12px 12px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.pm-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pm-title{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-weight: 900;
+  color: #111827;
+}
+.pm-title .material-icons-round{ color:#ff8f00; font-size:20px; }
+
+.pm-shell{ position: relative; }
+.pm-viewport{
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 36px 8px; /* 留給左右箭頭 */
+  scroll-behavior: smooth;
+
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+.pm-viewport::-webkit-scrollbar{ display:none; }
+.pm-track{
+  display:flex;
+  gap: 10px;
+  padding: 2px 2px 2px;
+}
+
+.pm-card{
+  flex: 0 0 132px; /* 窄卡：5字寬節奏 */
+  border-radius: 16px;
+  padding: 12px 12px 10px 14px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+  position:relative;
+  overflow:hidden;
+}
+.pm-card::before{
+  content:'';
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:6px;
+  background: var(--pm-rail, #cfd8dc);
+  border-radius: 16px 0 0 16px;
+  opacity: 0.95;
+  pointer-events:none;
+}
+.pm-card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background: linear-gradient(135deg, var(--pm-wash, rgba(207,216,220,0.16)) 0%, rgba(255,255,255,0) 62%);
+  pointer-events:none;
+}
+.pm-card:hover{ filter: brightness(1.02); box-shadow: 0 14px 28px rgba(0,0,0,0.08); }
+.pm-card:active{ transform: translateY(1px) scale(0.996); }
+
+
+.pm-card > *{ position: relative; z-index: 1; }
+.pm-name{
+  font-weight: 950;
+  color:#111827;
+  font-size: 16px; /* 主標題放大 */
+  line-height:1.18;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+  min-height: 40px;
+  max-width: 5.0em; /* 約 5 個中文字寬 */
+}
+.pm-hint{
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #455a64;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pm-theme-drink{ --pm-rail: #ffa726; --pm-wash: rgba(255,167,38,0.16); }
+.pm-theme-health{ --pm-rail: #64b5f6; --pm-wash: rgba(100,181,246,0.16); }
+.pm-theme-beauty{ --pm-rail: #f48fb1; --pm-wash: rgba(244,143,177,0.16); }
+.pm-theme-clean{ --pm-rail: #81c784; --pm-wash: rgba(129,199,132,0.16); }
+.pm-theme-default{ --pm-rail: #cfd8dc; --pm-wash: rgba(207,216,220,0.16); }
+
+.pm-nav{
+  position:absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  opacity: 0.88;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pm-nav:hover{ opacity: 1; }
+.pm-nav:active{ transform: translateY(-50%) scale(0.98); }
+.pm-nav.left{ left: 4px; }
+.pm-nav.right{ right: 4px; }
+.pm-nav.hidden{ display:none; }
+.pm-nav .material-icons-round{ font-size: 20px; color: rgba(17,24,39,0.72); }
+
+#promoMarqueeCtaHost .pm-cta-btn{ margin-left: 6px; }
+
+
 /* --- Float Bar & Buttons --- */
 #float-bar { 
   position: fixed; 
@@ -138,14 +280,13 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .fb-btn:active { background: #e65100; transform: scale(0.98); }
 
 #gift-fab {
-  position: fixed; bottom: calc(90px + var(--safe-bottom)); left: 20px;
+  position: fixed; bottom: calc(90px + var(--safe-bottom) + var(--kb)); left: 20px;
   width: 50px; height: 50px; border-radius: 50%;
   background: #fff; border: 2px solid #ffd54f;
   box-shadow: 0 4px 15px rgba(255, 160, 0, 0.3);
   display: flex; align-items: center; justify-content: center;
   font-size: 24px; cursor: pointer; z-index: 1090;
   transition: transform 0.2s;
-  display: none; 
 }
 #gift-fab:active { transform: scale(0.9); }
 @keyframes shakeGift { 0% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } 100% { transform: rotate(0deg); } }
@@ -561,12 +702,12 @@ header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0
 /* Drawer Core */
 #drawer { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1200; pointer-events: none; }
 #drawer-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); opacity: 0; transition: 0.3s; backdrop-filter: blur(4px); }
-#drawer-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 100%; max-width: 480px; background: #fff; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; pointer-events: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.15); }
+#drawer-panel { position: absolute; top: 0; right: 0; bottom: var(--kb); width: 100%; max-width: 480px; background: #fff; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; pointer-events: auto; box-shadow: -5px 0 30px rgba(0,0,0,0.15); }
 #drawer.open #drawer-bg { opacity: 1; pointer-events: auto; }
 #drawer.open #drawer-panel { transform: translateX(0); }
 .dr-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; flex-shrink: 0; }
 .dr-body { flex: 1; overflow-y: auto; padding: 12px; background: #f4f6f8; overscroll-behavior: contain; }
-.dr-foot { padding: 20px; padding-bottom: calc(20px + var(--safe-bottom)); background: #fff; border-top: 1px solid var(--border); box-shadow: 0 -4px 20px rgba(0,0,0,0.05); flex-shrink: 0; }
+.dr-foot { padding: 20px; padding-bottom: calc(20px + var(--safe-bottom) + var(--kb)); background: #fff; border-top: 1px solid var(--border); box-shadow: 0 -4px 20px rgba(0,0,0,0.05); flex-shrink: 0; }
 
 .c-item { display: flex; gap: 10px; margin-bottom: 8px; padding: 8px 12px; background: #fff; border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 1px 2px rgba(0,0,0,0.02); align-items: center; }
 .c-info { flex: 1; }
@@ -749,7 +890,7 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .cat-section.zone-highlight{
   outline: 2px solid #ffca28;
   box-shadow: 0 0 0 6px rgba(255,202,40,0.18);
-  border-radius: 18px;
+  border-radius: 16px;
 }
 
 
@@ -960,6 +1101,32 @@ body.drawer-open { overflow:hidden; }
 }
 .pm-item:active{ transform: translateY(1px); }
 .pm-item:hover{ box-shadow: 0 10px 24px rgba(0,0,0,0.06); }
+.pm-item.is-focus{
+  background: rgba(255,255,255,0.96);
+  background-image: linear-gradient(270deg, var(--pm-accent, rgba(255,224,178,0.28)) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0) 100%);
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.10);
+  position: relative;
+  overflow: hidden;
+}
+.pm-item.is-focus::before{
+  content:'';
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:6px;
+  background: var(--pm-accent, rgba(255,167,38,0.80));
+  border-radius: 16px 0 0 16px;
+  opacity: 0.90;
+  pointer-events:none;
+}
+.pm-item.is-focus::after{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.70);
+  pointer-events:none;
+}
 .pm-item .row{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .pm-item .name{ font-weight: 900; color: #263238; }
 .pm-item .hint{ margin-top: 4px; font-size: 12px; color: #455a64; line-height: 1.35; }
@@ -1101,7 +1268,7 @@ body.drawer-open { overflow:hidden; }
 .pm-gift-list{ display:flex; flex-direction:column; gap:10px; }
 .pm-gift-item{
   border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 12px 12px;
   background: rgba(255,255,255,0.92);
   box-shadow: 0 10px 22px rgba(0,0,0,0.05);
@@ -1318,6 +1485,8 @@ body.cfg-error .btn-bundle{
 #starHeroOverlay.fade-out{ opacity: 0; }
 
 .star-hero-card{
+  position: relative;
+
   width: min(980px, 92vw);
   max-height: min(78vh, 660px);
   overflow: hidden;
@@ -1362,7 +1531,7 @@ body.cfg-error .btn-bundle{
 #starHeroOverlay.show.entering .sh-sub{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .12s; }
 #starHeroOverlay.show.entering .sh-carousel{ animation: shFadeUp .52s cubic-bezier(.2,.9,.2,1) both; animation-delay: .18s; }
 #starHeroOverlay.show.entering .sh-dots{ animation: shFadeUp .50s cubic-bezier(.2,.9,.2,1) both; animation-delay: .26s; }
-#starHeroOverlay.show.entering #starHeroBrowseBtn{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .34s; }
+#starHeroOverlay.show.entering #starHeroBrowseBtn{ animation: shFadeUp .46s cubic-bezier(.2,.9,.2,1) both; animation-delay: .38s; }
 
 
 .sh-head{
@@ -1434,7 +1603,7 @@ body.cfg-error .btn-bundle{
 .sh-item{
   flex: 0 0 184px;
   scroll-snap-align: center;
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid rgba(0,0,0,0.08);
   background: rgba(255,255,255,0.98);
   box-shadow: 0 10px 24px rgba(0,0,0,0.06);
@@ -1494,12 +1663,14 @@ body.cfg-error .btn-bundle{
 .sh-actions{
   margin-top: 12px;
   display:flex;
-  justify-content:flex-end;
+  flex-direction: column;
+  gap: 10px;
 }
+
 #starHeroBrowseBtn{
   width: 100%;
   border: none;
-  margin-top: 12px;
+  margin-top: 0;
   background: linear-gradient(90deg, rgba(255,143,0,0.95), rgba(255,111,0,0.95));
   color: #fff;
   font-weight: 900;
@@ -1533,6 +1704,48 @@ body.cfg-error .btn-bundle{
 }
 .star-fly .material-icons-round{ font-size: 24px; }
 
+
+#starHeroCloseBtn{
+  position:absolute;
+  top:10px; right:10px;
+  width:36px; height:36px;
+  border:none;
+  border-radius:12px;
+  background: rgba(255,255,255,0.72);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  display:flex; align-items:center; justify-content:center;
+  color:#455a64;
+  cursor:pointer;
+}
+#starHeroCloseBtn:active{ transform: scale(0.96); }
+
+
+#gift-fab.attn{
+  animation: giftGlow 1.55s ease-in-out infinite, giftShake 2.6s ease-in-out infinite;
+  box-shadow: 0 10px 26px rgba(255,111,0,0.32);
+}
+@keyframes giftGlow{
+  0%,100%{ filter: brightness(1); box-shadow: 0 8px 22px rgba(0,0,0,0.10), 0 0 0 rgba(255,193,7,0.0); }
+  50%{ filter: brightness(1.10); box-shadow: 0 10px 26px rgba(0,0,0,0.12), 0 0 18px rgba(255,193,7,0.35); }
+}
+@keyframes giftShake{
+  0%,65%,100%{ transform: translateX(0) rotate(0deg); }
+  6%{ transform: translateX(-2px) rotate(-1deg); }
+  12%{ transform: translateX(2px) rotate(1deg); }
+  18%{ transform: translateX(-2px) rotate(-1deg); }
+  24%{ transform: translateX(2px) rotate(1deg); }
+  30%{ transform: translateX(-1px) rotate(-0.6deg); }
+  36%{ transform: translateX(1px) rotate(0.6deg); }
+  42%{ transform: translateX(0) rotate(0deg); }
+}
+
+
+20%{ transform: translateX(-2px) rotate(-1deg); }
+  40%{ transform: translateX(2px) rotate(1deg); }
+  60%{ transform: translateX(-1px) rotate(-0.6deg); }
+  80%{ transform: translateX(1px) rotate(0.6deg); }
+}
+
 </style>
 </head>
 <body>
@@ -1555,7 +1768,9 @@ body.cfg-error .btn-bundle{
     <div class="sh-sub" id="starHeroSubtitleText"></div>
     <div class="sh-carousel" id="starHeroCarousel"></div>
     <div class="sh-dots" id="starHeroDots" aria-hidden="true"></div>
-    <button type="button" id="starHeroBrowseBtn">先去逛逛</button>
+    <div class="sh-actions">
+<button type="button" id="starHeroBrowseBtn">先去逛逛</button>
+    </div>
   </div>
 </div>
 
@@ -1637,6 +1852,8 @@ body.cfg-error .btn-bundle{
   </div>
   <div class="rank-list" id="rankList"></div>
 </div>
+
+<div id="promoMarqueeSlot" style="display:none"></div>
 
 <div id="systemAnnouncementSlot" style="display:none"></div>
 
@@ -2366,10 +2583,13 @@ window.updateQty = function(btnEl, pid, delta) {
   
   if(delta > 0 && isFirstAdd) {
       isFirstAdd = false;
-      setTimeout(() => {
-          showMilestoneCard();
-          setTimeout(() => { minimizeMilestoneCard(); }, 2000);
-      }, 500);
+      try{
+        const openedOnce = localStorage.getItem('ttl_ms_opened_once') === '1';
+        const fab = document.getElementById('gift-fab');
+        if(fab && !openedOnce){
+          fab.classList.add('attn');
+        }
+      }catch(e){}
   } else if (delta > 0) {
       const addedToast = showToast("已加入購物車");
       setTimeout(() => {
@@ -2397,6 +2617,8 @@ window.updateQty = function(btnEl, pid, delta) {
 // --- MILESTONE LOGIC (DUAL TRACK) ---
 
 window.showMilestoneCard = function() {
+    try{ localStorage.setItem('ttl_ms_opened_once','1'); }catch(e){}
+    try{ const fab=document.getElementById('gift-fab'); if(fab) fab.classList.remove('attn'); }catch(e){}
     renderMilestoneContent();
     document.getElementById('milestone-overlay').classList.add('open');
     document.getElementById('msCard').classList.remove('shrinking');
@@ -2803,6 +3025,8 @@ function ensurePromoMapDom(){
 
 // Promo Map: pending category jump (avoid triggering root-back logic)
 let __PM_PENDING_SCROLL_ID__ = null;
+let __PM_FOCUS_TITLE__ = null;
+let __PM_OPEN_FROM_MARQUEE__ = false;
 function pmScrollToTargetId(id){
   try{
     const tid = String(id||'').trim();
@@ -2834,6 +3058,8 @@ function buildPromoMapList(){
     const listEl = document.getElementById('promoMapList');
     if(!listEl) return;
     listEl.innerHTML = '';
+    const __focusTitle = String(__PM_FOCUS_TITLE__||'').trim();
+    let __focusEl = null;
     const sections = Array.from(document.querySelectorAll('.cat-section'));
     sections.forEach(sec => {
       const titleEl = sec.querySelector('.cat-section-title');
@@ -2857,6 +3083,7 @@ try{
 
       const item = document.createElement('div');
       item.className = 'pm-item';
+      if(__focusTitle && title === __focusTitle){ item.classList.add('is-focus'); __focusEl = item; }
       item.setAttribute('data-kind', kind || 'plain');
       item.setAttribute('data-brand', brand || 'health');
 try{
@@ -2899,10 +3126,436 @@ try{
       };
       listEl.appendChild(item);
     });
+
+    if(__focusEl){
+      try{
+        requestAnimationFrame(()=>{ try{ __focusEl.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){} });
+      }catch(e){}
+    }
   }catch(e){}
 }
 
 /* --- V29: Promo Map '贈品門檻' 分頁 --- */
+
+function setPromoMapSeen(){
+  try{ localStorage.setItem("ttl_promo_map_seen","1"); }catch(e){}
+  try{ const btn = document.getElementById("promoMapCtaBtn"); if(btn) btn.classList.remove("pm-attn"); }catch(e){}
+}
+
+let __PM_MARQ_RAF__ = null;
+let __PM_MARQ_IDLE_T__ = null;
+let __PM_MARQ_ORIG_W__ = 0; // width of one loop
+let __PM_MARQ_CTRL__ = null; // transform marquee controller
+let __PM_MARQ_LAST_AUTO_T__ = 0; // last auto-scroll timestamp
+let __PM_MARQ_BOUND__ = false; // whether listeners are bound
+
+function stopPromoMarqueeAutoScroll(){
+  try{ if(__PM_MARQ_RAF__){ cancelAnimationFrame(__PM_MARQ_RAF__); __PM_MARQ_RAF__ = null; } }catch(e){}
+  try{ if(__PM_MARQ_IDLE_T__){ clearTimeout(__PM_MARQ_IDLE_T__); __PM_MARQ_IDLE_T__ = null; } }catch(e){}
+}
+
+
+function pmThemeFromTitle(title){
+  const t = String(title||'');
+  if(t.includes('飲') || t.includes('啤') || t.includes('黑麥') || t.includes('飲品')) return 'drink';
+  if(t.includes('保健') || t.includes('益生') || t.includes('膠囊') || t.includes('食品')) return 'health';
+  if(t.includes('美容') || t.includes('保養') || t.includes('精華') || t.includes('面膜') || t.includes('女神')) return 'beauty';
+  if(t.includes('清潔') || t.includes('洗') || t.includes('沐浴') || t.includes('洗髮')) return 'clean';
+  return 'default';
+}
+
+/* Promo Marquee copy overrides (manual)
+   - 你可以在這裡自行 key 文案： { '分類標題': '顯示短文案' }
+   - 若留空，系統會走自動摘要（最低XX元起 / XX折起 / 買X送Y / 滿額贈…）
+   - 也可在 RULES.uiPromoMarqueeCopy 提供同格式物件以覆蓋這裡（優先使用 RULES）。
+*/
+const PM_MARQUEE_COPY = {
+  // '飲品快閃': '52折起',
+  // '美容保養': '最低 NT$99 起',
+};
+
+function getPromoMarqueeCopy(title){
+  try{
+    const t = String(title||'').trim();
+    if(!t) return '';
+    const m = (typeof RULES !== 'undefined' && RULES && RULES.uiPromoMarqueeCopy) ? RULES.uiPromoMarqueeCopy : PM_MARQUEE_COPY;
+    if(m && typeof m === 'object' && m[t]) return String(m[t]).trim();
+  }catch(e){}
+  return '';
+}
+
+
+function getProductCodesByCategoryTitle(title){
+  const set = new Set();
+  try{
+    const t = String(title||'');
+    if(!t || !Array.isArray(PRODUCTS)) return set;
+    for(const p of PRODUCTS){
+      if(!p) continue;
+      const c = String(p.category||'');
+      if(c && c.includes(t)) set.add(String(p.code||'').trim());
+    }
+  }catch(e){}
+  return set;
+}
+
+function buildPromoMarqueeSummary(title){
+  try{
+    const t = String(title||'').trim();
+    if(!t) return '多重優惠';
+
+    const manual = getPromoMarqueeCopy(t);
+    if(manual) return manual;
+
+    // 1) flat_price / 加價購：顯示「最低 NT$XX 起」
+    try{
+      if(RULES && Array.isArray(RULES.flat_price) && RULES.flat_price.length){
+        const vals = RULES.flat_price
+          .filter(r => r && r.zone && t.includes(String(r.zone)) && isFinite(Number(r.unit)) && Number(r.unit)>0)
+          .map(r => Number(r.unit));
+        if(vals.length){
+          const minUnit = Math.min.apply(null, vals);
+          return `最低 NT$${fmtMoney(minUnit)} 起`;
+        }
+      }
+    }catch(e){}
+
+    // 2) 訂單折扣/多件優惠：顯示「XX折起」
+    try{
+      const info = getTierBadgeInfoByCategory(t);
+      if(info && Array.isArray(info.rules) && info.rules.length){
+        let bestOff = 0;
+        for(const r of info.rules){
+          const off = Number(r && r.pct);
+          if(isFinite(off) && off > bestOff) bestOff = off;
+        }
+        const zhe = fmtZheFromPctOff(bestOff);
+        if(zhe) return `${zhe}起`;
+      }
+    }catch(e){}
+
+    // 3) 買X送Y（掃商品 codes 對應 bogo）
+    try{
+      const codes = getProductCodesByCategoryTitle(t);
+      if(codes.size && RULES && Array.isArray(RULES.bogo) && RULES.bogo.length){
+        const hit = RULES.bogo.find(b => b && codes.has(String(b.code||'').trim()));
+        if(hit && (Number(hit.buy)||0)>0 && (Number(hit.get)||0)>0){
+          const buy = Number(hit.buy)||1, get = Number(hit.get)||1;
+          return `買${buy}送${get}`;
+        }
+      }
+    }catch(e){}
+
+    // 4) 滿額贈 / 可解鎖加購（fallback）
+    try{
+      if(RULES && Array.isArray(RULES.spend) && RULES.spend.some(s => s && s.zone && t.includes(String(s.zone)))) return '滿額贈';
+    }catch(e){}
+    try{
+      if(RULES && Array.isArray(RULES.series_gift) && RULES.series_gift.some(s => s && s.zone_prefix && t.includes(String(s.zone_prefix)))) return '滿額贈';
+    }catch(e){}
+    if(categoryUnlocksAddonByTitle(t)) return '可解鎖加購';
+
+    return '多重優惠';
+  }catch(e){ return '多重優惠'; }
+}
+
+function promoMarqueePause(delayMs){
+  try{ stopPromoMarqueeAutoScroll(); }catch(e){}
+  try{ if(__PM_MARQ_IDLE_T__) clearTimeout(__PM_MARQ_IDLE_T__); }catch(e){}
+  const ms = (typeof delayMs === 'number' && isFinite(delayMs)) ? Math.max(800, delayMs) : 2500;
+  try{
+    __PM_MARQ_IDLE_T__ = setTimeout(()=>{ try{ initPromoMarqueeAutoScroll(); }catch(e){} }, ms);
+  }catch(e){}
+}
+
+function initPromoMarqueeArrows(){
+  try{
+    const slot = document.getElementById('promoMarqueeSlot');
+    if(!slot || slot.style.display === 'none') return;
+    const viewport = slot.querySelector('#promoMarqueeViewport') || slot.querySelector('.pm-viewport');
+    const track = slot.querySelector('#promoMarqueeTrack') || slot.querySelector('.pm-track');
+    const left = slot.querySelector('#pmNavLeft');
+    const right = slot.querySelector('#pmNavRight');
+    if(!viewport || !track || !left || !right) return;
+
+    const update = ()=>{
+      // show arrows only when one-loop width is meaningfully wider than viewport
+      const ow = Number(track.dataset.origW || 0);
+      const can = ow ? (ow > viewport.clientWidth + 8) : (track.scrollWidth > viewport.clientWidth + 8);
+      left.classList.toggle('hidden', !can);
+      right.classList.toggle('hidden', !can);
+    };
+
+    const step = ()=> Math.max(220, Math.floor(viewport.clientWidth * 0.82));
+
+    const nudge = (dir)=>{
+      try{
+        if(!__PM_MARQ_CTRL__){ return; }
+        const c = __PM_MARQ_CTRL__;
+        c.paused = true;
+        c.resumeAt = performance.now() + 1200;
+        c.x += (dir * step());
+        while(c.x < 0) c.x += c.ow;
+        while(c.x >= c.ow) c.x -= c.ow;
+        c.track.style.transform = `translate3d(${-c.x}px,0,0)`;
+      }catch(e){}
+    };
+
+    left.onclick = ()=> nudge(-1);
+    right.onclick = ()=> nudge(1);
+
+    update();
+    window.addEventListener('resize', ()=>{ try{ update(); }catch(e){} }, {passive:true});
+  }catch(e){}
+}
+
+
+function initPromoMarqueeAutoScroll(){
+  try{
+    stopPromoMarqueeAutoScroll();
+    const slot = document.getElementById("promoMarqueeSlot");
+    if(!slot || slot.style.display === "none") return;
+
+    const viewport = slot.querySelector('#promoMarqueeViewport') || slot.querySelector('.pm-viewport');
+    const track = slot.querySelector('#promoMarqueeTrack') || slot.querySelector('.pm-track');
+    if(!viewport || !track) return;
+
+    // Build seamless loop by duplicating children once
+    if(!track.dataset.loopReady){
+      const kids = Array.from(track.children);
+      kids.forEach(k=> track.appendChild(k.cloneNode(true)));
+      track.dataset.loopReady = '1';
+    }
+
+    // Measure one-loop width
+    requestAnimationFrame(()=>{
+      try{
+        const kids = Array.from(track.children);
+        if(kids.length === 0) return;
+        const half = Math.floor(kids.length/2);
+        let ow = 0;
+        for(let i=0;i<half;i++){
+          ow += kids[i].getBoundingClientRect().width;
+        }
+        ow = Math.max(1, Math.round(ow));
+        track.dataset.origW = String(ow);
+        __PM_MARQ_ORIG_W__ = ow;
+
+        __PM_MARQ_CTRL__ = { x: (__PM_MARQ_CTRL__ && __PM_MARQ_CTRL__.x) || 0, ow, viewport, track, dragging:false, paused:false, resumeAt:0 };
+
+        // Ensure styles for transform marquee
+        viewport.style.overflow = 'hidden';
+        track.style.willChange = 'transform';
+        track.style.transform = `translate3d(${-__PM_MARQ_CTRL__.x}px,0,0)`;
+
+        const prefersReduce = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        const speed = prefersReduce ? 15 : 33; // px/s (v38: +50%)
+
+        let last = performance.now();
+        const tick = (t)=>{
+          try{
+            if(!__PM_MARQ_CTRL__){ __PM_MARQ_RAF__ = requestAnimationFrame(tick); return; }
+            const c = __PM_MARQ_CTRL__;
+            const now = t;
+            const dt = Math.min(48, Math.max(0, now - last)); // cap
+            last = now;
+
+            // Pause while dragging or recent user scroll
+            if(c.dragging || c.paused){
+              if(c.resumeAt && now > c.resumeAt){ c.paused = false; c.resumeAt = 0; }
+              __PM_MARQ_RAF__ = requestAnimationFrame(tick);
+              return;
+            }
+
+            c.x += speed * dt / 1000;
+            if(c.x >= c.ow) c.x -= c.ow;
+            c.track.style.transform = `translate3d(${-c.x}px,0,0)`;
+          }catch(e){}
+          __PM_MARQ_RAF__ = requestAnimationFrame(tick);
+        };
+        __PM_MARQ_RAF__ = requestAnimationFrame(tick);
+
+        // Drag support (pointer/touch) with direction lock (avoid pausing on vertical scroll)
+        const DRAG_TH = 6;
+        const onDown = (ev)=>{
+          try{
+            const c = __PM_MARQ_CTRL__;
+            if(!c) return;
+            c._down = true;
+            c._lock = null; // 'h' or 'v'
+            c._dragMoved = false;
+            c._dragStartX = (ev.touches?ev.touches[0].clientX:ev.clientX);
+            c._dragStartY = (ev.touches?ev.touches[0].clientY:ev.clientY);
+            c._dragStartPos = c.x;
+            // capture pointer to keep receiving moves (Android stability)
+            try{ if(ev.pointerId!=null && viewport.setPointerCapture) viewport.setPointerCapture(ev.pointerId); }catch(e){}
+          }catch(e){}
+        };
+        const onMove = (ev)=>{
+          try{
+            const c=__PM_MARQ_CTRL__;
+            if(!c || !c._down) return;
+            const cx = (ev.touches?ev.touches[0].clientX:ev.clientX);
+            const cy = (ev.touches?ev.touches[0].clientY:ev.clientY);
+            const dx = cx - c._dragStartX;
+            const dy = cy - c._dragStartY;
+
+            if(!c._lock){
+              if(Math.abs(dx) < DRAG_TH && Math.abs(dy) < DRAG_TH) return;
+              // decide direction (bias to vertical to preserve scroll feel)
+              if(Math.abs(dx) > Math.abs(dy) * 1.15){
+                c._lock = 'h';
+                c.dragging = true;
+                c.paused = true;
+                c.resumeAt = 0;
+              }else if(Math.abs(dy) > Math.abs(dx) * 1.15){
+                c._lock = 'v';
+                c._down = false; // release; allow page scroll
+                return;
+              }else{
+                return;
+              }
+            }
+
+            if(c._lock !== 'h') return;
+
+            // prevent page scroll while actively dragging horizontally (Android fix)
+            try{ if(ev.cancelable) ev.preventDefault(); }catch(e){}
+            if(Math.abs(dx) > 10) c._dragMoved = true;
+
+            c.x = c._dragStartPos - dx;
+            while(c.x < 0) c.x += c.ow;
+            while(c.x >= c.ow) c.x -= c.ow;
+            c.track.style.transform = `translate3d(${-c.x}px,0,0)`;
+          }catch(e){}
+        };
+        const onUp = ()=>{
+          try{
+            const c=__PM_MARQ_CTRL__;
+            if(!c) return;
+            const wasH = (c._lock === 'h');
+            c._down = false;
+            c._lock = null;
+            if(wasH){
+              c.dragging = false;
+              c.paused = true;
+              c.resumeAt = performance.now() + 650;
+            }
+          }catch(e){}
+        };
+
+// remove prior
+        try{
+          if(viewport.__pmDown){ viewport.removeEventListener('pointerdown', viewport.__pmDown); viewport.removeEventListener('touchstart', viewport.__pmDown); }
+          if(viewport.__pmMove){ window.removeEventListener('pointermove', viewport.__pmMove); window.removeEventListener('touchmove', viewport.__pmMove); }
+          if(viewport.__pmUp){ window.removeEventListener('pointerup', viewport.__pmUp); window.removeEventListener('touchend', viewport.__pmUp); window.removeEventListener('touchcancel', viewport.__pmUp); window.removeEventListener('pointercancel', viewport.__pmUp); }
+        }catch(e){}
+
+        viewport.__pmDown = onDown;
+        viewport.__pmMove = onMove;
+        viewport.__pmUp = onUp;
+        viewport.addEventListener('pointerdown', onDown, {passive:true});
+        viewport.addEventListener('touchstart', onDown, {passive:true});
+        window.addEventListener('pointermove', onMove, {passive:true});
+        window.addEventListener('touchmove', onMove, {passive:false});
+        window.addEventListener('pointerup', onUp, {passive:true});
+        window.addEventListener('pointercancel', onUp, {passive:true});
+        window.addEventListener('touchend', onUp, {passive:true});
+        window.addEventListener('touchcancel', onUp, {passive:true});
+      }catch(e){}
+    });
+  }catch(e){}
+}
+
+
+function renderPromoMarquee(){
+  try{
+    const slot = document.getElementById("promoMarqueeSlot");
+    if(!slot) return;
+
+    const sections = Array.from(document.querySelectorAll(".cat-section"));
+    const items = [];
+    for(const sec of sections){
+      const titleEl = sec.querySelector(".cat-section-title");
+      const title = titleEl ? String(titleEl.innerText||"").trim() : "";
+      if(!title) continue;
+      const theme = pmThemeFromTitle(title);
+      const summary = buildPromoMarqueeSummary(title);
+      items.push({ title, theme, summary });
+    }
+
+    if(items.length === 0){
+      slot.style.display = "none";
+      return;
+    }
+
+    slot.innerHTML = `
+      <div class="pm-head">
+        <div class="pm-title"><span class="material-icons-round">map</span> 優惠導覽</div>
+        <div id="promoMarqueeCtaHost"></div>
+      </div>
+      <div class="pm-shell">
+        <button type="button" class="pm-nav left" id="pmNavLeft" aria-label="上一個"><span class="material-icons-round">chevron_left</span></button>
+        <div class="pm-viewport" id="promoMarqueeViewport"><div class="pm-track" id="promoMarqueeTrack"></div></div>
+        <button type="button" class="pm-nav right" id="pmNavRight" aria-label="下一個"><span class="material-icons-round">chevron_right</span></button>
+      </div>
+    `;
+
+    const track = slot.querySelector("#promoMarqueeTrack");
+    if(track){
+      track.innerHTML = '';
+      // Duplicate once to make a seamless loop (A+B). We always scroll within one-loop width.
+      for(let pass=0; pass<1; pass++){
+        for(const it of items){
+          const card = document.createElement("div");
+          const theme = it.theme || "default";
+          card.className = `pm-card pm-theme-${theme}`;
+          const t = escapeHtml(it.title);
+          const s = escapeHtml(it.summary || "多重優惠");
+          card.innerHTML = `
+            <div class="pm-name">${t}</div>
+            <div class="pm-hint">${s}</div>
+          `;
+          card.onclick = () => {
+            try{
+              const c = __PM_MARQ_CTRL__;
+              if(c && c._dragMoved){ c._dragMoved = false; return; }
+            }catch(e){}
+            try{ __PM_OPEN_FROM_MARQUEE__ = true; __PM_FOCUS_TITLE__ = it.title; }catch(e){}
+            try{ setPromoMapSeen(); }catch(e){}
+            try{ openPromoMap(); }catch(e){}
+          };
+          track.appendChild(card);
+        }
+      }
+    }
+
+    try{
+      const btn = document.getElementById("promoMapCtaBtn");
+      const host = document.getElementById("promoMarqueeCtaHost");
+      if(btn && host) host.appendChild(btn);
+    }catch(e){}
+
+    slot.style.display = "block";
+    try{
+      requestAnimationFrame(()=>{
+        try{
+          const track2 = slot.querySelector("#promoMarqueeTrack");
+          const ow = track2 ? Math.round(track2.scrollWidth) : 0;
+          if(ow && isFinite(ow) && ow > 0){
+            track2.dataset.origW = String(ow);
+            __PM_MARQ_ORIG_W__ = ow;
+          }
+        }catch(e){}
+        try{ initPromoMarqueeArrows(); }catch(e){}
+        try{ initPromoMarqueeAutoScroll(); }catch(e){}
+      });
+    }catch(e){}
+
+  }catch(e){}
+}
+
+
 function pmLsGet(key, defVal){
   try{
     const v = localStorage.getItem(key);
@@ -3138,7 +3791,8 @@ function openPromoMap(){
   try{
     if(!ensurePromoMapDom()) return;
     initPromoMapTabsOnce();
-    const prefTab = pmLsGet('ttl_pm_tab','nav');
+    const prefTab = (__PM_OPEN_FROM_MARQUEE__ ? 'nav' : pmLsGet('ttl_pm_tab','nav'));
+    __PM_OPEN_FROM_MARQUEE__ = false;
     setPromoMapTab(prefTab, {skipSave:true});
     document.body.classList.add('drawer-open');
     const overlay = document.getElementById('promoMapOverlay');
@@ -3146,7 +3800,7 @@ function openPromoMap(){
     overlay.style.display = 'block';
     drawer.classList.add('open');
 
-    
+
     try{ history.pushState({modal:'promoMap'}, null, ""); }catch(e){}
 overlay.onclick = () => closePromoMap();
     const closeBtn = document.getElementById('promoMapCloseBtn');
@@ -3175,6 +3829,8 @@ function closePromoMap(opts){
     if(drawer) drawer.classList.remove('open');
     document.body.classList.remove('drawer-open');
   }catch(e){}
+
+  try{ __PM_FOCUS_TITLE__ = null; }catch(e){}
 
   // If we have a pending jump target (e.g., close without popstate), do it after close
   try{
@@ -3288,8 +3944,7 @@ try{
       btn.onclick = (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        try{ localStorage.setItem('ttl_promo_map_seen','1'); }catch(e){}
-        try{ btn.classList.remove('pm-attn'); }catch(e){}
+        try{ setPromoMapSeen(); }catch(e){}
         try{ openPromoMap(); }catch(e){}
       };
     }
@@ -3303,6 +3958,7 @@ let __STAR_AUTO_PENDING__ = false;
 let __STAR_OPEN__ = false;
 let __STAR_CLOSING__ = false;
 let __STAR_PENDING_NAV__ = null;
+let __STAR_PENDING_BACK__ = false;
 let __STAR_ATT_TIMER__ = null;
 let __STAR_SCROLL_TIMER__ = null;
 let __STAR_ITEMS__ = [];
@@ -3452,6 +4108,21 @@ function calcStarDeal(p){
   let bestUnit  = (base > 0 && isFinite(base)) ? base : 0;
   let source = '';
 
+
+
+  // Add-on flat price (加價購)
+  try{
+    const cat = String(p && p.category || '');
+    if(cat.includes('加價購')){
+      const fr = getFlatPriceRule(p && p.code, cat);
+      const unit = (fr && isFinite(fr.unit)) ? Number(fr.unit) : NaN;
+      if(isFinite(unit) && unit > 0){
+        const ratio = (base > 0) ? (unit / base) : 1;
+        return { minPrice: unit, foldText: `加購價 ${Math.round(unit).toLocaleString('zh-TW')}元`, ratio: ratio, source: 'addon' };
+      }
+    }
+  }catch(e){}
+
   // Bundle promo price (best absolute promo)
   try{
     const bundleRule = (RULES && Array.isArray(RULES.bundle)) ? RULES.bundle.find(r => r && r.code === (p && p.code) && isFinite(r.price) && r.price > 0) : null;
@@ -3534,7 +4205,9 @@ function buildStarHeroCarousel(){
     const deal = calcStarDeal(p);
     const base = Number(p && p.price || 0);
     let line = '';
-    if(deal && deal.minPrice){
+    if(deal && deal.source==='addon' && deal.minPrice && isFinite(deal.minPrice)){
+      line = `加購價 ${Number(deal.minPrice).toLocaleString('zh-TW')}元`;
+    }else if(deal && deal.minPrice){
       if(base > 0 && deal.ratio && deal.ratio < 0.999){
         line = `最低${Number(deal.minPrice).toLocaleString('zh-TW')}元／${String(deal.foldText||'').replace(/[<>]/g,'')}`;
       }else{
@@ -3618,7 +4291,8 @@ function buildStarHeroCarousel(){
   wrap.__shScrollHandler = ()=>{
     try{ updateDot(); }catch(e){}
     try{ if(__STAR_SCROLL_TIMER__){ clearTimeout(__STAR_SCROLL_TIMER__); } }catch(e){}
-    __STAR_SCROLL_TIMER__ = setTimeout(()=>{ try{ snapToNearest(); }catch(e){} }, 110);
+    const __isIOS__ = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    if(!__isIOS__){ __STAR_SCROLL_TIMER__ = setTimeout(()=>{ try{ snapToNearest(); }catch(e){} }, 110); }
   };
   wrap.addEventListener('scroll', wrap.__shScrollHandler, { passive:true });
 
@@ -3637,6 +4311,8 @@ function openStarHeroOverlay(isAuto=false){
     const overlay = document.getElementById('starHeroOverlay');
     if(!overlay) return;
 
+    try{ setStarBadgeMuted(); }catch(e){}
+
     hardResetStarHeroOverlay();
 
     __starRebuildDOM();
@@ -3652,6 +4328,8 @@ function openStarHeroOverlay(isAuto=false){
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden','false');
     __STAR_OPEN__ = true;
+    try{ if(!window.__STAR_HISTORY_ACTIVE__){ history.pushState({modal:'star'}, null, ''); window.__STAR_HISTORY_ACTIVE__=true; } }catch(e){}
+    try{ const xbtn=document.getElementById('starHeroCloseBtn'); if(xbtn){ xbtn.onclick = ()=>{ try{ dismissStarHero('x'); }catch(e){} }; } }catch(e){}
 
     overlay.classList.remove('entering');
     void overlay.offsetWidth;
@@ -3671,7 +4349,7 @@ function openStarHeroOverlay(isAuto=false){
         dismissStarHero('browse');
       };
     }
-  }catch(e){}
+}catch(e){}
 }
 
 function hardResetStarHeroOverlay(){
@@ -3776,6 +4454,18 @@ function forceCloseStarHeroNow(){
 
 
 
+function scrollToMainCatalog(){
+  try{
+    const first = document.querySelector('.cat-section');
+    if(first && first.id){
+      pmScrollToTargetId(first.id);
+      return;
+    }
+    const list = document.getElementById('list');
+    if(list) list.scrollIntoView({behavior:'smooth', block:'start'});
+  }catch(e){}
+}
+
 function _finalizeStarHeroClose(){
   try{ if(__STAR_CLOSE_WATCHDOG__){ clearTimeout(__STAR_CLOSE_WATCHDOG__); __STAR_CLOSE_WATCHDOG__ = null; } }catch(e){}
 
@@ -3796,6 +4486,7 @@ function _finalizeStarHeroClose(){
 
   __STAR_OPEN__ = false;
   __STAR_CLOSING__ = false;
+  try{ window.__STAR_HISTORY_ACTIVE__ = false; }catch(e){}
 
   // Ensure dock icon is visible (fix: opacity stuck at 0)
   try{
@@ -3820,10 +4511,15 @@ function _finalizeStarHeroClose(){
   if(__STAR_PENDING_NAV__){
     const code = __STAR_PENDING_NAV__;
     __STAR_PENDING_NAV__ = null;
+    __STAR_PENDING_BACK__ = false;
     try{ jumpToProductByCode(String(code||'')); }catch(e){}
   }
-}
 
+  if(__STAR_PENDING_BACK__){
+    __STAR_PENDING_BACK__ = false;
+    try{ scrollToMainCatalog(); }catch(e){}
+  }
+}
 
 function dismissStarHero(reason){
   try{
@@ -3831,6 +4527,14 @@ function dismissStarHero(reason){
     if(!overlay) return;
     if(__STAR_CLOSING__) return;
     if(!overlay.classList.contains('show')) return;
+
+    const fromPop = (reason === 'popstate');
+    const skipHistory = (reason && typeof reason === 'object' && reason.skipHistory);
+
+    if(window.__STAR_HISTORY_ACTIVE__ && !fromPop && !skipHistory){
+      try{ history.back(); }catch(e){}
+      return;
+    }
 
     __STAR_CLOSING__ = true;
 
@@ -3956,26 +4660,44 @@ function showStarDock(show){
   }catch(e){}
 }
 
+function starBadgeIsMuted(){
+  try{ return sessionStorage.getItem('ttl_star_badge_muted')==='1'; }catch(e){ return false; }
+}
+function setStarBadgeMuted(){
+  try{ sessionStorage.setItem('ttl_star_badge_muted','1'); }catch(e){}
+  try{ updateStarDockBadge(0); }catch(e){}
+}
 function updateStarDockBadge(n){
   try{
-    const b = document.getElementById('starDockBadge');
-    if(!b) return;
-    const v = Math.max(0, Number(n||0));
-    if(v > 0){
-      b.textContent = String(v);
-      b.style.display = 'flex';
-    }else{
-      b.style.display = 'none';
-    }
+    const badge = document.getElementById('starDockBadge');
+    if(!badge) return;
+    if(starBadgeIsMuted()){ badge.style.display='none'; badge.textContent='0'; return; }
+    const v = Math.max(0, Math.min(9, Number(n)||0));
+    if(v<=0){ badge.style.display='none'; badge.textContent='0'; return; }
+    badge.style.display = 'inline-flex';
+    badge.textContent = String(v);
+  }catch(e){}
+}
+function refreshStarDockBadge(){
+  try{
+    if(!starIsDismissed()) return;
+    if(starBadgeIsMuted()) { updateStarDockBadge(0); return; }
+    const n = (getStarProducts()||[]).length;
+    updateStarDockBadge(n);
   }catch(e){}
 }
 
+
 function initStarHero(){
   try{
-    // If previously dismissed, show dock immediately
     if(starIsDismissed()){
       showStarDock(true);
+      try{ refreshStarDockBadge(); }catch(e){}
+    }else{
+      showStarDock(false);
+      try{ updateStarDockBadge(0); }catch(e){}
     }
+
     // If pending auto show requested earlier (e.g., user clicked Start before boot ready)
     if(__STAR_AUTO_PENDING__){
       __STAR_AUTO_PENDING__ = false;
@@ -4196,7 +4918,35 @@ function highlightText(text, query) {
   return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
+
+function setupViewportVars(){
+  try{
+    const root = document.documentElement;
+    const apply = ()=>{
+      try{
+        const vv = window.visualViewport;
+        const innerH = window.innerHeight || 0;
+        let kb = 0;
+        if(vv){
+          kb = Math.max(0, innerH - vv.height - vv.offsetTop);
+          root.style.setProperty('--vvh', vv.height + 'px');
+        }
+        root.style.setProperty('--kb', kb + 'px');
+      }catch(e){}
+    };
+    apply();
+    if(window.visualViewport){
+      visualViewport.addEventListener('resize', apply, {passive:true});
+      visualViewport.addEventListener('scroll', apply, {passive:true});
+    }else{
+      window.addEventListener('resize', apply, {passive:true});
+    }
+  }catch(e){}
+}
+
+
 async function initApp() {
+  try{ setupViewportVars(); }catch(e){}
   try{ setBootConfigState('loading'); }catch(e){}
 
   try {
@@ -4264,7 +5014,7 @@ const groupCode = String(pick("group_code")||"").trim();
     }
 
     const rData = Papa.parse(rText, { header: true, skipEmptyLines: true }).data;
-    RULES = { tiers: [], bogo: [], spend: [], bundle: [], series_gift: [], flat_price: [], eligibility: [], uiNotes: {}, uiAccent: {}, uiCatStyle: {}, uiCfg: {}, freeShipThreshold: null };
+    RULES = { tiers: [], bogo: [], spend: [], bundle: [], series_gift: [], flat_price: [], eligibility: [], uiNotes: {}, uiAccent: {}, uiCatStyle: {}, uiCfg: {}, uiPromoMarqueeCopy: {}, freeShipThreshold: null };
     rData.forEach(row => {
       const pick = (k) => {
         const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
@@ -4331,6 +5081,22 @@ else if(type.includes("ui_note")) {
         const zone = String(pick("zone")||"").trim();
         const txt = String(pick("ui_text")||"").trim();
         if(zone && txt) RULES.uiNotes[zone] = txt;
+
+        // Promo Marquee copy (recommended: add a new column like ui_text2 for cat_hint rows)
+        try{
+          if(!RULES.uiPromoMarqueeCopy) RULES.uiPromoMarqueeCopy = {};
+          const z = String(zone||"").trim();
+          if(z.startsWith("cat_marquee|") || z.startsWith("marquee|")){
+            const t = z.split("|").slice(1).join("|").trim();
+            if(t && txt) RULES.uiPromoMarqueeCopy[t] = String(txt).trim();
+          }else if(z.startsWith("cat_hint|")){
+            const t = z.substring("cat_hint|".length).trim();
+            const short = String(
+              pick("ui_text2") || pick("ui_text_short") || pick("ui_marquee_copy") || pick("ui_marquee") || pick("ui_text_marquee") || ""
+            ).trim();
+            if(t && short) RULES.uiPromoMarqueeCopy[t] = short;
+          }
+        }catch(e){}
       }
 
             else if(type.includes("bundle")) RULES.bundle.push({ code: pick("product_code"), price: Number(pick("unit_price")) });
@@ -4362,6 +5128,7 @@ if (rankText) {
     renderUI();
     window.__APP_READY__=true;
     renderSystemAnnouncement();
+    try{ renderPromoMarquee(); }catch(e){}
     try{ initStarHero(); }catch(e){}
 
 // V2 Sprint1: staged rendering (reduce perceived waiting)
@@ -5108,6 +5875,11 @@ function refreshCart() {
 /* removed accidental override of closeCart (kept core closeCart with 2-stage checkout) */
 
 window.onpopstate = (e) => { 
+    // Handle Star Hero overlay
+    try{
+      const so = document.getElementById('starHeroOverlay');
+      if(so && so.classList.contains('show')){ dismissStarHero('popstate'); return; }
+    }catch(ex){}
     // CRITICAL FIX: Always ensure body is clean when returning to root state
     if (!document.querySelector('.modal.open') && 
         !document.getElementById('drawer').classList.contains('open') && 
