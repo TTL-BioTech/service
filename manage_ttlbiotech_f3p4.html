@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-<link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#00796b"/>
-<link rel="apple-touch-icon" href="icons/icon-192.png"/>
-
-<title>TTL BIO-TECH 戰情中心 V98.11.2</title>
+<title>TTL BIO-TECH 戰情中心 V98.11.9</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00897b">
+  <meta name="apple-mobile-web-app-title" content="TTL-Bio Dashboard">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -172,6 +175,20 @@ header { height: var(--header-height); background: #fff; border-bottom: 1px soli
 /* Table View */
 .data-panel { background: #fff; border-radius: 8px; border: 1px solid #e0e0e0; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 .panel-head { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: #fafafa; }
+
+.panel-actions{ display:flex; align-items:center; gap:10px; }
+.oar{ display:flex; align-items:center; gap:6px; }
+.oar-btn{ border:1px solid #cfd8dc; background:#fff; border-radius:10px; padding:6px 8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.oar-btn .material-icons-round{ font-size:20px; color:#607d8b; }
+.oar-btn.on{ background:#e0f2f1; border-color: var(--primary); }
+.oar-btn.on .material-icons-round{ color: var(--primary); }
+.oar-pill{ border:1px solid #cfd8dc; background:#fff; border-radius:999px; padding:6px 10px; cursor:pointer; font-weight:900; color:#455a64; font-size:12px; }
+@media(max-width:520px){
+  .panel-actions{ gap:8px; }
+  .oar-pill{ padding:6px 8px; }
+  .oar-btn{ padding:6px 7px; }
+}
+
 .search-wrap { position: relative; width: 280px; }
 .search-wrap input { width: 100%; padding: 8px 34px 8px 34px; border: 1px solid #ccc; border-radius: 20px; font-size: 14px; outline: none; }
 .search-wrap .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #999; }
@@ -394,105 +411,266 @@ tr.active-row .prod-name-cell { color: #1b5e20; font-size: 17px; font-weight: 90
 }
 
 /* ========= Settings (Config Editor) ========= */
-.settings-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 6px 4px 6px;}
+#view-settings{
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 18px);
+}
+#view-settings > *{ flex: 0 0 auto; }
+
+.settings-topbar{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:14px 6px 6px 6px;
+}
 .settings-top-actions{display:flex;gap:10px;flex-wrap:wrap;}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;min-height:0;}
 @media (max-width: 980px){.settings-grid{grid-template-columns:1fr;}}
-.settings-card{background:#fff;border:1px solid #e0e0e0;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,0.06);padding:14px;min-height:0;position:relative;overflow:hidden;}
-.settings-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+
+.settings-card{
+  background:#fff;border:1px solid #e0e0e0;border-radius:18px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.06);
+  padding:16px;
+  min-height:0;position:relative;overflow:hidden;
+}
+.settings-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
 .sc-title{font-weight:900;color:#263238;}
 .sc-btn{border:1px solid #cfd8dc;background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:800;color:#37474f;}
 .sc-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
 .sc-btn:active{transform:translateY(1px);}
-.options-list{border:1px solid #e6ecef;border-radius:16px;padding:12px;min-height:110px;max-height:60vh;overflow:hidden;overflow-y:auto;background:#fff;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;scrollbar-gutter:stable;margin-top:8px;}
-#view-settings .options-list::after{content:'';display:block;height:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 18px);}
 
-#view-settings{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 56px);scroll-padding-bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 56px);}
-#payOptionsList{max-height:42vh;}
-.opt-row{display:grid;grid-template-columns:90px 1fr 80px 54px;gap:10px;align-items:center;padding:10px;border:1px solid #eef2f4;border-radius:14px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.04);margin-bottom:10px;}
-.opt-row:last-child{margin-bottom:0;}
-.opt-spacer{height:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 48px);}
-.opt-row.inactive .opt-name{color:#90a4ae;text-decoration:line-through;}
-.opt-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:#546e7a;font-weight:800;}
-.opt-name{width:100%;padding:8px 10px;border:1px solid #cfd8dc;border-radius:10px;font-size:14px;}
-.opt-move{display:flex;gap:6px;justify-content:flex-end;}
-.opt-icon-btn{border:1px solid #cfd8dc;background:#fff;border-radius:10px;padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.opt-del{border:1px solid #ef9a9a;background:#ffebee;color:#c62828;border-radius:10px;padding:6px;cursor:pointer;font-weight:900;}
-@media (max-width: 520px){
-  .settings-topbar{padding:14px 6px 8px 6px;}
-  .settings-card{padding:20px 16px 22px 16px;}
-  .options-list{padding:14px;max-height:62vh;min-height:140px;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
-  .opt-row{
-    grid-template-columns:1fr auto;
-    grid-template-areas:
-      "toggle toggle"
-      "name name"
-      "move del";
-    gap:10px;
-    padding:12px;
-  }
-  .opt-toggle{grid-area:toggle;font-size:13px;}
-  .opt-name{grid-area:name;font-size:14px;padding:10px 12px;}
-  .opt-move{grid-area:move;justify-content:flex-start;}
-  .opt-icon-btn{padding:8px;border-radius:12px;}
-  .opt-del{
-    grid-area:del;
-    width:auto;
-    justify-self:end;
-    padding:10px 12px;
-    border-radius:12px;
-    white-space:nowrap;
-  }
+/* Options viewport: keep the "card backplate" generous, and rely on inner scrolling */
+.options-list{
+  border:1px solid #e6ecef;border-radius:16px;
+  padding:14px;
+  min-height:260px;
+  max-height:min(56vh, 560px);
+  overflow:hidden;overflow-y:auto;background:#f7fafb;
+  -webkit-overflow-scrolling:touch;touch-action:pan-y;
+  overscroll-behavior:contain;scrollbar-gutter:stable;
+  margin-top:8px;
 }
 
-
-.toast{
-  position:fixed;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  background:rgba(38,50,56,0.95);
-  color:#fff;
-  padding:10px 14px;
-  border-radius:999px;
-  font-weight:800;
-  font-size:13px;
-  z-index:4000;
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .18s ease, transform .18s ease;
-  max-width:min(92vw,520px);
-  text-align:center;
-  box-shadow:0 6px 16px rgba(0,0,0,.22);
+/* High-quality option "capsules" inside settings lists */
+.opt-row{
+  display:flex;align-items:center;gap:10px;
+  background:#fff;border:1px solid #e3e7ea;border-radius:14px;
+  padding:10px 12px;margin:0 0 10px 0;
+  box-shadow:0 2px 10px rgba(0,0,0,0.04);
 }
-.toast.show{
-  opacity:1;
-  transform:translateX(-50%) translateY(-6px);
+.opt-row.inactive{opacity:0.72;}
+.opt-toggle{
+  display:flex;align-items:center;gap:6px;flex:0 0 auto;
+  font-size:12px;font-weight:900;color:#546e7a;
+  background:#f2f5f7;border:1px solid #e3e7ea;
+  padding:6px 8px;border-radius:999px;user-select:none;
 }
-@media (max-width:768px){
-  .toast{ bottom:76px; }
+.opt-toggle input{accent-color:var(--primary);transform:scale(1.05);}
+.opt-name{
+  flex:1 1 auto;min-width:140px;
+  border:1px solid #e3e7ea;border-radius:12px;
+  padding:8px 10px;background:#fff;
+  font-weight:800;color:#263238;
 }
-
-
-/* Orders auto refresh controls (Orders tab only) */
-.orders-auto-wrap{display:none; align-items:center; gap:6px; margin-left:8px;}
-.auto-btn{display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:50%; background:#fff3e0; color:#e65100; cursor:pointer; transition:0.2s; border:1px solid #ffe0b2;}
-.auto-btn:hover{filter:brightness(0.98);}
-.auto-btn.on{background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9;}
-.auto-interval{font-size:12px; padding:7px 10px; border:1px solid #cfd8dc; border-radius:999px; background:#fff; cursor:pointer; color:#455a64; line-height:1;}
-.auto-interval:hover{background:#fafafa;}
+.opt-name:focus{
+  outline:none;border-color:rgba(0,137,123,0.55);
+  box-shadow:0 0 0 3px rgba(0,137,123,0.12);
+}
+.opt-move{display:flex;gap:6px;flex:0 0 auto;}
+.opt-icon-btn{
+  width:38px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid #e3e7ea;background:#fff;border-radius:12px;
+  cursor:pointer;
+}
+.opt-icon-btn:active{transform:translateY(1px);}
+.opt-del{
+  flex:0 0 auto;
+  border:1px solid rgba(211,47,47,0.35);background:#fff;color:#d32f2f;
+  font-weight:900;border-radius:12px;padding:8px 10px;cursor:pointer;
+}
+.opt-spacer{height:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 24px);}
 @media (max-width:520px){
-  .orders-auto-wrap{gap:4px; margin-left:6px;}
-  .auto-interval{padding:6px 8px; font-size:11px;}
+  .opt-row{gap:8px;padding:10px 10px;}
+  .opt-name{min-width:0;}
+  .opt-icon-btn{width:36px;height:34px;border-radius:12px;}
+  .opt-del{padding:8px 10px;border-radius:12px;}
 }
 
+/* Health panel should not compress other cards; keep its own scroll area */
+.health-panel{
+  padding:6px 2px;
+  display:flex;flex-direction:column;gap:10px;
+  max-height:min(52vh, 560px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.health-row{border:1px solid #eceff1;border-radius:14px;padding:10px 12px;background:#fafafa;}
+.health-row.ok{border-color:#d0f2ea;background:#f3fffb;}
+.health-row.warn{border-color:#ffe0b2;background:#fffaf3;}
+.health-name{font-weight:900;color:#263238;display:flex;align-items:center;gap:6px;}
+.health-meta{margin-top:6px;color:#607d8b;font-size:12px;line-height:1.4;}
+.health-actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+.health-badge{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;border:1px solid #e0e0e0;background:#fff;color:#455a64;display:inline-flex;align-items:center;gap:4px;}
+.health-badge.ok{border-color:#b2dfdb;background:#e0f2f1;color:#00695c;}
+.health-badge.warn{border-color:#ffcc80;background:#fff3e0;color:#e65100;}
+
+@media (max-width: 520px){
+  #view-settings{ padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 22px); }
+  .settings-card{ padding:16px; }
+  .options-list{ min-height:240px; max-height:min(52vh, 520px); }
+}
+
+
+/* --- PWA INSTALL (Android + iOS guide) --- */
+#installWidget{
+  position: fixed;
+  bottom: 135px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #263238;
+  color: #ffeb3b;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2000;
+  -webkit-tap-highlight-color: transparent;
+}
+#installWidget:active{ transform: scale(0.92); }
+
+#iosInstallPrompt{
+  display:none;
+  position: fixed;
+  bottom: 26px;
+  bottom: calc(26px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(18px);
+  width: 92%;
+  max-width: 380px;
+  background: rgba(38, 50, 56, 0.95);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px 18px 14px 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+  z-index: 6000;
+  opacity: 0;
+  transition: opacity .35s ease, transform .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#iosInstallPrompt.visible{ display:block; }
+#iosInstallPrompt.animate-in{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+#iosInstallPrompt .ios-close{
+  position:absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: #cfd8dc;
+  cursor: pointer;
+}
+#iosInstallPrompt .ios-close:active{ transform: scale(0.92); }
+
+#iosInstallPrompt .ios-title{
+  font-weight: 900;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+}
+#iosInstallPrompt .ios-text{
+  font-size: 13px;
+  line-height: 1.55;
+  color: #fff;
+}
+#iosInstallPrompt .ios-sub{
+  margin-top: 8px;
+  font-size: 12px;
+  color: #b0bec5;
+}
+#iosInstallPrompt .icon-anim{
+  vertical-align: middle;
+  font-size: 20px;
+  color: #4fc3f7;
+  margin: 0 3px;
+  display:inline-block;
+  animation: iconPulse 1.5s infinite ease-in-out;
+}
+@keyframes iconPulse{
+  0%{ transform: scale(1); filter: drop-shadow(0 0 0 rgba(79,195,247,0)); }
+  50%{ transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(79,195,247,0.6)); }
+  100%{ transform: scale(1); filter: drop-shadow(0 0 0 rgba(79,195,247,0)); }
+}
+
+/* --- SW UPDATE TOAST --- */
+#updateToast{
+  position: fixed;
+  left: 50%;
+  bottom: 82px;
+  transform: translateX(-50%) translateY(40px);
+  background: #37474f;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 6100;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  font-weight: 800;
+  font-size: 13px;
+}
+#updateToast.show{
+  display:flex;
+  transform: translateX(-50%) translateY(0);
+}
+#updateToast .btn-update{
+  border:none;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: #ffeb3b;
+  color: #263238;
+  font-weight: 900;
+  cursor: pointer;
+}
+#updateToast .btn-update:active{ transform: scale(0.94); }
+/* --- GLOBAL TOAST (避免版面位移) --- */
+#toast{
+  position: fixed;
+  left: 50%;
+  bottom: 128px;
+  transform: translateX(-50%) translateY(18px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 6200;
+  background: rgba(38,50,56,0.95);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.30);
+  font-weight: 800;
+  font-size: 13px;
+  max-width: min(92vw, 520px);
+  text-align: center;
+  line-height: 1.35;
+}
+#toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 </style>
 </head>
 <body>
 
 <div id="loading-mask">
   <div class="spinner"></div>
-  <div id="loading-text" style="font-weight:700;color:#546e7a;font-size:15px">系統初始化 (V98.11.2)...</div>
+  <div id="loading-text" style="font-weight:700;color:#546e7a;font-size:15px">系統初始化 (V98.11.9)...</div>
 </div>
 
 <div id="restoreWidget" onclick="toggleRestoreList(event)">
@@ -502,6 +680,28 @@ tr.active-row .prod-name-cell { color: #1b5e20; font-size: 17px; font-weight: 90
 </div>
 
 <div id="toast" class="toast"></div>
+
+<div id="installWidget" onclick="installApp(event)" title="安裝到主畫面">
+  <span class="material-icons-round">install_mobile</span>
+</div>
+
+<div id="iosInstallPrompt">
+  <button class="ios-close" onclick="closeIosInstallPrompt()" aria-label="關閉">
+    <span class="material-icons-round">close</span>
+  </button>
+  <div class="ios-title">加入主畫面（iPhone / iPad）</div>
+  <div class="ios-text">
+    點擊工具列上的 <span class="material-icons-round icon-anim">ios_share</span> 分享<br>
+    並選擇 <b>「加入主畫面」</b>
+  </div>
+  </div>
+
+<div id="updateToast">
+  <span class="material-icons-round" style="color:#ffeb3b">system_update</span>
+  <span>發現新版本</span>
+  <button class="btn-update" onclick="updateApp()">更新</button>
+</div>
+
 
 <div id="scrollTopBtn" onclick="scrollToTop()">
     <span class="material-icons-round">arrow_upward</span>
@@ -703,16 +903,17 @@ tr.active-row .prod-name-cell { color: #1b5e20; font-size: 17px; font-weight: 90
             <input id="tableSearch" type="text" placeholder="搜尋..." oninput="handleSearchInput()">
             <span id="searchClear" class="material-icons-round search-clear" onclick="clearSearch()">close</span>
           </div>
-          <div id="filter-btn" class="filter-btn" onclick="openFilterSheet()"><span class="material-icons-round" style="font-size:20px">filter_alt</span></div>
-          <div id="ordersAutoWrap" class="orders-auto-wrap">
-            <div id="ordersAutoToggle" class="auto-btn" title="訂單自動更新（可選）" onclick="toggleOrdersAuto()">
-              <span class="material-icons-round" style="font-size:20px">autorenew</span>
+          <div class="panel-actions">
+            <div id="filter-btn" class="filter-btn" onclick="openFilterSheet()"><span class="material-icons-round" style="font-size:20px">filter_alt</span></div>
+            <div id="ordersAutoRefresh" class="oar" style="display:none;">
+              <button id="oarToggle" class="oar-btn" onclick="toggleOrdersAutoRefresh()" title="訂單自動更新" aria-label="訂單自動更新">
+                <span class="material-icons-round">autorenew</span>
+              </button>
+              <button id="oarInterval" class="oar-pill" onclick="cycleOrdersAutoInterval()" title="切換自動更新間隔" aria-label="切換自動更新間隔">120s</button>
             </div>
-            <div id="ordersAutoInterval" class="auto-interval" title="切換自動更新間隔" onclick="cycleOrdersAutoInterval()">120s</div>
+            <div id="mobile-sort-btn" onclick="openSortSheet()"><span class="material-icons-round" style="font-size:20px">sort</span></div>
+            <span id="mobile-del-all" class="material-icons-round" style="display:none; color:#d32f2f; margin-left:10px; cursor:pointer;" onclick="deleteAllOrders()">delete_sweep</span>
           </div>
-
-          <div id="mobile-sort-btn" onclick="openSortSheet()"><span class="material-icons-round" style="font-size:20px">sort</span></div>
-          <span id="mobile-del-all" class="material-icons-round" style="display:none; color:#d32f2f; margin-left:10px; cursor:pointer;" onclick="deleteAllOrders()">delete_sweep</span>
         </div>
         <div class="table-container" id="tableContainer">
           <table id="mainTable"></table>
@@ -755,6 +956,17 @@ tr.active-row .prod-name-cell { color: #1b5e20; font-size: 17px; font-weight: 90
             註：停用的支付方式會在此以刪除線顯示，前台不再提供選擇（符合你描述的「勾選後會畫上刪除線，使用者不能選擇」效果）。
           </div>
         </div>
+      </div>
+
+      <div class="settings-card" style="border:1px solid #e0e0e0;">
+        <div class="settings-card-head">
+          <div class="sc-title">資料源狀態</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="sc-btn" onclick="refreshHealthPanel()">刷新</button>
+            <button class="sc-btn" onclick="clearHealth()">清除紀錄</button>
+          </div>
+        </div>
+        <div id="healthPanel" class="health-panel"></div>
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px;">
@@ -885,7 +1097,7 @@ function denyAccessAndStop() {
 ADMIN_TOKEN = promptForToken(false);
 if (!ADMIN_TOKEN) denyAccessAndStop();
 
-const APP_VERSION = "98.11.2";
+const APP_VERSION = "98.11.9";
 try{
   document.title = `TTL BIO-TECH 戰情中心 V${APP_VERSION}`;
   const lt = document.getElementById('loading-text');
@@ -1011,14 +1223,14 @@ async function init() {
     // V2 Sprint1: staged loading
     // - core (orders/inventory/sales) renders ASAP
     // - product bundle map loads in parallel and enhances UI after
-    const prodsPromise = fetchCSV(SHEET_P_CSV)
+    const prodsPromise = fetchCSV(SHEET_P_CSV, { healthKey: 'products' })
       .then(prods => { processProducts(prods); return true; })
       .catch(e => { console.warn('Product CSV load failed:', e); return false; });
 
     const [ord, inv, sales] = await Promise.all([
-      fetchCSV(getOrdersCsvUrl()),
-      fetchCSV(INVENTORY_CSV),
-      fetchCSV(SALES_CSV)
+      fetchCSV(getOrdersCsvUrl(), { healthKey: 'orders' }),
+      fetchCSV(INVENTORY_CSV, { healthKey: 'inventory' }),
+      fetchCSV(SALES_CSV, { healthKey: 'sales' })
     ]);
 
     processOrders(ord);
@@ -1105,8 +1317,117 @@ function scrollToTop() {
     else window.scrollTo({top:0, behavior:'smooth'});
 }
 
+
+// === Data Source Health (for維運) ===
+const HEALTH_LS_KEY = 'ttl_admin_data_health_v1';
+let DATA_HEALTH = (() => {
+  try { return JSON.parse(localStorage.getItem(HEALTH_LS_KEY) || '{}') || {}; }
+  catch(e){ return {}; }
+})();
+
+function recordHealth(key, ok, detail){
+  if(!key) return;
+  const now = Date.now();
+  if(!DATA_HEALTH[key]) DATA_HEALTH[key] = { okCount:0, failCount:0, lastOk:0, lastFail:0, lastError:'' };
+  const it = DATA_HEALTH[key];
+  if(ok){
+    it.okCount = (it.okCount||0) + 1;
+    it.lastOk = now;
+    it.lastError = '';
+  } else {
+    it.failCount = (it.failCount||0) + 1;
+    it.lastFail = now;
+    it.lastError = String(detail || '');
+  }
+  try{ localStorage.setItem(HEALTH_LS_KEY, JSON.stringify(DATA_HEALTH)); }catch(e){}
+  try{
+    if(typeof CURRENT_TAB !== 'undefined' && CURRENT_TAB === 'settings') renderHealthPanel();
+  }catch(e){}
+}
+
+function _fmtHealthTime(ts){
+  if(!ts) return '--';
+  try{ return new Date(ts).toLocaleString(); }catch(e){ return '--'; }
+}
+
+function renderHealthPanel(){
+  const el = document.getElementById('healthPanel');
+  if(!el) return;
+  const items = [
+    ['orders','Orders（訂單）'],
+    ['inventory','Inventory（庫存）'],
+    ['sales','Sales（銷售）'],
+    ['products','Products（商品）'],
+    ['config','Config（下拉選單）'],
+  ];
+  const rows = items.map(([k,label])=>{
+    const it = DATA_HEALTH[k] || {};
+    const okAt = _fmtHealthTime(it.lastOk);
+    const failAt = _fmtHealthTime(it.lastFail);
+    const failCnt = it.failCount || 0;
+    const okCnt = it.okCount || 0;
+    const status = (failCnt>0 && (!it.lastOk || it.lastFail>it.lastOk)) ? 'warn' : 'ok';
+    const badge = status==='ok' ? 'OK' : 'WARN';
+    const err = (status==='warn' && it.lastError) ? `<div class="health-err">${escapeHtml(it.lastError).slice(0,120)}</div>` : '';
+    return `<div class="health-row ${status}">
+      <div class="health-name">${label}<span class="health-badge ${status}">${badge}</span></div>
+      <div class="health-meta">
+        <div>成功：${okAt}（${okCnt}）</div>
+        <div>失敗：${failAt}（${failCnt}）</div>
+        ${err}
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = rows || "<div style='color:#90a4ae;font-weight:800;padding:10px'>尚無紀錄</div>";
+}
+
+function clearHealth(){
+  DATA_HEALTH = {};
+  try{ localStorage.removeItem(HEALTH_LS_KEY); }catch(e){}
+  renderHealthPanel();
+  showToast('已清除資料源狀態紀錄');
+}
+
+
+async function refreshHealthPanel(){
+  // Manual probe of all data sources (records health, doesn't mutate DATA)
+  try{
+    showToast('刷新資料源狀態中…', 1200);
+
+    const tasks = [
+      fetchCSV(getOrdersCsvUrl(), { cacheBust: true, healthKey: 'orders' }).catch(()=>null),
+      fetchCSV(INVENTORY_CSV, { cacheBust: true, healthKey: 'inventory' }).catch(()=>null),
+      fetchCSV(SALES_CSV, { cacheBust: true, healthKey: 'sales' }).catch(()=>null),
+      fetchCSV(SHEET_P_CSV, { cacheBust: true, healthKey: 'products' }).catch(()=>null),
+      (async()=>{
+        const t0 = performance.now();
+        try{
+          const res = await gasFetch({ action: "get_config" }, false);
+          if(res && res.ok){
+            recordHealth('config', true, `ok ${(performance.now()-t0).toFixed(0)}ms`);
+          } else {
+            recordHealth('config', false, (res && (res.error || res.message)) ? (res.error || res.message) : 'bad response');
+          }
+        }catch(e){
+          recordHealth('config', false, e && e.message ? e.message : String(e));
+        }
+      })()
+    ];
+
+    await Promise.allSettled(tasks);
+    renderHealthPanel();
+    showToast('已刷新資料源狀態');
+  }catch(e){
+    console.error('refreshHealthPanel failed', e);
+    showToast('刷新失敗');
+  }
+}
+
+
+
 async function fetchCSV(url, opts = {}) {
   const cacheBust = opts.cacheBust !== false;
+  const healthKey = opts.healthKey || null;
   let finalUrl = url;
   try {
     const u = new URL(url);
@@ -1116,10 +1437,20 @@ async function fetchCSV(url, opts = {}) {
     // keep original url
   }
 
-  const res = await fetch(finalUrl, { cache: 'no-store' });
-  if (!res.ok) throw new Error("Network response was not ok");
-  return Papa.parse(await res.text(), { header: false }).data; 
+  const t0 = performance.now();
+  try{
+    const res = await fetch(finalUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const txt = await res.text();
+    const data = Papa.parse(txt, { header: false }).data;
+    recordHealth(healthKey, true, `ok ${(performance.now()-t0).toFixed(0)}ms`);
+    return data;
+  } catch(err){
+    recordHealth(healthKey, false, err && err.message ? err.message : String(err));
+    throw err;
+  }
 }
+
 
 function showLoading(show, text) {
     const el = document.getElementById('loading-mask');
@@ -1444,6 +1775,7 @@ function switchTab(tab, pushToHistory = true, preserveState = false) {
     const rl = document.getElementById('restoreList'); if(rl) rl.classList.remove('open');
     
     CURRENT_TAB = tab; ACTIVE_FILTER = '';
+    try{ applyOrdersAutoRefresh(); }catch(e){}
     // Mobile layout classes (avoid top blank + enable dashboard scrolling)
     try{
         const cb = document.querySelector('.content-box');
@@ -1506,9 +1838,8 @@ function switchTab(tab, pushToHistory = true, preserveState = false) {
         backBtn.style.display = 'flex';
         document.getElementById('filter-btn').style.display = 'none';
         updateRestoreWidgetVisibility('settings');
-        stopOrdersAutoRefresh();
-        updateOrdersAutoUI();
         ensureSettingsLoaded();
+        try{ renderHealthPanel(); }catch(e){}
         return;
     }
 
@@ -1517,8 +1848,6 @@ function switchTab(tab, pushToHistory = true, preserveState = false) {
         backBtn.style.display = 'none';
         updateDashboard();
         updateRestoreWidgetVisibility('dashboard');
-        stopOrdersAutoRefresh();
-        updateOrdersAutoUI();
     } else {
         document.getElementById('view-table-container').style.display = 'flex';
         if (!PENDING_SEARCH && !preserveState) { 
@@ -1528,9 +1857,6 @@ function switchTab(tab, pushToHistory = true, preserveState = false) {
         backBtn.style.display = 'flex';
         renderCurrentTable();
         updateRestoreWidgetVisibility(tab);
-        // Orders-only auto refresh (optional)
-        if(tab === 'orders' && ORDERS_AUTO_ENABLED) startOrdersAutoRefresh(); else stopOrdersAutoRefresh();
-        updateOrdersAutoUI();
     }
 }
 
@@ -2360,10 +2686,12 @@ function renderCurrentTable() {
         list = DATA.orders.filter(o => o.id.toLowerCase().includes(q) || o.name.includes(q));
         if (q.length === 8 && !isNaN(q)) list = DATA.orders.filter(o => o.id.includes(q) || o.time.replace(/\D/g,'').startsWith(q));
     }
-        // Orders filter (dept / pickup)
-        if (SELECTED_ORDER_FILTERS && SELECTED_ORDER_FILTERS.size > 0) {
-            list = list.filter(o => SELECTED_ORDER_FILTERS.has(o.dept) || SELECTED_ORDER_FILTERS.has(o.pickup));
-        }
+
+    // Orders filter (dept / pickup) - only applies on Orders tab
+    if (CURRENT_TAB === 'orders' && SELECTED_ORDER_FILTERS && SELECTED_ORDER_FILTERS.size > 0) {
+        list = list.filter(o => SELECTED_ORDER_FILTERS.has(o.dept) || SELECTED_ORDER_FILTERS.has(o.pickup));
+    }
+
     if(SORT.key) list.sort((a,b) => (a[SORT.key]>b[SORT.key]?1:-1)*(SORT.asc?1:-1));
 
     if (isMobile) {
@@ -2848,9 +3176,7 @@ function callGAS(payload, msg, isDelete, isRetry=false) {
               closeModal(true); 
           } 
           updateDashboard();
-        updateRestoreWidgetVisibility('dashboard');
-        stopOrdersAutoRefresh();
-        updateOrdersAutoUI(); 
+        updateRestoreWidgetVisibility('dashboard'); 
           renderCurrentTable(); 
           showLoading(false); 
           // alert(msg); // 選擇性開啟提示
@@ -2915,13 +3241,16 @@ async function ensureSettingsLoaded(force = false) {
 
       renderConfigUI();
       SETTINGS_LOADED = true;
+      recordHealth('config', true);
       setConfigStatus("狀態：已載入（" + new Date().toLocaleTimeString() + "）");
     } else {
+      recordHealth('config', false, (res && res.error) ? res.error : '未知錯誤');
       setConfigStatus("狀態：載入失敗");
       alert("設定載入失敗：" + ((res && res.error) ? res.error : "未知錯誤"));
     }
   } catch(e) {
     console.error(e);
+    recordHealth('config', false, e && e.message ? e.message : '連線錯誤');
     setConfigStatus("狀態：載入失敗");
     alert("設定載入失敗：連線錯誤");
   }
@@ -3161,11 +3490,15 @@ function showItemStats() {
 
 window.addEventListener('resize', () => { renderCurrentTable(); updateDashboard(); });
 
-// === Orders auto refresh (Orders tab only; default OFF) + last sync UI ===
+// === Orders auto refresh (optional; Orders tab only) ===
 let ORDERS_AUTO_TIMER = null;
-let ORDERS_AUTO_ENABLED = JSON.parse(localStorage.getItem("orders_auto_enabled") || "false");
-let ORDERS_AUTO_INTERVAL = parseInt(localStorage.getItem("orders_auto_interval") || "120", 10);
+const ORDERS_AUTO_ENABLED_KEY = 'ttl_admin_orders_autorefresh_enabled';
+const ORDERS_AUTO_INTERVAL_KEY = 'ttl_admin_orders_autorefresh_interval';
+let ORDERS_AUTO_ENABLED = localStorage.getItem(ORDERS_AUTO_ENABLED_KEY) === 'true';
+let ORDERS_AUTO_INTERVAL = parseInt(localStorage.getItem(ORDERS_AUTO_INTERVAL_KEY) || '120', 10);
 if(![60,120].includes(ORDERS_AUTO_INTERVAL)) ORDERS_AUTO_INTERVAL = 120;
+
+// === last sync UI ===
 
 function updateLastSyncText() {
   const el = document.getElementById('lastSyncText');
@@ -3182,7 +3515,7 @@ async function refreshOrdersOnly(silent = true) {
     const editModal = document.getElementById('editModal');
     if(editModal && editModal.classList.contains('open')) return;
 
-    const ord = await fetchCSV(getOrdersCsvUrl(), { cacheBust: true });
+    const ord = await fetchCSV(getOrdersCsvUrl(), { cacheBust: true, healthKey: 'orders' });
     processOrders(ord);
     updateDashboard();
     renderCurrentTable();
@@ -3201,14 +3534,14 @@ async function refreshAllData(silent = true) {
     showLoading(true, '更新中...');
 
     // Load products in parallel (enhances bundle rendering, non-blocking)
-    const prodsPromise = fetchCSV(SHEET_P_CSV, { cacheBust: true })
+    const prodsPromise = fetchCSV(SHEET_P_CSV, { cacheBust: true, healthKey: 'products' })
       .then(prods => { processProducts(prods); return true; })
       .catch(e => { console.warn('Product CSV load failed:', e); return false; });
 
     const [ord, inv, sales] = await Promise.all([
-      fetchCSV(getOrdersCsvUrl(), { cacheBust: true }),
-      fetchCSV(INVENTORY_CSV, { cacheBust: true }),
-      fetchCSV(SALES_CSV, { cacheBust: true })
+      fetchCSV(getOrdersCsvUrl(), { cacheBust: true, healthKey: 'orders' }),
+      fetchCSV(INVENTORY_CSV, { cacheBust: true, healthKey: 'inventory' }),
+      fetchCSV(SALES_CSV, { cacheBust: true, healthKey: 'sales' })
     ]);
 
     processOrders(ord);
@@ -3241,52 +3574,68 @@ async function refreshAllData(silent = true) {
 
 
 
+function renderOrdersAutoControls(){
+  const wrap = document.getElementById('ordersAutoRefresh');
+  if(wrap) wrap.style.display = (CURRENT_TAB === 'orders') ? 'flex' : 'none';
+  const t = document.getElementById('oarToggle');
+  const p = document.getElementById('oarInterval');
+  if(t){ t.classList.toggle('on', !!ORDERS_AUTO_ENABLED); }
+  if(p){ p.textContent = `${ORDERS_AUTO_INTERVAL}s`; }
+}
+
 function stopOrdersAutoRefresh(){
   if(ORDERS_AUTO_TIMER){ clearInterval(ORDERS_AUTO_TIMER); ORDERS_AUTO_TIMER = null; }
 }
 
-function startOrdersAutoRefresh(){
-  stopOrdersAutoRefresh();
-  if(!ORDERS_AUTO_ENABLED) return;
+function applyOrdersAutoRefresh(){
+  // show/hide controls
+  renderOrdersAutoControls();
+
+  // only run on Orders tab
+  if(CURRENT_TAB !== 'orders' || !ORDERS_AUTO_ENABLED || document.visibilityState !== 'visible'){
+    stopOrdersAutoRefresh();
+    return;
+  }
+  if(ORDERS_AUTO_TIMER) return;
   ORDERS_AUTO_TIMER = setInterval(() => {
-    if(document.visibilityState !== 'visible') return;
     if(CURRENT_TAB !== 'orders') return;
+    if(document.visibilityState !== 'visible') return;
     refreshOrdersOnly(true);
   }, ORDERS_AUTO_INTERVAL * 1000);
 }
 
-function updateOrdersAutoUI(){
-  const wrap = document.getElementById('ordersAutoWrap');
-  if(!wrap) return;
-  wrap.style.display = (CURRENT_TAB === 'orders') ? 'flex' : 'none';
-  const t = document.getElementById('ordersAutoToggle');
-  const itv = document.getElementById('ordersAutoInterval');
-  if(t) t.classList.toggle('on', !!ORDERS_AUTO_ENABLED);
-  if(itv) itv.textContent = `${ORDERS_AUTO_INTERVAL}s`;
+function setOrdersAutoEnabled(enabled){
+  ORDERS_AUTO_ENABLED = !!enabled;
+  localStorage.setItem(ORDERS_AUTO_ENABLED_KEY, ORDERS_AUTO_ENABLED ? 'true' : 'false');
+  renderOrdersAutoControls();
+  stopOrdersAutoRefresh();
+  if(ORDERS_AUTO_ENABLED && CURRENT_TAB === 'orders'){
+    refreshOrdersOnly(true);
+  }
+  applyOrdersAutoRefresh();
 }
 
-function toggleOrdersAuto(){
-  ORDERS_AUTO_ENABLED = !ORDERS_AUTO_ENABLED;
-  localStorage.setItem("orders_auto_enabled", JSON.stringify(ORDERS_AUTO_ENABLED));
-  showToast(ORDERS_AUTO_ENABLED ? `訂單自動更新：開啟（${ORDERS_AUTO_INTERVAL}s）` : '訂單自動更新：關閉');
-  if(ORDERS_AUTO_ENABLED) startOrdersAutoRefresh(); else stopOrdersAutoRefresh();
-  updateOrdersAutoUI();
+function toggleOrdersAutoRefresh(){
+  setOrdersAutoEnabled(!ORDERS_AUTO_ENABLED);
+  showToast(`訂單自動更新：${ORDERS_AUTO_ENABLED ? '開啟' : '關閉'}`);
 }
 
 function cycleOrdersAutoInterval(){
   ORDERS_AUTO_INTERVAL = (ORDERS_AUTO_INTERVAL === 60) ? 120 : 60;
-  localStorage.setItem("orders_auto_interval", String(ORDERS_AUTO_INTERVAL));
+  localStorage.setItem(ORDERS_AUTO_INTERVAL_KEY, String(ORDERS_AUTO_INTERVAL));
+  renderOrdersAutoControls();
+  stopOrdersAutoRefresh();
+  applyOrdersAutoRefresh();
   showToast(`自動更新間隔：${ORDERS_AUTO_INTERVAL}s`);
-  if(ORDERS_AUTO_ENABLED) startOrdersAutoRefresh();
-  updateOrdersAutoUI();
 }
 
-
-function registerServiceWorker(){
-  if(!('serviceWorker' in navigator)) return;
-  try{
-    navigator.serviceWorker.register('./sw.js', {scope: './'}).catch(()=>{});
-  }catch(e){}
+function startAutoRefresh(){
+  // legacy entry point for boot
+  if(!window.__ordersAutoBound){
+    window.__ordersAutoBound = true;
+    document.addEventListener('visibilitychange', applyOrdersAutoRefresh);
+  }
+  applyOrdersAutoRefresh();
 }
 
 function bindMetaButtons() {
@@ -3315,14 +3664,144 @@ function ensureValidTokenAndRetry(payload, msg, isDelete) {
   callGAS(payload, msg, isDelete, true);
 }
 
+// --- PWA INSTALL GUIDANCE (Android + iOS) ---
+let deferredInstallPrompt = null;
+let swWaitingWorker = null;
+
+function isStandaloneMode(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+function isIosDevice(){
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const iOS = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return iOS;
+}
+function isSafariOnIos(){
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isIos = isIosDevice();
+  // iOS: Safari contains 'safari' and not 'crios' (Chrome), not 'fxios' (Firefox)
+  return isIos && ua.includes('safari') && !ua.includes('crios') && !ua.includes('fxios');
+}
+
+function showInstallWidget(){
+  const w = document.getElementById('installWidget');
+  if(w) w.style.display = 'flex';
+}
+function hideInstallWidget(){
+  const w = document.getElementById('installWidget');
+  if(w) w.style.display = 'none';
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Android/Chromium install prompt
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if(!isStandaloneMode()) showInstallWidget();
+});
+
+window.addEventListener('appinstalled', () => {
+  hideInstallWidget();
+  try { showToast('已安裝至主畫面'); } catch(e) {}
+});
+
+async function installApp(ev){
+  try { ev && ev.stopPropagation(); } catch(e) {}
+  if(!deferredInstallPrompt){
+    // If on iOS, guide user
+    if(isIosDevice() && !isStandaloneMode()){
+      openIosInstallPrompt();
+      return;
+    }
+    try { showToast('此裝置暫無法自動安裝'); } catch(e) {}
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  hideInstallWidget();
+  if(outcome === 'accepted'){
+    try { showToast('安裝中…'); } catch(e) {}
+  }
+}
+
+// iOS A2HS guide (Safari Share -> Add to Home Screen)
+function openIosInstallPrompt(){
+  if(isStandaloneMode()) return;
+  const key = 'ttl_admin_ios_a2hs_dismissed';
+  if(localStorage.getItem(key) === '1') return;
+  const p = document.getElementById('iosInstallPrompt');
+  if(!p) return;
+  p.classList.add('visible');
+  requestAnimationFrame(()=>p.classList.add('animate-in'));
+}
+function closeIosInstallPrompt(){
+  const key = 'ttl_admin_ios_a2hs_dismissed';
+  localStorage.setItem(key,'1');
+  const p = document.getElementById('iosInstallPrompt');
+  if(!p) return;
+  p.classList.remove('animate-in');
+  setTimeout(()=>p.classList.remove('visible'), 250);
+}
+
+// Auto show iOS guide after boot
+function maybeShowIosGuide(){
+  if(!isIosDevice()) return;
+  if(isStandaloneMode()) return;
+    setTimeout(()=>openIosInstallPrompt(), 900);
+}
+
+// --- Service Worker (App Shell only; all Sheets CSV remain network-only) ---
+function showUpdateToast(){
+  const t = document.getElementById('updateToast');
+  if(t) t.classList.add('show');
+}
+function hideUpdateToast(){
+  const t = document.getElementById('updateToast');
+  if(t) t.classList.remove('show');
+}
+function updateApp(){
+  if(swWaitingWorker){
+    swWaitingWorker.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
+
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).then(reg => {
+    if(reg.waiting){
+      swWaitingWorker = reg.waiting;
+      showUpdateToast();
+    }
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      if(!w) return;
+      w.addEventListener('statechange', () => {
+        if(w.state === 'installed' && navigator.serviceWorker.controller){
+          swWaitingWorker = w;
+          showUpdateToast();
+        }
+      });
+    });
+  }).catch(err => {
+    console.warn('SW register failed', err);
+  });
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(refreshing) return;
+    refreshing = true;
+    hideUpdateToast();
+    window.location.reload();
+  });
+}
+
 async function boot() {
   bindMetaButtons();
   registerServiceWorker();
+  maybeShowIosGuide();
   await init();
   updateLastSyncText();
-  updateOrdersAutoUI();
-  // default OFF: auto refresh starts only if user enabled it previously
-  if(ORDERS_AUTO_ENABLED) startOrdersAutoRefresh();
+  startAutoRefresh();
 }
 
 boot();
