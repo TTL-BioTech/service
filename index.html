@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
-<title>生技展訂購系統 v29</title>
+<title>生技展訂購系統</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -68,7 +68,12 @@ body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%;
 
 /* --- LAYOUT --- */
 main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
-.grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; width: 100%; }
+.grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; width: 100%; 
+/* --- V42 (Rebuild from V41.2): Category VList virtualization (row-based, deterministic) --- */
+.vlist-grid{ position: relative; }
+.vlist-inner{ position: relative; width: 100%; height: 0; }
+.vlist-abs{ position:absolute; }
+}
 
 /* --- Global: Two-stage checkout collapse (desktop + mobile) --- */
 .checkout-details{
@@ -670,6 +675,8 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   width: 32px; height: 32px; border-radius: 50%; border: 1px solid #eceff1; background: #fff; color: var(--primary); 
   font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative;
 }
+.s-btn.add{ z-index: 3; }
+
 .s-btn::after { content: ''; position: absolute; top: -10px; bottom: -10px; left: -10px; right: -10px; }
 .s-btn:active { background: var(--primary-light); transform: scale(0.9); }
 .s-btn.add { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 5px rgba(0,137,123,0.3); }
@@ -779,7 +786,18 @@ header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0
 }
 @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
 .skeleton { background: #f6f7f8; background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); background-repeat: no-repeat; background-size: 800px 104px; animation: shimmer 1s linear infinite forwards; border-radius: 8px; }
-.sk-card { height: 280px; border-radius: 16px; background: #fff; padding: 12px; margin-bottom: 12px; }
+.sk-card { height: 280px;
+
+/* V40: skeleton cards used by chunked renderer */
+.skel-card{ border: 1px solid #eef2f4; background: #fff; border-radius: 16px; overflow: hidden; }
+.skel-card .p-img-box{ background:#fafafa; }
+
+/* V39 Phase5: Smoothness kit (flag: p5_cv) */
+.ff-p5_cv .p-card{ contain: layout paint; }
+.ff-p5_cv .cat-section{ content-visibility:auto; contain-intrinsic-size: 1px 900px; }
+
+.ff-p5_cv .rank-list, .ff-p5_cv .cat-nav, .ff-p5_cv .pm-track, .ff-p5_cv #promoMarqueeTrack, .ff-p5_cv #starHeroList{ -webkit-overflow-scrolling: touch; }
+ border-radius: 16px; background: #fff; padding: 12px; margin-bottom: 12px; }
 
 #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; width: 90%; max-width: 320px; display: flex; flex-direction: column-reverse; gap: 8px; align-items: center; }
 .toast { background: rgba(33, 33, 33, 0.95); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 14px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.2); opacity: 0; transform: translateY(20px); animation: toastIn 0.3s forwards, toastOut 0.3s forwards 2.5s; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s; }
@@ -1740,12 +1758,6 @@ body.cfg-error .btn-bundle{
 }
 
 
-20%{ transform: translateX(-2px) rotate(-1deg); }
-  40%{ transform: translateX(2px) rotate(1deg); }
-  60%{ transform: translateX(-1px) rotate(-0.6deg); }
-  80%{ transform: translateX(1px) rotate(0.6deg); }
-}
-
 </style>
 </head>
 <body>
@@ -1759,6 +1771,21 @@ body.cfg-error .btn-bundle{
   </div>
 </div>
 
+<script>
+/* Welcome fail-safe: keep '開始訂購' usable even if later scripts error */
+(function(){
+  if (typeof window.closeWelcome === 'function') return;
+  window.closeWelcome = function(){
+    var el = document.getElementById('welcome-overlay');
+    if(!el) return;
+    try{ el.classList.add('fade-out'); }catch(e){}
+    setTimeout(function(){
+      try{ el.style.display = 'none'; }catch(e){}
+      try{ if (typeof window.requestStarHeroAutoShow === 'function') window.requestStarHeroAutoShow(); }catch(e){}
+    }, 520);
+  };
+})();
+</script>
 
 <div id="starHeroOverlay" aria-hidden="true">
   <div class="star-hero-card" role="dialog" aria-modal="true" aria-label="主打星推薦">
@@ -1998,6 +2025,66 @@ body.cfg-error .btn-bundle{
 <script>
 const GIFT_IMAGES = {}; 
 
+/* ==========================================================
+   V40 Feature Flags — Stable preset (P1/2/3/5 ON, no CSV cache)
+   - This stable build hard-enables: p1_skel,p2_chunk,p3_lazyimg,p5_cv (no CSV cache)
+   - No URL/localStorage overrides in this build (rollback = redeploy previous version)
+   ========================================================== */
+(function initFeatureFlags(){
+  // Hard-default: Phase 1–3 & 5 always ON (Phase4 OFF) (no URL/localStorage overrides in this stable build)
+  const DEFAULT_FLAGS = ['p1_skel','p2_chunk','p3_lazyimg','p5_cv'];
+  const enabled = new Set(DEFAULT_FLAGS);
+
+  // Safe runner for flagged blocks (prevents white screen if any dev feature throws)
+  window.FF_SAFE_RUN = function(label, fn){
+    try { return fn(); }
+    catch(err){
+      console.warn('[FF_SAFE_RUN]', label, err);
+      return null;
+    }
+  };
+
+  // Minimal public API
+  window.FF = {
+    enabled,
+    has: (name)=> enabled.has(String(name||"").trim()),
+    list: ()=> Array.from(enabled).sort()
+  };
+
+  // Apply CSS classes for enabled flags (for styling tweaks per phase)
+  try{
+    const root = document.documentElement;
+    Array.from(enabled).forEach(f=> root.classList.add('ff-' + String(f).replace(/[^a-zA-Z0-9_-]/g,'_')));
+  }catch(e){}
+})();;
+
+/* V39 Smoke checks: append ?smoke=1 to run basic sanity tests */
+(function initSmoke(){
+  const q = new URLSearchParams(location.search);
+  if(q.get('smoke') !== '1') return;
+  window.addEventListener('load', ()=>{
+    const results = [];
+    const ok = (name, cond)=> results.push({name, pass: !!cond});
+    ok('closeWelcome exists', typeof window.closeWelcome === 'function');
+    ok('#welcome-overlay exists', !!document.getElementById('welcome-overlay'));
+    ok('#starHeroOverlay exists', !!document.getElementById('starHeroOverlay'));
+    ok('#gift-fab exists', !!document.getElementById('gift-fab'));
+    ok('PapaParse loaded', typeof window.Papa === 'object' && typeof window.Papa.parse === 'function');
+    const fails = results.filter(r=>!r.pass);
+    console.groupCollapsed('%c[SMOKE] V39', 'color:#00c853;font-weight:800');
+    results.forEach(r=>console.log(r.pass?'✅':'❌', r.name));
+    console.groupEnd();
+    if(fails.length){
+      console.warn('[SMOKE] failures:', fails);
+    }
+  }, {once:true});
+})();
+
+// ===== Build / Release =====
+const BUILD_ID = "V42_FINAL_r20260222_01_v2";
+window.BUILD_ID = BUILD_ID;
+
+
 const SHEET_P = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBtV8q3Ank7Bnhs83IbOb97U46juV-RKeL3NpdFiNcSu-ifI21fQYo1-io62S3JIrXEO5MiDArc1Lr/pub?gid=1623055155&single=true&output=csv";
 const SHEET_R = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQU95r9_TOPlQXY-lcBS_RH3tRc0mtRyuazxHHWljpRusbzBiWsEfm3Pa_HZmKW5Ob5TOq4W5O-vumI/pub?gid=2071879068&single=true&output=csv";
 const SHEET_RANK = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQj5QLrtaWikGcLNwMawbjiN8ZQDgFzW1RV7UECFgLzECWj16I2ugE_B6tzzLICCynsk1L6lAuJfccS/pub?gid=93142219&single=true&output=csv";
@@ -2032,8 +2119,60 @@ function looksLikeHtml(text) {
   return t.startsWith("<!doctype") || t.startsWith("<html") || t.includes("<head") || t.includes("<body");
 }
 
+
+// V39 Phase4: Optional CSV cache (flag: p4_cachecsv)
+function __fnv1a32(str){
+  let h = 0x811c9dc5;
+  const s = String(str||"");
+  for(let i=0;i<s.length;i++){
+    h ^= s.charCodeAt(i);
+    h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0;
+  }
+  return ('0000000' + h.toString(16)).slice(-8);
+}
+function __csvCacheKey(url){ return 'ttl_csv_cache_' + __fnv1a32(url); }
+function __csvCacheTtlMs(){
+  // default 10 minutes; override via localStorage: ttl_csvcache_ttl_min
+  try{
+    const v = Number(localStorage.getItem('ttl_csvcache_ttl_min'));
+    if(isFinite(v) && v > 0) return v * 60 * 1000;
+  }catch(e){}
+  return 10 * 60 * 1000;
+}
+function __csvCacheGet(url){
+  try{
+    const raw = localStorage.getItem(__csvCacheKey(url));
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj.txt !== 'string') return null;
+    const t = Number(obj.t||0);
+    if(t && (Date.now() - t) < __csvCacheTtlMs()) return obj.txt;
+  }catch(e){}
+  return null;
+}
+function __csvCacheSet(url, txt){
+  try{
+    const obj = { t: Date.now(), txt: String(txt||"") };
+    localStorage.setItem(__csvCacheKey(url), JSON.stringify(obj));
+  }catch(e){}
+}
+
 async function fetchCsvTextSmart(sourceUrl, label = "data", options = {}) {
-  const { timeoutMs = 12000, optional = false, minLength = 50 } = options || {};
+  const { timeoutMs = 12000, optional = false, minLength = 50, __noCache = false } = options || {};
+
+  // Phase4 cache: return cached immediately; refresh in background
+  const useCache = (!__noCache) && (window.FF && FF.has && FF.has('p4_cachecsv'));
+  if(useCache){
+    const cached = __csvCacheGet(sourceUrl);
+    if(cached){
+      FF_SAFE_RUN('csvCacheRefresh:' + label, ()=>{
+        fetchCsvTextSmart(sourceUrl, label, { timeoutMs, optional: true, minLength, __noCache: true })
+          .then(fresh=>{ if(fresh && String(fresh).trim().length >= minLength) __csvCacheSet(sourceUrl, fresh); })
+          .catch(()=>{});
+      });
+      return cached;
+    }
+  }
   let lastErr = null;
 
   for (let i = 0; i < CORS_FALLBACKS.length; i++) {
@@ -2042,6 +2181,7 @@ async function fetchCsvTextSmart(sourceUrl, label = "data", options = {}) {
       const txt = await fetchTextWithTimeout(u, timeoutMs);
       if (!txt || txt.trim().length < minLength) throw new Error("Empty response");
       if (looksLikeHtml(txt)) throw new Error("Unexpected HTML response");
+      if((window.FF && FF.has && FF.has('p4_cachecsv')) && !options.__noCache){ __csvCacheSet(sourceUrl, txt); }
       return txt;
     } catch (e) {
       lastErr = e;
@@ -2294,6 +2434,32 @@ function updateShipFreeBadge(total){
   }
 }
 
+// --- V42: Threshold crossing toast (Free Shipping) ---
+let __THRESH_BOOT__ = true;
+let __LAST_FS_OK__ = null;
+
+function __detectThresholdToasts(data){
+  try{
+    const thr = getFreeShipThreshold();
+    if(!thr) return;
+    const total = Number((data && data.finalTotal) || 0);
+    const ok = total >= thr;
+
+    if(__THRESH_BOOT__){
+      __LAST_FS_OK__ = ok;
+      __THRESH_BOOT__ = false;
+      return;
+    }
+
+    if(ok && __LAST_FS_OK__ === false){
+      try{ showToast("已達免運門檻 🎉"); }catch(e){}
+    }
+
+    __LAST_FS_OK__ = ok;
+  }catch(e){}
+}
+
+
 function syncDeliveryHeaderUI(){
   const wrap = document.querySelector('.delivery-toggle-wrap');
   const form = document.getElementById('deliveryForm');
@@ -2480,7 +2646,19 @@ function createSeriesGiftItem(g, reached, baseQty) {
     const unit = seriesGiftUnit(g.prefix);
     const thr = Number(g.amt);
     const ruleText = (Number.isFinite(thr) && thr > 0) ? `每 ${thr} ${unit}送` : `每${unit}送`;
-    const perText = `${ruleText} ${Number(g.qty)||0} 個`;
+    const perQty = (Number(g.qty) || 0);
+    const perText = `${ruleText} ${perQty} 個`;
+
+    // earned gift count (consider mult)
+    let giftTimes = 0;
+    try{
+      if(Number.isFinite(thr) && thr > 0){
+        giftTimes = (String(g.mult).toLowerCase() === 'true') ? Math.floor(baseQty / thr) : (baseQty >= thr ? 1 : 0);
+      } else {
+        giftTimes = baseQty > 0 ? 1 : 0;
+      }
+    }catch(e){ giftTimes = 0; }
+    const giftCount = Math.max(0, giftTimes * perQty);
 
     const div = document.createElement("div");
     div.className = `gift-item ${reached ? 'unlocked' : ''}`;
@@ -2490,7 +2668,7 @@ function createSeriesGiftItem(g, reached, baseQty) {
         <div class="g-info">
           <div class="g-amt">${perText}</div>
           <div class="g-name">${gName}</div>
-          <div style="font-size:12px;opacity:.8;margin-top:4px;">目前${unit}數：${baseQty}</div>
+          <div style="font-size:12px;opacity:.8;margin-top:4px;">目前${unit}數：${baseQty}　贈品${unit}數：${giftCount}</div>
           ${reached ? '<div class="g-tag">已獲得</div>' : ''}
         </div>
     `;
@@ -2590,15 +2768,17 @@ window.updateQty = function(btnEl, pid, delta) {
           fab.classList.add('attn');
         }
       }catch(e){}
-  } else if (delta > 0) {
-      const addedToast = showToast("已加入購物車");
+  }
+  if (delta > 0) {
+      showToast("已加入購物車");
       setTimeout(() => {
           const data = calcCart();
           checkNewGifts(data.gifts); 
       }, 800);
   }
 
-  // Enforce add-on eligibility after any cart change
+
+// Enforce add-on eligibility after any cart change
   const removedAddon = enforceAddonEligibility();
   if(removedAddon > 0) {
     showToast("加價購商品已移除（未符合加購條件）", "warn");
@@ -3387,8 +3567,10 @@ function initPromoMarqueeAutoScroll(){
             c._dragStartX = (ev.touches?ev.touches[0].clientX:ev.clientX);
             c._dragStartY = (ev.touches?ev.touches[0].clientY:ev.clientY);
             c._dragStartPos = c.x;
-            // capture pointer to keep receiving moves (Android stability)
-            try{ if(ev.pointerId!=null && viewport.setPointerCapture) viewport.setPointerCapture(ev.pointerId); }catch(e){}
+            // NOTE: Do NOT capture pointer on down; it breaks desktop click targeting.
+            // We capture only after we lock into horizontal drag.
+            c._pid = (ev.pointerId!=null ? ev.pointerId : null);
+            c._captured = false;
           }catch(e){}
         };
         const onMove = (ev)=>{
@@ -3408,9 +3590,12 @@ function initPromoMarqueeAutoScroll(){
                 c.dragging = true;
                 c.paused = true;
                 c.resumeAt = 0;
+                try{ if(!c._captured && c._pid!=null && viewport.setPointerCapture){ viewport.setPointerCapture(c._pid); c._captured = true; } }catch(e){}
               }else if(Math.abs(dy) > Math.abs(dx) * 1.15){
                 c._lock = 'v';
                 c._down = false; // release; allow page scroll
+                c._pid = null;
+                c._captured = false;
                 return;
               }else{
                 return;
@@ -3434,6 +3619,9 @@ function initPromoMarqueeAutoScroll(){
             const c=__PM_MARQ_CTRL__;
             if(!c) return;
             const wasH = (c._lock === 'h');
+            try{ if(c._captured && c._pid!=null && viewport.releasePointerCapture){ viewport.releasePointerCapture(c._pid); } }catch(e){}
+            c._captured = false;
+            c._pid = null;
             c._down = false;
             c._lock = null;
             if(wasH){
@@ -3516,19 +3704,34 @@ function renderPromoMarquee(){
             <div class="pm-name">${t}</div>
             <div class="pm-hint">${s}</div>
           `;
-          card.onclick = () => {
-            try{
-              const c = __PM_MARQ_CTRL__;
-              if(c && c._dragMoved){ c._dragMoved = false; return; }
-            }catch(e){}
-            try{ __PM_OPEN_FROM_MARQUEE__ = true; __PM_FOCUS_TITLE__ = it.title; }catch(e){}
-            try{ setPromoMapSeen(); }catch(e){}
-            try{ openPromoMap(); }catch(e){}
-          };
+          // Store title on element so cloned nodes remain clickable via event delegation
+          card.dataset.title = String(it.title || '');
           track.appendChild(card);
         }
       }
     }
+
+
+      // Bind click delegation once (works even after marquee clones nodes for seamless loop)
+      if(!track.dataset.clickBound){
+        track.dataset.clickBound = '1';
+        track.addEventListener('click', (ev)=>{
+          try{
+            const tgt = ev && ev.target ? ev.target : null;
+            const card = (tgt && tgt.closest) ? tgt.closest('.pm-card') : null;
+            if(!card) return;
+            try{
+              const c = __PM_MARQ_CTRL__;
+              if(c && c._dragMoved){ c._dragMoved = false; return; }
+            }catch(e){}
+            const title = String(card.dataset.title || '').trim() || String((card.querySelector('.pm-name')||{}).innerText||'').trim();
+            if(!title) return;
+            try{ __PM_OPEN_FROM_MARQUEE__ = true; __PM_FOCUS_TITLE__ = title; }catch(e){}
+            try{ setPromoMapSeen(); }catch(e){}
+            try{ openPromoMap(); }catch(e){}
+          }catch(e){}
+        }, {passive:true});
+      }
 
     try{
       const btn = document.getElementById("promoMapCtaBtn");
@@ -4747,10 +4950,9 @@ function jumpToProductByCode(code){
     if(!c) return;
     const p = (Array.isArray(PRODUCTS) ? PRODUCTS.find(x => x && String(x.code||'').trim()===c) : null);
     if(!p) return;
-    const el = document.getElementById(`p-${p._id}`);
-    if(el){
-      el.scrollIntoView({behavior:'smooth', block:'start'});
-      applyNavBreathe(el, 'star');
+    // V42: VList-aware navigation (do not depend on DOM presence)
+    const ok = (typeof vlistScrollToProduct === 'function') ? vlistScrollToProduct(p._id, 'star') : false;
+    if(ok){
       const _tpl = uiGet('star|nav_toast', '已帶你到主打商品：{name} ✨');
       const _msg = _formatStarSubtitle(_tpl, p.name || p.product_name || p.name_zh || '');
       showToast(_msg, 'info', 1600);
@@ -4875,6 +5077,15 @@ function jumpToProduct(pid, source){
     renderList(); 
   }
   setTimeout(() => {
+    // V42: Prefer VList-aware navigation when list is virtualized (no-search view)
+    try{
+      const inp = document.getElementById('searchInp');
+      const q = String(inp && inp.value || '').trim();
+      if(!q && typeof vlistScrollToProduct === 'function'){
+        const ok = vlistScrollToProduct(pid, source);
+        if(ok) return;
+      }
+    }catch(e){}
     const el = document.getElementById(`p-${pid}`);
     if(el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -4945,6 +5156,368 @@ function setupViewportVars(){
 }
 
 
+
+// ==============================
+// V41: Worker Parse (CSV parse off main thread) — no-cache build
+// - Offload Papa.parse (and core normalization) to Web Worker when available
+// - Fallback to main-thread parse if worker fails (stability first)
+// ==============================
+let __coreParseWorker = null;
+function __getCoreParseWorker(){
+  if(__coreParseWorker) return __coreParseWorker;
+  const workerSrc = `
+    self.addEventListener('message', async (ev) => {
+      const payload = ev.data || {};
+      const pText = payload.pText || '';
+      const rText = payload.rText || '';
+      try{
+        // Load PapaParse inside worker
+        if(!self.Papa){
+          importScripts('https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js');
+        }
+        const parseCsv = (txt) => (self.Papa.parse(txt, { header:true, skipEmptyLines:true }).data || []);
+        const _pickFactory = (row) => {
+          // build a lowercase header map once per row
+          const map = {};
+          Object.keys(row||{}).forEach(k=>{
+            const kk = String(k||'').replace(/^\\uFEFF/,'').trim().toLowerCase();
+            if(kk && map[kk] == null) map[kk] = k;
+          });
+          return (k) => {
+            const kk = String(k||'').replace(/^\\uFEFF/,'').trim().toLowerCase();
+            const key = map[kk];
+            return (key ? row[key] : '') || '';
+          };
+        };
+        const _bool = (v) => {
+          const s = String(v||'').trim().toLowerCase();
+          return (s === 'true' || s === '1' || s === 'y' || s === 'yes' || s === 't');
+        };
+
+        // ---- PRODUCTS ----
+        const pData = parseCsv(pText);
+        const productMapEntries = [];
+        const giftMapEntries = [];
+        const products = [];
+        for(let i=0;i<pData.length;i++){
+          const row = pData[i];
+          const pick = _pickFactory(row);
+          const code = String(pick('product_code')||'').trim();
+          const name = String(pick('product_name')||'').trim();
+          if(!code || !name) continue;
+          const isGift = String(pick('is_gift')||'').toLowerCase();
+
+          const isNew = _bool(pick('is_new'));
+          const isHidden = _bool(pick('is_hidden'));
+          const groupCode = String(pick('group_code')||'').trim();
+
+          let bundle = [];
+          for(let k=1;k<=4;k++){
+            let sn = String(pick(\`spec_\${k}\`)||'').trim();
+            let sq = Number(pick(\`spec_\${k}_qty\`)||1);
+            if(sn){
+              sn = sn.replace(/^([A-Za-z0-9\\-\\.]+)\\s+/, '').trim();
+              bundle.push({ name: sn, qty: sq });
+            }
+          }
+
+          // Gift rows are not sellable but must exist in PRODUCT_MAP for name lookup
+          if(isGift === 'true' || isGift.includes('是')){
+            productMapEntries.push([code, { name, price: 0, bundle }]);
+            continue;
+          }
+
+          const p = {
+            _id: i,
+            code,
+            name,
+            name_lc: name.toLowerCase(),
+            code_lc: code.toLowerCase(),
+            category: String(pick('category')||'').trim(),
+            price: Number(String(pick('list_price')||'0').replace(/,/g,'')),
+            spec: String(pick('spec')||''),
+            photo: String(pick('photos url')||''),
+            bundle,
+            is_new: isNew,
+            is_hidden: isHidden,
+            group_code: groupCode
+          };
+
+          productMapEntries.push([code, p]);
+          if(p.photo && p.photo.length > 5){
+            giftMapEntries.push([code, [p.photo]]);
+          }
+          products.push(p);
+        }
+
+        if(!products || products.length === 0){
+          throw new Error('商品資料為空（可能是連線被擋 / 代理回傳異常）');
+        }
+
+        // ---- RULES ----
+        const rData = parseCsv(rText);
+        const rules = { tiers: [], bogo: [], spend: [], bundle: [], series_gift: [], flat_price: [], eligibility: [], uiNotes: {}, uiAccent: {}, uiCatStyle: {}, uiCfg: {}, uiPromoMarqueeCopy: {}, freeShipThreshold: null };
+
+        for(let i=0;i<rData.length;i++){
+          const row = rData[i];
+          const pick = _pickFactory(row);
+          const type = String(pick('rule_type')||'').toLowerCase();
+
+          if(type.includes('tier')) rules.tiers.push({ zone: String(pick('zone')||'').trim(), min: Number(pick('min_qty')), pct: Number(pick('percent_off')) });
+          else if(type.includes('bogo')) rules.bogo.push({ code: String(pick('product_code')||''), buy: Number(pick('buy')), get: Number(pick('get')) });
+          else if(type.includes('flat_price')){
+            const zone = String(pick('zone')||'').trim();
+            const code = String(pick('product_code')||'').trim();
+            const unit = Number(pick('unit_price')||pick('charge')||0);
+            if(zone && code && !Number.isNaN(unit)) rules.flat_price.push({ zone, code, unit });
+          }
+          else if(type.includes('eligibility')){
+            const zone = String(pick('zone')||'').trim();
+            const requires = String(pick('requires_any_zone_in')||'').trim();
+            const minQty = Number(pick('requires_min_qty')||pick('requires_min_qty ')||pick('requires_min_qty\t')||1);
+            if(zone) rules.eligibility.push({ zone, requires, minQty: (Number.isNaN(minQty) ? 1 : minQty) });
+          }
+          else if(type.includes('series_gift')){
+            const mRaw = String(pick('multiples')||'').trim().toUpperCase();
+            const mult = (mRaw === 'TRUE' || mRaw === '1' || mRaw === 'YES');
+            rules.series_gift.push({ scope: pick('threshold_scope'), prefix: pick('zone_prefix'), amt: Number(pick('threshold_amount')), gift: pick('gift_code'), qty: Number(pick('gift_qty')), mult });
+          }
+          else if(type.includes('spend')){
+            const mRaw = String(pick('multiples')||'').trim().toUpperCase();
+            const mult = (mRaw === 'TRUE' || mRaw === '1' || mRaw === 'YES');
+            rules.spend.push({ scope: pick('threshold_scope'), prefix: pick('zone_prefix'), amt: Number(pick('threshold_amount')), gift: pick('gift_code'), qty: Number(pick('gift_qty')), mult });
+          }
+          else if(type.includes('shipping_threshold')){
+            const rawAmt = String(pick('threshold_amount')||'').trim().replace(/,/g,'');
+            const amt = Number(rawAmt);
+            if(isFinite(amt) && amt > 0) rules.freeShipThreshold = amt;
+          }
+          else if(type.includes('ui_accent')){
+            const zone = String(pick('zone')||'').trim();
+            const c1 = String(pick('ui_accent')||'').trim();
+            const c2 = String(pick('ui_accent2')||'').trim();
+            if(zone && (c1 || c2)) rules.uiAccent[zone] = { c1, c2 };
+          }
+          else if(type.includes('ui_cat_style')){
+            const zone = String(pick('zone')||'').trim();
+            const mm = zone.match(/^cat\\|(.+)$/);
+            const catKey = mm ? String(mm[1]||'').trim() : zone.replace(/^cat\\|/,'').trim();
+            const c1 = String(pick('ui_accent')||'').trim();
+            const c2 = String(pick('ui_accent2')||'').trim();
+            if(catKey && (c1 || c2)) rules.uiCatStyle[catKey] = { c1, c2 };
+          }
+          else if(type.includes('ui_config')){
+            const key = String(pick('zone')||'').trim();
+            const txt = String(pick('ui_text')||'').trim();
+            const rawAmt = String(pick('threshold_amount')||'').trim().replace(/,/g,'');
+            const amt = Number(rawAmt);
+            if(key){
+              rules.uiCfg[key] = (txt ? txt : (isFinite(amt) ? amt : ''));
+            }
+          }
+          else if(type.includes('ui_note')){
+            const zone = String(pick('zone')||'').trim();
+            const txt = String(pick('ui_text')||'').trim();
+            if(zone && txt) rules.uiNotes[zone] = txt;
+
+            // Promo marquee copy
+            try{
+              if(!rules.uiPromoMarqueeCopy) rules.uiPromoMarqueeCopy = {};
+              const z = String(zone||'').trim();
+              if(z.startsWith('cat_marquee|') || z.startsWith('marquee|')){
+                const t = z.split('|').slice(1).join('|').trim();
+                if(t && txt) rules.uiPromoMarqueeCopy[t] = String(txt).trim();
+              }else if(z.startsWith('cat_hint|')){
+                const t = z.substring('cat_hint|'.length).trim();
+                const short = String(
+                  pick('ui_text2') || pick('ui_text_short') || pick('ui_marquee_copy') || pick('ui_marquee') || pick('ui_text_marquee') || ''
+                ).trim();
+                if(t && short) rules.uiPromoMarqueeCopy[t] = short;
+              }
+            }catch(e){}
+          }
+          else if(type.includes('bundle')) rules.bundle.push({ code: String(pick('product_code')||''), price: Number(pick('unit_price')) });
+        }
+
+        self.postMessage({ ok:true, products, productMapEntries, giftMapEntries, rules });
+      }catch(err){
+        self.postMessage({ ok:false, error: String((err && err.message) || err) });
+      }
+    });
+  `;
+  const blob = new Blob([workerSrc], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  __coreParseWorker = new Worker(url);
+  return __coreParseWorker;
+}
+
+function parseCoreInWorker(pText, rText){
+  return new Promise((resolve, reject) => {
+    try{
+      if(!('Worker' in window)) return reject(new Error('Worker not supported'));
+      const w = __getCoreParseWorker();
+      const timer = setTimeout(()=> reject(new Error('Worker parse timeout')), 25000);
+      const onMsg = (ev) => {
+        const msg = ev.data || {};
+        if(!msg.ok){
+          cleanup();
+          return reject(new Error(msg.error || 'Worker parse failed'));
+        }
+        cleanup();
+        resolve(msg);
+      };
+      const onErr = (e) => { cleanup(); reject(e instanceof Error ? e : new Error('Worker error')); };
+      function cleanup(){
+        clearTimeout(timer);
+        w.removeEventListener('message', onMsg);
+        w.removeEventListener('error', onErr);
+      }
+      w.addEventListener('message', onMsg);
+      w.addEventListener('error', onErr);
+      w.postMessage({ pText, rText });
+    }catch(err){
+      reject(err);
+    }
+  });
+}
+
+// Fallback: keep the exact legacy parse logic on main thread for safety
+function parseCoreOnMain(pText, rText){
+  const pData = Papa.parse(pText, { header: true, skipEmptyLines: true }).data;
+  const productMapEntries = [];
+  const giftMapEntries = [];
+  const products = pData.map((row, i) => {
+    const pick = (k) => {
+      const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
+      const key = Object.keys(row).find(key => String(key||'').replace(/^\uFEFF/,'').trim().toLowerCase() === kk);
+      return (key ? row[key] : "") || "";
+    };
+    const code = String(pick("product_code")||"").trim();
+    const name = String(pick("product_name")||"").trim();
+    if(!code || !name) return null;
+    const isGift = String(pick("is_gift")||"").toLowerCase();
+
+    const _bool = (v) => {
+      const s = String(v||'').trim().toLowerCase();
+      return (s === 'true' || s === '1' || s === 'y' || s === 'yes' || s === 't');
+    };
+    const isNew = _bool(pick("is_new"));
+    const isHidden = _bool(pick("is_hidden"));
+    const groupCode = String(pick("group_code")||"").trim();
+
+    let bundle = [];
+    for(let k=1; k<=4; k++) {
+      let sn = String(pick(`spec_${k}`)||"").trim();
+      let sq = Number(pick(`spec_${k}_qty`)||1);
+      if(sn) {
+        sn = sn.replace(/^([A-Za-z0-9\-\.]+)\s+/, '').trim();
+        bundle.push({ name: sn, qty: sq });
+      }
+    }
+
+    if(isGift === 'true' || isGift.includes('是')) {
+      productMapEntries.push([code, { name, price: 0, bundle }]);
+      return null;
+    }
+    const p = {
+      _id: i, code: code, name: name, name_lc: name.toLowerCase(), code_lc: code.toLowerCase(), category: pick("category").trim(),
+      price: Number((pick("list_price")||"0").replace(/,/g,'')), spec: pick("spec"), photo: pick("photos url"), bundle: bundle,
+      is_new: isNew, is_hidden: isHidden, group_code: groupCode
+    };
+    productMapEntries.push([p.code, p]);
+    if(p.photo && p.photo.length > 5) giftMapEntries.push([p.code, [p.photo]]);
+    return p;
+  }).filter(x => x);
+
+  if(!products || products.length === 0) throw new Error("商品資料為空（可能是連線被擋 / 代理回傳異常）");
+
+  const rData = Papa.parse(rText, { header: true, skipEmptyLines: true }).data;
+  const rules = { tiers: [], bogo: [], spend: [], bundle: [], series_gift: [], flat_price: [], eligibility: [], uiNotes: {}, uiAccent: {}, uiCatStyle: {}, uiCfg: {}, uiPromoMarqueeCopy: {}, freeShipThreshold: null };
+  rData.forEach(row => {
+    const pick = (k) => {
+      const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
+      const key = Object.keys(row).find(key => String(key||'').replace(/^\uFEFF/,'').trim().toLowerCase() === kk);
+      return (key ? row[key] : "") || "";
+    };
+    const type = String(pick("rule_type")||"").toLowerCase();
+    if(type.includes("tier")) rules.tiers.push({ zone: pick("zone").trim(), min: Number(pick("min_qty")), pct: Number(pick("percent_off")) });
+    else if(type.includes("bogo")) rules.bogo.push({ code: pick("product_code"), buy: Number(pick("buy")), get: Number(pick("get")) });
+    else if(type.includes("flat_price")) {
+      const zone = pick("zone").trim();
+      const code = String(pick("product_code")||"").trim();
+      const unit = Number(pick("unit_price")||pick("charge")||0);
+      if(zone && code && !Number.isNaN(unit)) rules.flat_price.push({ zone, code, unit });
+    }
+    else if(type.includes("eligibility")) {
+      const zone = pick("zone").trim();
+      const requires = String(pick("requires_any_zone_in")||"").trim();
+      const minQty = Number(pick("requires_min_qty")||pick("requires_min_qty ")||pick("requires_min_qty\t")||1);
+      if(zone) rules.eligibility.push({ zone, requires, minQty: (Number.isNaN(minQty) ? 1 : minQty) });
+    }
+    else if(type.includes("series_gift")) {
+      const mRaw = String(pick("multiples") || "").trim().toUpperCase();
+      const mult = (mRaw === "TRUE" || mRaw === "1" || mRaw === "YES");
+      rules.series_gift.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult });
+    }
+    else if(type.includes("spend")) {
+      const mRaw = String(pick("multiples") || "").trim().toUpperCase();
+      const mult = (mRaw === "TRUE" || mRaw === "1" || mRaw === "YES");
+      rules.spend.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult });
+    }
+    else if(type.includes("shipping_threshold")) {
+      const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
+      const amt = Number(rawAmt);
+      if(isFinite(amt) && amt > 0) rules.freeShipThreshold = amt;
+    }
+    else if(type.includes("ui_accent")) {
+      const zone = String(pick("zone")||"").trim();
+      const c1 = String(pick("ui_accent")||"").trim();
+      const c2 = String(pick("ui_accent2")||"").trim();
+      if(zone && (c1 || c2)) rules.uiAccent[zone] = { c1, c2 };
+    }
+    else if(type.includes("ui_cat_style")) {
+      const zone = String(pick("zone")||"").trim();
+      const mm = zone.match(/^cat\|(.+)$/);
+      const catKey = mm ? String(mm[1]||'').trim() : zone.replace(/^cat\|/,'').trim();
+      const c1 = String(pick("ui_accent")||"").trim();
+      const c2 = String(pick("ui_accent2")||"").trim();
+      if(catKey && (c1 || c2)) rules.uiCatStyle[catKey] = { c1, c2 };
+    }
+    else if(type.includes("ui_config")) {
+      const key = String(pick("zone")||"").trim();
+      const txt = String(pick("ui_text")||"").trim();
+      const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
+      const amt = Number(rawAmt);
+      if(key){
+        rules.uiCfg[key] = (txt ? txt : (isFinite(amt) ? amt : ""));
+      }
+    }
+    else if(type.includes("ui_note")) {
+      const zone = String(pick("zone")||"").trim();
+      const txt = String(pick("ui_text")||"").trim();
+      if(zone && txt) rules.uiNotes[zone] = txt;
+
+      try{
+        if(!rules.uiPromoMarqueeCopy) rules.uiPromoMarqueeCopy = {};
+        const z = String(zone||"").trim();
+        if(z.startsWith("cat_marquee|") || z.startsWith("marquee|")){
+          const t = z.split("|").slice(1).join("|").trim();
+          if(t && txt) rules.uiPromoMarqueeCopy[t] = String(txt).trim();
+        }else if(z.startsWith("cat_hint|")){
+          const t = z.substring("cat_hint|".length).trim();
+          const short = String(
+            pick("ui_text2") || pick("ui_text_short") || pick("ui_marquee_copy") || pick("ui_marquee") || pick("ui_text_marquee") || ""
+          ).trim();
+          if(t && short) rules.uiPromoMarqueeCopy[t] = short;
+        }
+      }catch(e){}
+    }
+    else if(type.includes("bundle")) rules.bundle.push({ code: pick("product_code"), price: Number(pick("unit_price")) });
+  });
+
+  return { ok:true, products, productMapEntries, giftMapEntries, rules };
+}
+
 async function initApp() {
   try{ setupViewportVars(); }catch(e){}
   try{ setBootConfigState('loading'); }catch(e){}
@@ -4958,149 +5531,28 @@ const [pText, rText, rankText, gText] = await Promise.all([
   fetchCsvTextSmart(SHEET_GIFTS_URL, "贈品圖片", { optional: true })
 ]);
 
-const pData = Papa.parse(pText, { header: true, skipEmptyLines: true }).data;
-    PRODUCTS = pData.map((row, i) => {
-      const pick = (k) => {
-        const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
-        const key = Object.keys(row).find(key => String(key||'').replace(/^\uFEFF/,'').trim().toLowerCase() === kk);
-        return (key ? row[key] : "") || "";
-      };
-      const code = String(pick("product_code")||"").trim();
-      const name = String(pick("product_name")||"").trim();
-      if(!code || !name) return null;
-      const isGift = String(pick("is_gift")||"").toLowerCase();
 
-const _bool = (v) => {
-  const s = String(v||'').trim().toLowerCase();
-  return (s === 'true' || s === '1' || s === 'y' || s === 'yes' || s === 't');
-};
-const isNew = _bool(pick("is_new"));
-const isHidden = _bool(pick("is_hidden"));
-const groupCode = String(pick("group_code")||"").trim();
-
-
-      let bundle = [];
-      for(let k=1; k<=4; k++) {
-        let sn = String(pick(`spec_${k}`)||"").trim();
-        let sq = Number(pick(`spec_${k}_qty`)||1);
-        if(sn) {
-          // specs sometimes come as: "375358-12 VINATA緊緻活膚膠囊"
-          sn = sn.replace(/^([A-Za-z0-9\-\.]+)\s+/, '').trim();
-          bundle.push({ name: sn, qty: sq });
-        }
-      }
-
-      // V24.0+: gifts are NOT sellable items, but still keep full metadata for gifts-content/statistics
-      if(isGift === 'true' || isGift.includes('是')) {
-        PRODUCT_MAP.set(code, { name, price: 0, bundle });
-        return null;
-      }
-      const p = {
-        _id: i, code: code, name: name, category: pick("category").trim(),
-        price: Number((pick("list_price")||"0").replace(/,/g,'')), spec: pick("spec"), photo: pick("photos url"), bundle: bundle,
-        is_new: isNew, is_hidden: isHidden, group_code: groupCode
-      };
-      if(p.code) PRODUCT_MAP.set(p.code, p);
-      
-      // Gift Map Image (single source): use only "Photos url" to align with site-wide image logic
-      if(p.photo && p.photo.length > 5) {
-          GIFT_MAP.set(p.code, [p.photo]);
-      }
-      return p;
-    }).filter(x => x);
-
-    if(!PRODUCTS || PRODUCTS.length === 0) {
-      throw new Error("商品資料為空（可能是連線被擋 / 代理回傳異常）");
-    }
-
-    const rData = Papa.parse(rText, { header: true, skipEmptyLines: true }).data;
-    RULES = { tiers: [], bogo: [], spend: [], bundle: [], series_gift: [], flat_price: [], eligibility: [], uiNotes: {}, uiAccent: {}, uiCatStyle: {}, uiCfg: {}, uiPromoMarqueeCopy: {}, freeShipThreshold: null };
-    rData.forEach(row => {
-      const pick = (k) => {
-        const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
-        const key = Object.keys(row).find(key => String(key||'').replace(/^\uFEFF/,'').trim().toLowerCase() === kk);
-        return (key ? row[key] : "") || "";
-      };
-      const type = pick("rule_type").toLowerCase();
-      if(type.includes("tier")) RULES.tiers.push({ zone: pick("zone").trim(), min: Number(pick("min_qty")), pct: Number(pick("percent_off")) });
-      else if(type.includes("bogo")) RULES.bogo.push({ code: pick("product_code"), buy: Number(pick("buy")), get: Number(pick("get")) });
-      else if(type.includes("flat_price")) {
-        const zone = pick("zone").trim();
-        const code = String(pick("product_code")||"").trim();
-        const unit = Number(pick("unit_price")||pick("charge")||0);
-        if(zone && code && !Number.isNaN(unit)) RULES.flat_price.push({ zone, code, unit });
-      }
-      else if(type.includes("eligibility")) {
-        const zone = pick("zone").trim();
-        const requires = String(pick("requires_any_zone_in")||"").trim();
-        const minQty = Number(pick("requires_min_qty")||pick("requires_min_qty ")||pick("requires_min_qty\t")||1);
-        if(zone) RULES.eligibility.push({ zone, requires, minQty: (Number.isNaN(minQty) ? 1 : minQty) });
-      }
-      else if(type.includes("series_gift")) {
-        const mRaw = String(pick("multiples") || "").trim().toUpperCase();
-        const mult = (mRaw === "TRUE" || mRaw === "1" || mRaw === "YES");
-        RULES.series_gift.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult });
-      }
-      else if(type.includes("spend")) {
-        const mRaw = String(pick("multiples") || "").trim().toUpperCase();
-        const mult = (mRaw === "TRUE" || mRaw === "1" || mRaw === "YES");
-        RULES.spend.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult });
-      }
-
-      else if(type.includes("shipping_threshold")) {
-        const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
-        const amt = Number(rawAmt);
-        if(isFinite(amt) && amt > 0) RULES.freeShipThreshold = amt;
-      }
-      
-else if(type.includes("ui_accent")) {
-  const zone = String(pick("zone")||"").trim();
-  const c1 = String(pick("ui_accent")||"").trim();
-  const c2 = String(pick("ui_accent2")||"").trim();
-  if(zone && (c1 || c2)) RULES.uiAccent[zone] = { c1, c2 };
+// V41: Parse core datasets in Worker (fallback to main)
+let core;
+try{
+  try{ setBootConfigState('parsing'); }catch(e){}
+  window.__PARSE_MODE__ = 'worker';
+  core = await parseCoreInWorker(pText, rText);
+}catch(err){
+  console.warn('[V41] Worker parse failed, fallback to main:', err);
+  window.__PARSE_MODE__ = 'main';
+  core = parseCoreOnMain(pText, rText);
 }
-else if(type.includes("ui_cat_style")) {
-  // zone format: cat|<分類標題>
-  const zone = String(pick("zone")||"").trim();
-  const mm = zone.match(/^cat\|(.+)$/);
-  const catKey = mm ? String(mm[1]||'').trim() : zone.replace(/^cat\|/,'').trim();
-  const c1 = String(pick("ui_accent")||"").trim();
-  const c2 = String(pick("ui_accent2")||"").trim();
-  if(catKey && (c1 || c2)) RULES.uiCatStyle[catKey] = { c1, c2 };
-}
-else if(type.includes("ui_config")) {
-  const key = String(pick("zone")||"").trim();
-  const txt = String(pick("ui_text")||"").trim();
-  const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
-  const amt = Number(rawAmt);
-  if(key){
-    RULES.uiCfg[key] = (txt ? txt : (isFinite(amt) ? amt : ""));
-  }
-}
-else if(type.includes("ui_note")) {
-        const zone = String(pick("zone")||"").trim();
-        const txt = String(pick("ui_text")||"").trim();
-        if(zone && txt) RULES.uiNotes[zone] = txt;
 
-        // Promo Marquee copy (recommended: add a new column like ui_text2 for cat_hint rows)
-        try{
-          if(!RULES.uiPromoMarqueeCopy) RULES.uiPromoMarqueeCopy = {};
-          const z = String(zone||"").trim();
-          if(z.startsWith("cat_marquee|") || z.startsWith("marquee|")){
-            const t = z.split("|").slice(1).join("|").trim();
-            if(t && txt) RULES.uiPromoMarqueeCopy[t] = String(txt).trim();
-          }else if(z.startsWith("cat_hint|")){
-            const t = z.substring("cat_hint|".length).trim();
-            const short = String(
-              pick("ui_text2") || pick("ui_text_short") || pick("ui_marquee_copy") || pick("ui_marquee") || pick("ui_text_marquee") || ""
-            ).trim();
-            if(t && short) RULES.uiPromoMarqueeCopy[t] = short;
-          }
-        }catch(e){}
-      }
+PRODUCTS = core.products || [];
+RULES = core.rules || {};
+PRODUCT_MAP = new Map(core.productMapEntries || []);
+GIFT_MAP = new Map(core.giftMapEntries || []);
 
-            else if(type.includes("bundle")) RULES.bundle.push({ code: pick("product_code"), price: Number(pick("unit_price")) });
-    });
+if(!PRODUCTS || PRODUCTS.length === 0) {
+  throw new Error("商品資料為空（可能是連線被擋 / 代理回傳異常）");
+}
+
 if (gText) {
   const gData = Papa.parse(gText, { header: true, skipEmptyLines: true }).data;
   gData.forEach(row => {
@@ -5346,55 +5798,560 @@ function setupScrollSpy() {
   document.querySelectorAll('.cat-section').forEach(section => { sectionObserver.observe(section); });
 }
 
+
+// V39 Phase2: Chunked render for large lists (flag: p2_chunk)
+function __makeProductSkeletonCard(){
+  const d = document.createElement('div');
+  d.className = 'p-card skel-card';
+  d.innerHTML = `
+    <div class="p-img-box"><div class="skeleton" style="width:100%;height:100%;border-radius:14px"></div></div>
+    <div class="p-body">
+      <div class="skeleton" style="height:14px;width:65%;margin:6px 0"></div>
+      <div class="skeleton" style="height:12px;width:40%;margin:10px 0 6px"></div>
+      <div class="skeleton" style="height:36px;width:100%;border-radius:12px;margin-top:12px"></div>
+    </div>`;
+  return d;
+}
+
+function __renderListChunkedNoSearch(grid, token){
+  // Use caller-provided token for cancellation; if missing, start a new render token
+  if(!token){
+    window.__RENDER_TOKEN__ = (window.__RENDER_TOKEN__||0) + 1;
+    token = window.__RENDER_TOKEN__;
+  }
+
+  if(sectionObserver) sectionObserver.disconnect();
+
+  let topAnchor = document.getElementById('cat-all-wrapper');
+  if(!topAnchor){
+    topAnchor = document.createElement('div');
+    topAnchor.id = 'cat-all-wrapper';
+    grid.appendChild(topAnchor);
+  }
+  const catData = [];
+  categories.forEach(cat => {
+    const catProducts = PRODUCTS.filter(p => {
+      if(!p || p.is_hidden) return false;
+      if (cat.includes('清潔-')) {
+        if (!p.category.includes('清潔')) return false;
+        if (cat === '清潔-洗潔' && !p.name.includes('洗潔')) return false;
+        if (cat === '清潔-洗衣' && !p.name.includes('洗衣')) return false;
+        if (cat === '清潔-皂' && !p.name.includes('皂')) return false;
+        return true;
+      } else {
+        return p.category.includes(cat);
+      }
+    });
+    if(catProducts.length <= 0) return;
+
+    const secId = `cat-${cat.replace(/\s+/g,'-')}`;
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.id = secId;
+
+    const title = document.createElement('div');
+    title.className = 'cat-section-title';
+    let displayName = cat.includes('清潔-') ? cat : cat.split(/[\s_]/)[0];
+    title.innerText = displayName;
+    section.appendChild(title);
+
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'grid-layout vlist-grid';
+    gridContainer.dataset.vcat = cat;
+    gridContainer.dataset.secId = secId;
+
+    // Placeholder: total height is deterministic by rows * rowStride; real cards are virtualized into inner.
+    const inner = document.createElement('div');
+    inner.className = 'vlist-inner';
+    gridContainer.appendChild(inner);
+
+    section.appendChild(gridContainer);
+    grid.appendChild(section);
+
+    // Register category state for virtualization
+    __VLIST_CAT__[cat] = __VLIST_CAT__[cat] || {};
+    __VLIST_CAT__[cat].cat = cat;
+    __VLIST_CAT__[cat].secId = secId;
+    __VLIST_CAT__[cat].sectionEl = section;
+    __VLIST_CAT__[cat].titleEl = title;
+    __VLIST_CAT__[cat].gridEl = gridContainer;
+    __VLIST_CAT__[cat].innerEl = inner;
+    __VLIST_CAT__[cat].items = catProducts;
+
+    // Build pid -> position map (used by rank/star navigation)
+    catProducts.forEach((p, idx) => {
+      if(!p || !p._id) return;
+      __VLIST_PID_POS__[p._id] = { cat: cat, idx: idx, code: p.code };
+    });
+  });
+
+  // init row stride / columns and update initial window
+  try{
+    window.__VLIST_FALLBACK__ = false;
+    __vlistInitLayout();
+    __vlistAttachScroll();
+    __vlistUpdateAll(true);
+    setupScrollSpy();
+  }catch(e){
+    console.warn('[V42] vlist init failed, fallback to legacy list:', e);
+    window.__VLIST_FALLBACK__ = true;
+    try{ __vlistReset(); }catch(_e){}
+    try{ grid.innerHTML = ''; }catch(_e){}
+    try{ __renderListNoSearchLegacy(grid, token); }catch(_e){}
+  }
+}
+
+function __appendCardsChunked(container, arr, q, token){
+  let idx = 0;
+  const step = ()=>{
+    if(token !== window.__RENDER_TOKEN__) return; // cancelled
+    const t0 = performance.now();
+
+    if(container.dataset.hasSkel === '1'){
+      container.innerHTML = '';
+      delete container.dataset.hasSkel;
+    }
+
+    const frag = document.createDocumentFragment();
+    let wrote = 0;
+
+    while(idx < arr.length){
+      frag.appendChild(createProductCard(arr[idx], q));
+      idx++; wrote++;
+      if(wrote >= 8 && (performance.now() - t0) > 10) break;
+      if((performance.now() - t0) > 14) break;
+    }
+
+    container.appendChild(frag);
+
+    if(idx < arr.length){
+      requestAnimationFrame(step);
+    }
+  };
+  requestAnimationFrame(step);
+}
+
 function renderList() {
+  // cancel any in-flight chunked render
+  window.__RENDER_TOKEN__ = (window.__RENDER_TOKEN__||0) + 1;
+  const token = window.__RENDER_TOKEN__;
+
   const grid = document.getElementById("list");
   grid.innerHTML = "";
+
   const inp = document.getElementById("searchInp");
-  const q = inp.value.toLowerCase().trim();
-  
+  const q = String(inp && inp.value || "").toLowerCase().trim();
+
   document.getElementById("clearSearch").style.display = q.length > 0 ? 'block' : 'none';
-  
+
   if (q) {
     if(sectionObserver) sectionObserver.disconnect();
-    const filtered = PRODUCTS.filter(p => !p.is_hidden && (p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q)));
+
+    const filtered = PRODUCTS.filter(p => {
+      if(!p || p.is_hidden) return false;
+      const nl = p.name_lc || (p.name ? p.name.toLowerCase() : "");
+      const cl = p.code_lc || (p.code ? p.code.toLowerCase() : "");
+      return (nl.includes(q) || cl.includes(q));
+    });
+
     document.getElementById("empty-state").style.display = filtered.length === 0 ? "block" : "none";
+    if(filtered.length === 0) return;
+
     const container = document.createElement("div");
     container.className = "grid-layout";
-    filtered.forEach(p => { container.appendChild(createProductCard(p, q)); });
+
+    // Phase1: skeleton placeholder (flag: p1_skel)
+    if(window.FF && FF.has && FF.has('p1_skel')){
+      const sk = Math.min(8, filtered.length);
+      for(let i=0;i<sk;i++) container.appendChild(__makeProductSkeletonCard());
+      container.dataset.hasSkel = '1';
+    }
+
     grid.appendChild(container);
+
+    // Phase2: chunked render (flag: p2_chunk)
+    if(window.FF && FF.has && FF.has('p2_chunk')){
+      FF_SAFE_RUN('renderListChunkedSearch', ()=> __appendCardsChunked(container, filtered, q, token));
+    }else{
+      filtered.forEach(p => { container.appendChild(createProductCard(p, q)); });
+    }
+
   } else {
     document.getElementById("empty-state").style.display = "none";
-    
+
+    // Phase2: chunked render path (flag: p2_chunk)
+    if(window.FF && FF.has && FF.has('p2_chunk')){
+      FF_SAFE_RUN('renderListChunked', ()=> __renderListChunkedNoSearch(grid, token));
+      return;
+    }
+
     const topAnchor = document.createElement("div");
     topAnchor.id = "cat-all-wrapper";
     grid.appendChild(topAnchor);
 
+    __vlistReset();
+    window.__VLIST_CAT__ = window.__VLIST_CAT__ || {};
+    window.__VLIST_PID_POS__ = window.__VLIST_PID_POS__ || {};
+
     categories.forEach(cat => {
-        const catProducts = PRODUCTS.filter(p => {
-            if(p.is_hidden) return false;
-            if (cat.includes("清潔-")) {
-                if (!p.category.includes("清潔")) return false;
-                if (cat === "清潔-洗潔" && !p.name.includes("洗潔")) return false;
-                if (cat === "清潔-洗衣" && !p.name.includes("洗衣")) return false;
-                if (cat === "清潔-皂" && !p.name.includes("皂")) return false;
-                return true;
-            } else { return p.category.includes(cat); }
-        });
-        if (catProducts.length > 0) {
-            const secId = `cat-${cat.replace(/\s+/g, '-')}`;
-            const section = document.createElement("div"); section.className = "cat-section"; section.id = secId;
-            const title = document.createElement("div"); title.className = "cat-section-title";
-            let displayName = cat.includes("清潔-") ? cat : cat.split(/[\s_]/)[0];
-            title.innerText = displayName;
-            section.appendChild(title);
-            const gridContainer = document.createElement("div"); gridContainer.className = "grid-layout";
-            catProducts.forEach(p => { gridContainer.appendChild(createProductCard(p, null)); });
-            section.appendChild(gridContainer);
-            grid.appendChild(section);
-        }
+      const catProducts = PRODUCTS.filter(p => {
+        if(p.is_hidden) return false;
+        if (cat.includes("清潔-")) {
+          if (!p.category.includes("清潔")) return false;
+          if (cat === "清潔-洗潔" && !p.name.includes("洗潔")) return false;
+          if (cat === "清潔-洗衣" && !p.name.includes("洗衣")) return false;
+          if (cat === "清潔-皂" && !p.name.includes("皂")) return false;
+          return true;
+        } else { return p.category.includes(cat); }
+      });
+      if (catProducts.length > 0) {
+        const secId = `cat-${cat.replace(/\s+/g, '-')}`;
+        const section = document.createElement("div"); section.className = "cat-section"; section.id = secId;
+        const title = document.createElement("div"); title.className = "cat-section-title";
+        let displayName = cat.includes("清潔-") ? cat : cat.split(/[\s_]/)[0];
+        title.innerText = displayName;
+        section.appendChild(title);
+        const gridContainer = document.createElement("div"); gridContainer.className = "grid-layout";
+        catProducts.forEach(p => { gridContainer.appendChild(createProductCard(p, null)); });
+        section.appendChild(gridContainer);
+        grid.appendChild(section);
+      }
     });
     setupScrollSpy();
   }
+}
+
+// V40: debounced search input (avoid rendering on every keystroke)
+let __searchDebounceTimer = null;
+function scheduleRenderList(){
+  clearTimeout(__searchDebounceTimer);
+  __searchDebounceTimer = setTimeout(()=>{
+    __searchDebounceTimer = null;
+    renderList();
+  }, 140);
+}
+
+
+
+
+function __renderListNoSearchLegacy(grid, token){
+  try{
+    if(sectionObserver) sectionObserver.disconnect();
+  }catch(e){}
+  let topAnchor = document.getElementById('cat-all-wrapper');
+  if(!topAnchor){
+    topAnchor = document.createElement('div');
+    topAnchor.id = 'cat-all-wrapper';
+    grid.appendChild(topAnchor);
+  }
+
+  categories.forEach(cat => {
+    const catProducts = PRODUCTS.filter(p => {
+      if(!p || p.is_hidden) return false;
+      if (cat.includes('清潔-')) {
+        if (!p.category.includes('清潔')) return false;
+        if (cat === '清潔-洗潔' && !p.name.includes('洗潔')) return false;
+        if (cat === '清潔-洗衣' && !p.name.includes('洗衣')) return false;
+        if (cat === '清潔-皂' && !p.name.includes('皂')) return false;
+        return true;
+      } else {
+        return p.category.includes(cat);
+      }
+    });
+    if(catProducts.length <= 0) return;
+
+    const secId = `cat-${cat.replace(/\s+/g,'-')}`;
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.id = secId;
+
+    const title = document.createElement('div');
+    title.className = 'cat-section-title';
+    let displayName = cat.includes('清潔-') ? cat : cat.split(/[\s_]/)[0];
+    title.innerText = displayName;
+    section.appendChild(title);
+
+    const container = document.createElement('div');
+    container.className = 'grid-layout';
+    section.appendChild(container);
+
+    grid.appendChild(section);
+
+    // Use chunked append for safety on low-end devices
+    __appendCardsChunked(container, catProducts, null, token);
+  });
+
+  try{ setupScrollSpy(); }catch(e){}
+}
+
+
+/* --- V42 Rebuild (from V41.2): Category VList virtualization --- */
+let __VLIST_READY__ = false;
+let __VLIST_SCROLL_BOUND__ = false;
+let __VLIST_COLS__ = 2;
+let __VLIST_GAP__ = 12;
+let __VLIST_SAFE_PAD__ = 20; // safety padding to prevent row overlap on some devices
+let __VLIST_CARD_H__ = 260;
+let __VLIST_ROW_H__ = 272;
+let __VLIST_TITLE_H__ = 44;
+let __VLIST_OVERSCAN_ROWS__ = 3;
+let __VLIST_SCHED__ = 0;
+let __VLIST_LAST_VW__ = 0;
+
+// Per-category state
+window.__VLIST_CAT__ = window.__VLIST_CAT__ || {};      // cat -> state
+window.__VLIST_PID_POS__ = window.__VLIST_PID_POS__ || {}; // pid -> {cat, idx}
+
+function __vlistReset(){
+  window.__VLIST_CAT__ = {};
+  window.__VLIST_PID_POS__ = {};
+  __VLIST_READY__ = false;
+}
+
+function __vlistInitLayout(){
+  try{
+    // derive gap from CSS (.grid-layout { gap: 12px; })
+    const probe = document.createElement('div');
+    probe.className = 'grid-layout';
+    probe.style.position='absolute'; probe.style.left='-9999px'; probe.style.top='-9999px';
+    probe.style.width = '360px';
+    document.body.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    const gap = parseFloat(cs.gap || cs.gridGap || '12') || 12;
+    __VLIST_GAP__ = gap;
+
+    // Create a sample card to measure height (card internals already clamp title + fixed aspect image)
+    let sampleP = null;
+    if(Array.isArray(PRODUCTS) && PRODUCTS.length){
+      sampleP = PRODUCTS.find(x=>x && !x.is_hidden) || PRODUCTS[0];
+    }
+    if(sampleP){
+      const card = createProductCard(sampleP, null);
+      card.style.width = '160px';
+      card.style.position = 'absolute';
+      card.style.left='-9999px'; card.style.top='-9999px';
+      document.body.appendChild(card);
+      const h = card.getBoundingClientRect().height;
+      if(h && isFinite(h) && h>150 && h<520){
+        __VLIST_CARD_H__ = Math.round(h);
+      }
+      card.remove();
+    }
+    probe.remove();
+
+    // title height from CSS (cat-section-title)
+    const t = document.createElement('div');
+    t.className = 'cat-section-title';
+    t.style.position='absolute'; t.style.left='-9999px'; t.style.top='-9999px';
+    t.textContent='測試';
+    document.body.appendChild(t);
+    const th = t.getBoundingClientRect().height;
+    if(th && isFinite(th) && th>24 && th<120) __VLIST_TITLE_H__ = Math.round(th);
+    t.remove();
+
+    __VLIST_ROW_H__ = __VLIST_CARD_H__ + __VLIST_GAP__ + __VLIST_SAFE_PAD__;
+    __VLIST_READY__ = true;
+  }catch(e){
+    __VLIST_READY__ = true;
+  }
+
+  // Determine cols per category container by computed gridTemplateColumns once it is in DOM
+  try{
+    Object.values(window.__VLIST_CAT__||{}).forEach(st=>{
+      const el = st && st.gridEl;
+      if(!el) return;
+      const cols = __vlistGetCols(el);
+      st.cols = cols;
+      const total = Array.isArray(st.items)? st.items.length : 0;
+      st.totalRows = Math.ceil(total / cols);
+      st.rowH = __VLIST_ROW_H__;
+      st.gap = __VLIST_GAP__;
+      // set placeholder height so section offsets are stable
+      const inner = st.innerEl;
+      if(inner){
+        inner.style.height = (st.totalRows * st.rowH) + 'px';
+      }
+      st.rendered = {r0:-1,r1:-1};
+      st.pinned = null;
+    });
+  }catch(e){}
+}
+
+function __vlistGetCols(gridEl){
+  try{
+    const cs = getComputedStyle(gridEl);
+    const tpl = cs.gridTemplateColumns || '';
+    const cols = tpl.split(' ').filter(Boolean).length;
+    return Math.max(1, cols || 2);
+  }catch(e){ return 2; }
+}
+
+function __vlistAttachScroll(){
+  if(__VLIST_SCROLL_BOUND__) return;
+  __VLIST_SCROLL_BOUND__ = true;
+  window.addEventListener('scroll', ()=> __vlistScheduleUpdate(), {passive:true});
+  window.addEventListener('resize', ()=> __vlistScheduleUpdate(true), {passive:true});
+}
+
+function __vlistScheduleUpdate(force=false){
+  if(__VLIST_SCHED__) return;
+  __VLIST_SCHED__ = requestAnimationFrame(()=>{
+    __VLIST_SCHED__ = 0;
+    __vlistUpdateAll(force);
+  });
+}
+
+function __vlistUpdateAll(force=false){
+  if(!__VLIST_READY__) return;
+  const vh = window.innerHeight || 800;
+  const vw = window.innerWidth || 360;
+  if(force || Math.abs(vw-__VLIST_LAST_VW__)>10){
+    __VLIST_LAST_VW__ = vw;
+    // recompute cols + placeholder heights
+    __vlistInitLayout();
+  }
+
+  const y0 = window.pageYOffset || 0;
+  const y1 = y0 + vh;
+  const bufferPx = Math.max(420, vh*0.6);
+
+  Object.values(window.__VLIST_CAT__||{}).forEach(st=>{
+    if(!st || !st.sectionEl || !st.gridEl || !st.innerEl) return;
+
+    const rect = st.gridEl.getBoundingClientRect();
+    const top = rect.top + (window.pageYOffset||0);
+    const bottom = top + rect.height;
+    if(bottom < y0 - bufferPx || top > y1 + bufferPx){
+      // out of range: optionally clear to reduce DOM
+      if(st.rendered && st.rendered.r0!==-1){
+        st.innerEl.innerHTML = '';
+        st.rendered = {r0:-1,r1:-1};
+      }
+      return;
+    }
+
+    // Visible row range within this grid
+    const cols = st.cols || __vlistGetCols(st.gridEl);
+    st.cols = cols;
+    const rowH = st.rowH || __VLIST_ROW_H__;
+    const totalRows = st.totalRows || Math.ceil((st.items||[]).length / cols);
+
+    const viewTop = Math.max(0, (y0 - top));
+    const viewBot = Math.max(0, (y1 - top));
+    let r0 = Math.floor(viewTop / rowH) - __VLIST_OVERSCAN_ROWS__;
+    let r1 = Math.ceil(viewBot / rowH) + __VLIST_OVERSCAN_ROWS__;
+    r0 = Math.max(0, r0);
+    r1 = Math.min(totalRows-1, r1);
+
+    if(st.pinned){
+      r0 = Math.min(r0, st.pinned.r0);
+      r1 = Math.max(r1, st.pinned.r1);
+    }
+
+    if(!force && st.rendered && st.rendered.r0===r0 && st.rendered.r1===r1) return;
+    __vlistRenderRows(st, r0, r1);
+  });
+
+  try{ if(typeof updateScrollSpyByScroll==='function') updateScrollSpyByScroll(); }catch(e){}
+}
+
+function __vlistRenderRows(st, r0, r1){
+  const inner = st.innerEl;
+  if(!inner) return;
+  inner.innerHTML = '';
+  const cols = st.cols || 2;
+  const gap = st.gap || __VLIST_GAP__;
+  const rowH = st.rowH || __VLIST_ROW_H__;
+  const total = (st.items||[]).length;
+
+  const gridW = st.gridEl.clientWidth || st.gridEl.getBoundingClientRect().width || 360;
+  const cardW = (gridW - gap*(cols-1)) / cols;
+
+  for(let r=r0; r<=r1; r++){
+    for(let c=0; c<cols; c++){
+      const idx = r*cols + c;
+      if(idx>=total) break;
+      const p = st.items[idx];
+      if(!p) continue;
+      const card = createProductCard(p, null);
+      card.id = `p-${p._id}`;
+      card.classList.add('vlist-abs');
+      card.style.width = cardW + 'px';
+      card.style.left = (c*(cardW+gap)) + 'px';
+      card.style.top = (r*rowH) + 'px';
+      inner.appendChild(card);
+    }
+  }
+  st.rendered = {r0:r0,r1:r1};
+}
+
+
+
+function __vlistTryApplyHighlight(pid, source, maxMs=5200){
+  try{
+    const t0 = (performance && performance.now) ? performance.now() : Date.now();
+    const step = ()=>{
+      try{ __vlistScheduleUpdate(true); }catch(e){}
+      const el = document.getElementById(`p-${pid}`);
+      if(el){
+        try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+        try{
+          if(source === 'rank') applyNavBreathe(el,'rank');
+          else if(source === 'star') applyNavBreathe(el,'star');
+          else {
+            el.classList.add('flash-highlight');
+            setTimeout(()=>{ try{ el.classList.remove('flash-highlight'); }catch(e){} }, 1200);
+          }
+        }catch(e){}
+        return;
+      }
+      const now = (performance && performance.now) ? performance.now() : Date.now();
+      if((now - t0) < maxMs){
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  }catch(e){}
+}
+function vlistScrollToCategory(cat){
+  try{
+    const st = (window.__VLIST_CAT__||{})[cat];
+    if(!st || !st.sectionEl) return false;
+    const header = document.getElementById('header');
+    const headerH = header ? header.getBoundingClientRect().height : 110;
+    const offset = Math.min(140, Math.max(78, (headerH || 110) - 18));
+    const y = st.sectionEl.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({top: Math.max(0,y), behavior:'smooth'});
+    return true;
+  }catch(e){ return false; }
+}
+
+function vlistScrollToProduct(pid, source){
+  try{
+    const pos = (window.__VLIST_PID_POS__||{})[pid];
+    if(!pos) return false;
+    const st = (window.__VLIST_CAT__||{})[pos.cat];
+    if(!st || !st.gridEl) return false;
+    const cols = st.cols || __vlistGetCols(st.gridEl);
+    const row = Math.floor((pos.idx||0) / cols);
+
+    // pin rows around target for a short time
+    st.pinned = {r0: Math.max(0,row-4), r1: Math.min((st.totalRows||row)+0, row+6)};
+    setTimeout(()=>{ try{ st.pinned=null; }catch(e){} }, 5200);
+
+    const header = document.getElementById('header');
+    const headerH = header ? header.getBoundingClientRect().height : 110;
+    const offset = Math.min(140, Math.max(78, (headerH || 110) - 18));
+
+    const top = st.gridEl.getBoundingClientRect().top + window.pageYOffset;
+    const y = top + row * (st.rowH||__VLIST_ROW_H__) - offset;
+    window.scrollTo({top: Math.max(0,y), behavior:'smooth'});
+
+    // after scroll, ensure highlight once target row is materialized
+    setTimeout(()=>{ try{ __vlistTryApplyHighlight(pid, source); }catch(e){} }, 160);
+
+    return true;
+  }catch(e){ return false; }
 }
 
 
@@ -5454,9 +6411,10 @@ const L_tier  = getBadgeName('tier','多件優惠');
       const hasSel = SELECTED_BUNDLE.has(p._id);
       actionBtn = `<div class="btn-bundle" onclick="openBundle(${p._id})">${hasSel ? "內容已選 ✓" : "選擇內容物"}</div>`;
     }
+    const lazyImgAttr = (window.FF && FF.has && FF.has('p3_lazyimg')) ? 'loading="lazy" decoding="async"' : '';
     let imgHtml = `<div class="p-no-img"><span class="material-icons-round" style="font-size:32px">image_not_supported</span>無圖片</div>`;
     if(p.photo && p.photo.length > 5) {
-      imgHtml = `<img src="${p.photo}" class="p-img" onload="this.classList.add('loaded')" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'p-no-img\'>暫無圖片</div>'">`;
+      imgHtml = `<img src="${p.photo}" class="p-img" ${lazyImgAttr} onload="this.classList.add('loaded')" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'p-no-img\'>暫無圖片</div>'">`;
     }
     
     // RESTORED HIGHLIGHT LOGIC
@@ -5868,6 +6826,8 @@ function refreshCart() {
   // Update宅配列右側免運提示（僅在展開時顯示）
   try { syncDeliveryHeaderUI(); } catch(e) {}
 
+  try { __detectThresholdToasts(data); } catch(e) {}
+
   return data;
 }
 
@@ -5942,7 +6902,6 @@ window.onpopstate = (e) => {
     handleRootBack();
 };
 window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"; };
-document.getElementById("searchInp").addEventListener("input", renderList);
 
 // OPTIMIZATION 2: Clear Search Logic
 document.getElementById("clearSearch").addEventListener("click", () => {
@@ -6291,8 +7250,66 @@ document.querySelectorAll('input, select').forEach(input => {
     });
 });
 
-document.getElementById("searchInp").addEventListener("input", renderList);
+document.getElementById("searchInp").addEventListener("input", scheduleRenderList);
 window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"; };
+
+/* ===== Diag Panel (?diag=1) ===== */
+(function(){
+  try{
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('diag') !== '1') return;
+    window.__DIAG_ON__ = true;
+
+    const box = document.createElement('div');
+    box.id = 'diagBox';
+    box.style.cssText = [
+      'position:fixed','right:10px','bottom:10px','z-index:999999',
+      'max-width:92vw','width:360px',
+      'background:rgba(15,17,22,.92)','backdrop-filter:blur(10px)',
+      'color:#fff','border:1px solid rgba(255,255,255,.12)',
+      'border-radius:14px','padding:10px 12px',
+      'font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+      'font-size:12px','line-height:1.35',
+      'box-shadow:0 10px 30px rgba(0,0,0,.35)'
+    ].join(';');
+
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;';
+    head.innerHTML = `<div style="font-weight:800;">DIAG</div>
+      <button id="diagCloseBtn" style="all:unset;cursor:pointer;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.12)">✕</button>`;
+    box.appendChild(head);
+
+    const pre = document.createElement('pre');
+    pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word;';
+    box.appendChild(pre);
+
+    document.body.appendChild(box);
+    document.getElementById('diagCloseBtn').onclick = ()=>{ try{ box.remove(); }catch(e){} };
+
+    function safeNum(n){ return (typeof n==='number' && isFinite(n)) ? n : 0; }
+    function yesno(v){ return v ? 'Y' : 'N'; }
+
+    function update(){
+      const lines = [];
+      lines.push(`build: ${window.BUILD_ID || 'unknown'}`);
+      lines.push(`time: ${new Date().toLocaleString()}`);
+      lines.push(`ua: ${navigator.userAgent}`);
+      lines.push(`vw/vh: ${window.innerWidth} x ${window.innerHeight}`);
+      lines.push(`parse: ${window.__PARSE_MODE__ || 'unknown'}`);
+      lines.push(`products: ${safeNum(window.PRODUCTS && window.PRODUCTS.length)}`);
+      lines.push(`rules: ${yesno(window.RULES)}`);
+      lines.push(`cart items: ${safeNum(window.CART && window.CART.length)}`);
+      lines.push(`vlist-ready: ${yesno(window.__VLIST_READY__)}  fallback: ${yesno(window.__VLIST_FALLBACK__)}`);
+      lines.push(`vlist-cardH: ${safeNum(window.__VLIST_CARD_H__)}  rowH: ${safeNum(window.__VLIST_ROW_H__)}  overscanRows: ${safeNum(window.__VLIST_OVERSCAN_ROWS__)}`);
+      const catCount = window.__VLIST_CAT__ ? Object.keys(window.__VLIST_CAT__).length : 0;
+      lines.push(`vlist-cats: ${catCount}`);
+      pre.textContent = lines.join('\n');
+    }
+
+    update();
+    setInterval(update, 900);
+  }catch(e){}
+})();
 
 initApp();
 try{ __starCaptureTemplate(); }catch(e){}
