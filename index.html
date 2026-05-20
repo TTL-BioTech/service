@@ -1758,6 +1758,18 @@ body.cfg-error .btn-bundle{
 }
 
 
+
+
+/* --- Pickup QR / email receipt proof --- */
+.pickup-proof-card{background:#f8fffd;border:1px solid #b2dfdb;border-radius:12px;padding:12px;margin:10px 0 12px;text-align:center;}
+.pickup-proof-title{font-weight:900;color:#00695c;font-size:14px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.pickup-qr-img{width:170px;height:170px;border:8px solid #fff;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08);background:#fff;}
+.pickup-code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:18px;font-weight:900;letter-spacing:1px;color:#263238;background:#fff;border:1px dashed #80cbc4;border-radius:10px;padding:8px 10px;margin:8px auto 4px;display:inline-block;}
+.receipt-status{font-size:12px;line-height:1.45;border-radius:10px;padding:9px 10px;margin:8px 0;text-align:left;}
+.receipt-status.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+.receipt-status.warn{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
+.receipt-status.fail{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+
 </style>
 </head>
 <body>
@@ -1967,6 +1979,7 @@ body.cfg-error .btn-bundle{
           <option value="薪資扣款">薪資扣款</option>
           <option value="匯款">匯款</option>
         </select>
+        <input id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="訂單備份 Email (必填)">
         <input id="fNote" placeholder="訂單備註">
       </div>
     </div>
@@ -2008,14 +2021,14 @@ body.cfg-error .btn-bundle{
     <div class="rc-body" id="rcBody"></div>
     <div class="rc-actions">
       <button class="btn-email" onclick="toggleEmailInput()">
-        <span class="material-icons-round">email</span> 寄送訂購紀錄到 Email
+        <span class="material-icons-round">email</span> 重新寄送訂單 Email
       </button>
       <div class="email-input-box" id="emailBox">
         <input type="email" id="rcEmail" placeholder="請輸入 Email..." style="flex:1;">
         <button class="btn-submit" style="flex:0 0 80px;padding:10px;" onclick="sendReceipt()">發送</button>
       </div>
-      <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:15px;">
-        請自行截圖留存，或使用上方按鈕寄送。
+      <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:15px;line-height:1.5;">
+        請保留此畫面截圖或 Email。取貨時出示 QR Code 或取貨碼，由工作人員掃描帶出訂單。
       </div>
       <button class="btn-close-rc" onclick="closeReceipt()">關閉並完成</button>
     </div>
@@ -2329,6 +2342,12 @@ let currentCat = "", categories = [];
 let modalPid = null, isCartOpen = false;
 let tempBundleSelection = [];
 let lastOrderData = null; 
+let lastOrderId = null;
+let lastPickupToken = '';
+let lastPickupCode = '';
+let lastReceiptEmail = '';
+let lastReceiptEmailStatus = null;
+let lastReceiptEmailError = '';
 let sectionObserver = null;
 let __SCROLLSPY_SCROLL_BOUND__ = false;
 let GIFT_MAP = new Map();
@@ -7246,26 +7265,34 @@ window.addEventListener("pageshow", () => {
 window.submitOrder = () => {
     // V2 Sprint1: strict mode — if config isn't ready, don't allow submission
     if(!CONFIG_READY) {
-        try { showInitBlockedToast(); } catch(e) { try { showToast('系統初始化中…請稍候', 'info', 2800); } catch(e2) {} }return;
+        try { showInitBlockedToast(); } catch(e) { try { showToast('系統初始化中…請稍候', 'info', 2800); } catch(e2) {} }
+        return;
     }
-const f = (id) => document.getElementById(id).value.trim(); 
+
+    const f = (id) => document.getElementById(id).value.trim();
     const nameEl = document.getElementById("fName");
     const deptEl = document.getElementById("fDept");
+    const emailEl = document.getElementById("fEmail");
 
     // 錯誤提示重置
     nameEl.classList.remove("input-error", "flash-anim");
     deptEl.classList.remove("input-error", "flash-anim");
+    if(emailEl) emailEl.classList.remove("input-error", "flash-anim");
     const dInputs = ['dName', 'dPhone', 'dAddr'];
     dInputs.forEach(id => document.getElementById(id).classList.remove("input-error", "flash-anim"));
 
     void nameEl.offsetWidth; // Trigger reflow
 
     let hasError = false;
+    const receiptEmail = f("fEmail");
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(receiptEmail);
+
     // 1. 基本驗證
     if(!f("fName")) { nameEl.classList.add("input-error", "flash-anim"); hasError = true; }
     if(!f("fDept")) { deptEl.classList.add("input-error", "flash-anim"); hasError = true; }
+    if(!receiptEmail || !isValidEmail) { if(emailEl) emailEl.classList.add("input-error", "flash-anim"); hasError = true; }
 
-    // [NEW] 2. 宅配驗證
+    // 2. 宅配驗證
     const isDelivery = document.getElementById("chkDelivery").checked;
     let pickupInfo = null;
 
@@ -7285,149 +7312,245 @@ const f = (id) => document.getElementById(id).value.trim();
     }
 
     if(hasError) {
-        showToast(isDelivery ? "請填寫完整訂購與宅配資訊" : "請填寫姓名與部門", "warn"); 
-        return; 
-    } 
+        showToast(isDelivery ? "請填寫完整訂購、Email 與宅配資訊" : "請填寫姓名、部門與有效 Email", "warn");
+        return;
+    }
 
-    const data = calcCart(); 
-    if(data.warnings.length > 0) { 
-        const warnEl = document.getElementById("warnMsg"); 
-        warnEl.scrollIntoView({ behavior: "smooth", block: "center" }); 
-        warnEl.classList.remove("flash-anim"); void warnEl.offsetWidth; warnEl.classList.add("flash-anim"); 
-        showToast("尚有優惠未湊滿，無法送出！", "warn"); 
-        return; 
-    } 
+    const data = calcCart();
+    if(data.warnings.length > 0) {
+        const warnEl = document.getElementById("warnMsg");
+        warnEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        warnEl.classList.remove("flash-anim"); void warnEl.offsetWidth; warnEl.classList.add("flash-anim");
+        showToast("尚有優惠未湊滿，無法送出！", "warn");
+        return;
+    }
 
-    const btn = document.querySelector(".btn-submit"); 
-    const originalText = btn.innerText; 
-    btn.innerText = "資料傳送中..."; 
-    btn.disabled = true; 
-    btn.style.opacity = "0.7"; 
+    const btn = document.querySelector(".btn-submit");
+    const originalText = btn.innerText;
+    btn.innerText = "資料傳送中...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
 
-    const allDiscountNotes = []; 
+    const allDiscountNotes = [];
 
     // 準備商品資料
-    const itemsPayload = data.items.map(it => { 
-        let spec = it.spec || ""; 
-        let bundleSummary = ""; 
+    const itemsPayload = data.items.map(it => {
+        let spec = it.spec || "";
+        let bundleSummary = "";
 
-        if(it.bundleSelection) { 
-            const s = it.bundleSelection; 
-            spec = `[自選] ${it.bundle[s[0]]?.name} + ${it.bundle[s[1]]?.name}`; 
-            bundleSummary = `${it.bundle[s[0]]?.name}|${it.bundle[s[1]]?.name}`; 
-        } else { 
-            if(it.bundle.length > 0) { 
-                spec = "[" + it.bundle.map(b=>b.name).join("+") + "]"; 
-                bundleSummary = it.bundle.map(b=>b.name).join("|"); 
-            } 
-        } 
+        if(it.bundleSelection) {
+            const s = it.bundleSelection;
+            spec = `[自選] ${it.bundle[s[0]]?.name} + ${it.bundle[s[1]]?.name}`;
+            bundleSummary = `${it.bundle[s[0]]?.name}|${it.bundle[s[1]]?.name}`;
+        } else {
+            if(it.bundle.length > 0) {
+                spec = "[" + it.bundle.map(b=>b.name).join("+") + "]";
+                bundleSummary = it.bundle.map(b=>b.name).join("|");
+            }
+        }
 
-        let chargeQty = it.qty, freeQty = 0; 
-        const bogo = RULES.bogo.find(b => b.code === it.code); 
-        if(bogo) { 
-            const set = bogo.buy + bogo.get; 
-            const sets = Math.floor(it.qty / set); 
-            freeQty = sets * bogo.get; 
-            chargeQty = it.qty - freeQty; 
-        } 
+        let chargeQty = it.qty, freeQty = 0;
+        const bogo = RULES.bogo.find(b => b.code === it.code);
+        if(bogo) {
+            const set = bogo.buy + bogo.get;
+            const sets = Math.floor(it.qty / set);
+            freeQty = sets * bogo.get;
+            chargeQty = it.qty - freeQty;
+        }
 
-        it.tags.forEach(t => { 
-            if(t.cls === 'save') allDiscountNotes.push(`${it.name}: ${t.text}`); 
-        }); 
+        it.tags.forEach(t => {
+            if(t.cls === 'save') allDiscountNotes.push(`${it.name}: ${t.text}`);
+        });
 
-        return { 
-            product_code: it.code, 
-            product_name: it.name, 
-            spec: spec, 
-            category: it.category, 
-            unit_price: it.price, 
-            qty: it.qty, 
-            charge_qty: chargeQty, 
-            free_qty: freeQty, 
-            line_total: Math.round(it.finalLine), 
-            bundle_summary: bundleSummary 
-        }; 
-    }); 
+        return {
+            product_code: it.code,
+            product_name: it.name,
+            spec: spec,
+            category: it.category,
+            unit_price: it.price,
+            qty: it.qty,
+            charge_qty: chargeQty,
+            free_qty: freeQty,
+            line_total: Math.round(it.finalLine),
+            bundle_summary: bundleSummary
+        };
+    });
 
-    // [Mod] 準備贈品資料 (包含拆解邏輯)
+    // 準備贈品資料 (包含拆解邏輯)
     const giftsPayload = data.gifts.map(g => {
         let bundleSummary = "";
-        // 查找贈品是否有 bundle 設定 (邏輯同產品列表)
         const p = PRODUCT_MAP.get(g.code);
         if (p && p.bundle && p.bundle.length > 0) {
-            // 如果贈品本身是組合包，自動拆解其內容物
             bundleSummary = p.bundle.map(b => b.name).join("|");
         }
 
-        return { 
-            product_code: g.code || "GIFT", 
-            product_name: `[贈品] ${g.name}`, 
+        return {
+            product_code: g.code || "GIFT",
+            product_name: `[贈品] ${g.name}`,
             qty: g.qty,
-            bundle_summary: bundleSummary // 傳給後端寫入 Content 欄位
+            bundle_summary: bundleSummary
         };
-    }); 
+    });
 
-    if(giftsPayload.length > 0) allDiscountNotes.push("已符合滿額贈資格"); 
+    if(giftsPayload.length > 0) allDiscountNotes.push("已符合滿額贈資格");
 
     // 組合最終 Payload
-    lastOrderData = { 
-        employee_name: f("fName"), 
-        department: f("fDept"), 
-        payment_method: f("fPay"), 
-        remarks: f("fNote"), 
-        totals: { 
-            base: data.subTotal, 
-            discount: Math.round(data.discountAmt), 
-            pay: Math.round(data.finalTotal) 
-        }, 
-        discount_notes: allDiscountNotes, 
-        items: itemsPayload, 
+    lastOrderData = {
+        employee_name: f("fName"),
+        department: f("fDept"),
+        payment_method: f("fPay"),
+        receipt_email: receiptEmail,
+        remarks: f("fNote"),
+        totals: {
+            base: data.subTotal,
+            discount: Math.round(data.discountAmt),
+            pay: Math.round(data.finalTotal)
+        },
+        discount_notes: allDiscountNotes,
+        items: itemsPayload,
         gifts: giftsPayload,
-        // [New] 宅配與取貨資訊
         pickup_method: isDelivery ? '宅配' : '自取',
         pickup_info: pickupInfo
-    }; 
+    };
 
-    fetch(GAS_URL, { 
-        method: "POST", 
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }, 
-        body: "payload=" + encodeURIComponent(JSON.stringify(lastOrderData)) 
+    fetch(GAS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "payload=" + encodeURIComponent(JSON.stringify(lastOrderData))
     })
     .then(response => response.json())
-    .then(res => { 
-        if(res.ok) { 
-            showToast("訂單送出成功！"); 
-            openReceipt(res.order_id); 
-        } else { 
-            alert("訂單送出失敗：" + (res.error || "未知錯誤")); 
-        } 
+    .then(res => {
+        if(res.ok) {
+            lastOrderId = res.order_id || null;
+            lastPickupToken = res.pickup_token || '';
+            lastPickupCode = res.pickup_code || '';
+            lastReceiptEmail = receiptEmail;
+            lastReceiptEmailStatus = res.email_status || (res.email_ok ? 'sent' : (res.email_error ? 'failed' : 'skipped'));
+            lastReceiptEmailError = res.email_error || '';
+            lastOrderData.order_id = lastOrderId;
+            lastOrderData.pickup_token = lastPickupToken;
+            lastOrderData.pickup_code = lastPickupCode;
+            lastOrderData.email_status = lastReceiptEmailStatus;
+            showToast("訂單送出成功！");
+            openReceipt(lastOrderId, res);
+        } else {
+            alert("訂單送出失敗：" + (res.error || "未知錯誤"));
+        }
     })
-    .catch(err => { 
-        console.error(err); 
-        alert("連線發生錯誤"); 
+    .catch(err => {
+        console.error(err);
+        alert("連線發生錯誤");
     })
-    .finally(() => { 
-        btn.innerText = originalText; 
-        btn.disabled = false; 
-        btn.style.opacity = "1"; 
-    }); 
+    .finally(() => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    });
 };
 
-function openReceipt(orderId) { const modal = document.getElementById("receiptModal"); const body = document.getElementById("rcBody"); document.getElementById("rcOrderId").innerText = `No. ${orderId}`; let html = ""; 
+function pickupQrPayload(){ return lastPickupToken ? `TTLBT_PICKUP|v1|${lastPickupToken}` : ''; }
+function pickupQrUrl(){ return pickupQrPayload() ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(pickupQrPayload())}` : ''; }
+function escapeHtml(str){ return String(str ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s])); }
 
-    // [New] 收據顯示宅配資訊
+function openReceipt(orderId, res = {}) {
+    const modal = document.getElementById("receiptModal");
+    const body = document.getElementById("rcBody");
+    document.getElementById("rcOrderId").innerText = `No. ${orderId || ''}`;
+    const emailInput = document.getElementById("rcEmail");
+    if(emailInput) emailInput.value = lastReceiptEmail || (lastOrderData && lastOrderData.receipt_email) || '';
+
+    let html = "";
+    const emailStatus = lastReceiptEmailStatus || res.email_status;
+    if(emailStatus === 'sent') {
+        html += `<div class="receipt-status ok">✅ 訂單明細與取貨 QR Code 已寄送至：<br><b>${escapeHtml(lastReceiptEmail)}</b></div>`;
+    } else if(emailStatus === 'failed') {
+        html += `<div class="receipt-status fail">⚠️ 訂單已建立，但 Email 寄送失敗。請先截圖留存，或使用下方按鈕重新寄送。${lastReceiptEmailError ? `<br><span style="font-size:11px">${escapeHtml(lastReceiptEmailError)}</span>` : ''}</div>`;
+    } else {
+        html += `<div class="receipt-status warn">提醒：請保留此畫面截圖，取貨時可出示 QR Code 或取貨碼。</div>`;
+    }
+
+    if(lastPickupToken || lastPickupCode) {
+        html += `<div class="pickup-proof-card">
+            <div class="pickup-proof-title"><span class="material-icons-round" style="font-size:18px">qr_code_2</span>取貨 QR Code</div>
+            ${pickupQrUrl() ? `<img class="pickup-qr-img" src="${pickupQrUrl()}" alt="取貨 QR Code">` : ''}
+            <div class="pickup-code">${escapeHtml(lastPickupCode || lastPickupToken)}</div>
+            <div style="font-size:11px;color:#607d8b;line-height:1.45;">此 QR Code 僅供工作人員於後台掃描辨識訂單，不含後台網址。</div>
+        </div>`;
+    }
+
+    // 收據顯示宅配資訊
     if (lastOrderData.pickup_method === '宅配' && lastOrderData.pickup_info) {
         html += `
         <div style="background:#fff3e0;padding:10px;margin-bottom:10px;border-radius:6px;font-size:13px;color:#e65100;">
             <b>🚚 宅配資訊</b><br>
-            ${lastOrderData.pickup_info.name} / ${lastOrderData.pickup_info.phone}<br>
-            ${lastOrderData.pickup_info.address}
+            ${escapeHtml(lastOrderData.pickup_info.name)} / ${escapeHtml(lastOrderData.pickup_info.phone)}<br>
+            ${escapeHtml(lastOrderData.pickup_info.address)}
         </div>`;
     }
- lastOrderData.items.forEach(it => { html += `<div class="rc-item"><div class="rc-name">${it.product_name}</div><div class="rc-meta"><span>${it.spec}</span><span>x${it.qty}</span><span>$${it.line_total}</span></div></div>`; }); if(lastOrderData.gifts.length > 0) { html += `<div class="rc-row bold" style="color:#e65100">滿額贈品</div>`; lastOrderData.gifts.forEach(g => { html += `<div class="rc-item"><div class="rc-name" style="color:#e65100">🎁 ${g.product_name}</div><div class="rc-meta"><span></span><span>x${g.qty}</span><span>免費</span></div></div>`; }); } html += `<div class="rc-row bold"><span>總計金額</span><span>$${lastOrderData.totals.pay}</span></div>`; body.innerHTML = html; modal.classList.add("open"); }
-function closeReceipt() { document.getElementById("receiptModal").classList.remove("open"); CART = []; SELECTED_BUNDLE.clear(); achievedGifts = []; saveState(); refreshCart(); closeCart(); renderList(); document.getElementById("fNote").value = ""; lastOrderData = null; }
+    lastOrderData.items.forEach(it => { html += `<div class="rc-item"><div class="rc-name">${escapeHtml(it.product_name)}</div><div class="rc-meta"><span>${escapeHtml(it.spec)}</span><span>x${it.qty}</span><span>$${it.line_total}</span></div></div>`; });
+    if(lastOrderData.gifts.length > 0) {
+        html += `<div class="rc-row bold" style="color:#e65100">滿額贈品</div>`;
+        lastOrderData.gifts.forEach(g => { html += `<div class="rc-item"><div class="rc-name" style="color:#e65100">🎁 ${escapeHtml(g.product_name)}</div><div class="rc-meta"><span></span><span>x${g.qty}</span><span>免費</span></div></div>`; });
+    }
+    html += `<div class="rc-row bold"><span>總計金額</span><span>$${lastOrderData.totals.pay}</span></div>`;
+    body.innerHTML = html;
+    modal.classList.add("open");
+}
+
+function closeReceipt() {
+    document.getElementById("receiptModal").classList.remove("open");
+    CART = [];
+    SELECTED_BUNDLE.clear();
+    achievedGifts = [];
+    saveState();
+    refreshCart();
+    closeCart();
+    renderList();
+    document.getElementById("fNote").value = "";
+    const emailEl = document.getElementById("fEmail");
+    if(emailEl) emailEl.value = "";
+    lastOrderData = null;
+    lastOrderId = null;
+    lastPickupToken = '';
+    lastPickupCode = '';
+    lastReceiptEmail = '';
+    lastReceiptEmailStatus = null;
+    lastReceiptEmailError = '';
+}
 function toggleEmailInput() { const box = document.getElementById("emailBox"); box.classList.toggle("show"); if(box.classList.contains("show")) document.getElementById("rcEmail").focus(); }
-function sendReceipt() { const email = document.getElementById("rcEmail").value.trim(); if(!email || !email.includes('@')) { showToast("請輸入有效的 Email", "warn"); return; } const btn = document.querySelector("#emailBox .btn-submit"); const orgTxt = btn.innerText; btn.innerText = "..."; btn.disabled = true; const payload = { action: 'send_email', email: email, order_id: document.getElementById("rcOrderId").innerText, order_data: lastOrderData }; fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "payload=" + encodeURIComponent(JSON.stringify(payload)) }).then(res => res.json()).then(res => { if(res.ok) { showToast("✅ 已寄送至信箱"); toggleEmailInput(); } else { alert("寄送失敗"); } }).catch(err => alert("連線錯誤")) .finally(() => { btn.innerText = orgTxt; btn.disabled = false; }); }
+function sendReceipt() {
+    const email = document.getElementById("rcEmail").value.trim();
+    if(!email || !email.includes('@')) { showToast("請輸入有效的 Email", "warn"); return; }
+    if(!lastOrderData || !lastOrderId) { showToast("找不到訂單資料，請先截圖留存", "warn"); return; }
+    const btn = document.querySelector("#emailBox .btn-submit");
+    const orgTxt = btn.innerText;
+    btn.innerText = "...";
+    btn.disabled = true;
+    const payload = {
+        action: 'send_email',
+        email: email,
+        order_id: lastOrderId,
+        pickup_token: lastPickupToken,
+        pickup_code: lastPickupCode,
+        order_data: Object.assign({}, lastOrderData, { receipt_email: email, pickup_token: lastPickupToken, pickup_code: lastPickupCode })
+    };
+    fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "payload=" + encodeURIComponent(JSON.stringify(payload)) })
+    .then(res => res.json()).then(res => {
+        if(res.ok) {
+            lastReceiptEmail = email;
+            lastReceiptEmailStatus = 'sent';
+            lastReceiptEmailError = '';
+            if(lastOrderData) lastOrderData.receipt_email = email;
+            showToast("✅ 已寄送至信箱");
+            toggleEmailInput();
+            openReceipt(lastOrderId, res);
+        } else {
+            lastReceiptEmailStatus = 'failed';
+            lastReceiptEmailError = res.error || '未知錯誤';
+            alert("寄送失敗：" + lastReceiptEmailError);
+        }
+    }).catch(err => alert("連線錯誤")) .finally(() => { btn.innerText = orgTxt; btn.disabled = false; });
+}
 
 // Start
 window.addEventListener('scroll', () => {
