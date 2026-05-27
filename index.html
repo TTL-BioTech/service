@@ -275,14 +275,39 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #float-bar.hidden { transform: translateY(200%); }
-.fb-total { font-size: 18px; font-weight: 700; }
+.fb-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.fb-total { font-size: 18px; font-weight: 700; line-height: 1.15; }
+.fb-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .fb-count { font-size: 12px; opacity: 0.7; }
+.fb-ship-badge {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+  background: rgba(255,248,225,0.16);
+  border: 1px solid rgba(255,224,178,0.28);
+  color: #ffe0b2;
+}
+.fb-ship-badge.ok { background: rgba(232,245,233,0.16); border-color: rgba(200,230,201,0.35); color: #c8e6c9; }
+@media (max-width: 480px){
+  .fb-btn{ padding: 10px 18px; font-size: 14px; }
+  .fb-ship-badge{ font-size: 10px; padding: 2px 7px; }
+}
 .fb-btn { 
   background: var(--accent); color: #fff; padding: 10px 24px; border-radius: 40px; 
   font-weight: 700; font-size: 15px; box-shadow: 0 4px 15px rgba(255,111,0,0.4); 
   display: flex; align-items: center; gap: 6px; transition: 0.1s;
 }
 .fb-btn:active { background: #e65100; transform: scale(0.98); }
+@media (max-width: 480px){
+  #float-bar .fb-btn{ padding: 10px 18px; font-size: 14px; }
+  #float-bar .fb-ship-badge{ font-size: 10px; padding: 2px 7px; }
+}
 
 #gift-fab {
   position: fixed; bottom: calc(90px + var(--safe-bottom) + var(--kb)); left: 20px;
@@ -317,11 +342,12 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   box-shadow: 0 8px 30px rgba(0,0,0,0.3); 
   z-index: 3000; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s;
   backdrop-filter: blur(8px);
-  transform: translateY(-150%); opacity: 0; pointer-events: none;
+  transform: translateY(-150%); opacity: 0; pointer-events: none; cursor: pointer;
 }
 #top-notify.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
 .tn-head { display: flex; align-items: center; gap: 8px; font-weight: 700; color: #ffd54f; font-size: 14px; margin-bottom: 2px; }
 .tn-body { font-size: 13px; line-height: 1.5; color: #fff; white-space: normal; }
+.tn-cta { margin-top: 4px; font-size: 12px; font-weight: 800; color: #ffd54f; opacity: 0.95; }
 
 /* --- Milestone Card --- */
 #milestone-overlay {
@@ -380,7 +406,13 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   line-height: 1;
   border: 1px solid transparent;
   letter-spacing: .2px;
-  flex: 0 0 auto;
+  flex: 0 0 54px;
+  width: 54px;
+  min-width: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .ms-badge-all{
   background: rgba(230,81,0,0.12);
@@ -603,7 +635,8 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .bg-purple { background: rgba(171, 71, 188, 0.95); }
 .bg-teal { background: #26a69a; }
 
-.p-body { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+.p-body { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; position: relative; min-height: 118px; }
+.p-main { min-width: 0; display: flex; flex-direction: column; }
 .p-title { font-size: 14px; font-weight: 700; line-height: 1.4; color: #37474f; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 40px; }
 .p-code { font-size: 11px; color: #cfd8dc; margin-bottom: 8px; }
 .p-code-chip{
@@ -665,7 +698,8 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   align-items: center;
   justify-content: flex-end; /* stepper 永遠靠右，避免擠壓 */
   gap: 10px;
-  margin-top: 10px;
+  margin-top: auto;
+  padding-top: 8px;
 }
 .p-buy-row.no-pill{ justify-content: flex-end; }
 .p-buy-row .stepper{ margin-top: 0 !important; }
@@ -722,8 +756,9 @@ header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0
 .c-spec { font-size: 12px; margin-bottom: 2px; color:#90a4ae; }
 .c-price-box { margin-top: 2px; font-weight:700; font-size:15px; color:#263238; }
 .c-old { text-decoration: line-through; color: #90a4ae; font-size: 12px; margin-right: 6px; }
-.c-tags { margin-top: 2px; }
-.c-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.c-tags { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+.c-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; line-height: 1.2; }
+.c-price-box { line-height: 1.25; }
 .c-tag.save { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
 .c-tag.warn { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
 .c-ctrl { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
@@ -1818,7 +1853,7 @@ body.cfg-error .btn-bundle{
   <span class="material-icons-round" style="color:#ffca28">card_giftcard</span>
 </div>
 
-<div id="top-notify">
+<div id="top-notify" onclick="openMilestoneFromNotify()" role="button" aria-label="查看滿額贈進度">
   <div class="tn-head"><span class="material-icons-round">emoji_events</span> 獲得贈品</div>
   <div class="tn-body" id="tn-text"></div>
 </div>
@@ -1905,7 +1940,10 @@ body.cfg-error .btn-bundle{
 <div id="float-bar" onclick="safeOpenCart()">
   <div class="fb-info">
     <span class="fb-total">$0</span>
-    <span class="fb-count">0 件商品</span>
+    <div class="fb-meta">
+      <span class="fb-count">0 件商品</span>
+      <span id="floatShipBadge" class="fb-ship-badge"></span>
+    </div>
   </div>
   <div class="fb-btn">查看購物車 <span class="material-icons-round" style="font-size:18px">arrow_forward</span></div>
 </div>
@@ -2094,7 +2132,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v1";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -2475,19 +2513,34 @@ function getFreeShipThreshold(){
   return (isFinite(t) && t > 0) ? t : 0;
 }
 
+function getShipFreeStatus(total){
+  const thr = getFreeShipThreshold();
+  if(!thr) return { enabled:false, ok:false, diff:0, text:'' };
+  const val = Number(total)||0;
+  const diff = Math.max(0, Math.round(thr - val));
+  const ok = val >= thr;
+  return { enabled:true, ok, diff, text: ok ? '✔ 滿額免運' : `差 ${diff.toLocaleString()} 免運` };
+}
+
+function applyShipFreeBadge(el, total, displayValue){
+  if(!el) return;
+  const st = getShipFreeStatus(total);
+  if(!st.enabled){ el.style.display='none'; return; }
+  el.classList.toggle('ok', !!st.ok);
+  el.textContent = st.text;
+  el.style.display = displayValue || 'inline-flex';
+}
+
 function updateShipFreeBadge(total){
   const badge = document.getElementById('shipFreeBadge');
+  applyShipFreeBadge(badge, total, 'inline-flex');
+}
+
+function updateFloatShipBadge(total){
+  const badge = document.getElementById('floatShipBadge');
   if(!badge) return;
-  const thr = getFreeShipThreshold();
-  if(!thr){ badge.style.display='none'; return; }
-  const diff = Math.max(0, Math.round(thr - (Number(total)||0)));
-  if((Number(total)||0) >= thr){
-    badge.classList.add('ok');
-    badge.textContent = '✔ 滿額免運';
-  } else {
-    badge.classList.remove('ok');
-    badge.textContent = `差 ${diff.toLocaleString()} 免運`;
-  }
+  if(!CART || CART.length === 0){ badge.style.display = 'none'; return; }
+  applyShipFreeBadge(badge, total, 'inline-flex');
 }
 
 // --- V42: Threshold crossing toast (Free Shipping) ---
@@ -2525,14 +2578,14 @@ function syncDeliveryHeaderUI(){
   if(!wrap || !form || !status || !badge || !chk) return;
 
   const expanded = !!(chk.checked && form.classList.contains('show'));
-  if(expanded){
-    status.style.display = 'none';
-    badge.style.display = 'inline-flex';
+  const checkoutOpened = (typeof __CHECKOUT_STAGE__ !== 'undefined' && __CHECKOUT_STAGE__ === 2);
+  status.style.display = expanded ? 'none' : 'inline';
+
+  if(checkoutOpened){
     wrap.classList.add('has-badge');
     const total = parseFloat(String(document.getElementById('sumPay')?.innerText||'').replace(/[^\d.]/g,'')) || 0;
     updateShipFreeBadge(total);
   } else {
-    status.style.display = 'inline';
     badge.style.display = 'none';
     wrap.classList.remove('has-badge');
   }
@@ -2583,6 +2636,7 @@ function setCheckoutStage(stage){
     if(btn){
       btn.textContent = (__CHECKOUT_STAGE__ === 2) ? '確認訂購' : '結帳去';
     }
+    try{ syncDeliveryHeaderUI(); }catch(e){}
   }catch(e){}
 }
 function handleCheckoutSubmit(){
@@ -2986,6 +3040,36 @@ function createDualItem(g, isReached, opts) {
     return item;
 }
 
+let __TOP_NOTIFY_TIMER__ = null;
+
+window.openMilestoneFromNotify = function(){
+    try{
+      if(__TOP_NOTIFY_TIMER__) clearTimeout(__TOP_NOTIFY_TIMER__);
+      const notify = document.getElementById('top-notify');
+      if(notify) notify.classList.remove('show');
+    }catch(e){}
+    try{ showMilestoneCard(); }catch(e){}
+};
+
+function showGiftUnlockNotify(unlocks, durationMs){
+    try{
+      const list = Array.isArray(unlocks) ? unlocks.filter(Boolean) : [unlocks].filter(Boolean);
+      if(list.length === 0) return;
+      const notify = document.getElementById('top-notify');
+      const txt = document.getElementById('tn-text');
+      if(!notify || !txt) return;
+      let html = "";
+      list.forEach(name => { html += `<div>• ${String(name).replace(/[<>]/g,'')}</div>`; });
+      html += `<div class="tn-cta">點擊查看滿額贈進度 ›</div>`;
+      txt.innerHTML = html;
+      notify.classList.add('show');
+      if(__TOP_NOTIFY_TIMER__) clearTimeout(__TOP_NOTIFY_TIMER__);
+      __TOP_NOTIFY_TIMER__ = setTimeout(() => {
+        try{ notify.classList.remove('show'); }catch(e){}
+      }, Number(durationMs)||4000);
+    }catch(e){}
+}
+
 function checkNewGifts(currentGifts) {
     const currentNames = currentGifts.map(g => g.name);
     const newUnlocks = currentNames.filter(n => !achievedGifts.includes(n));
@@ -3001,17 +3085,10 @@ function checkNewGifts(currentGifts) {
 
         fab.classList.add('gift-shake');
         
-        let html = "";
-        newUnlocks.forEach(name => {
-           html += `<div>• ${name}</div>`;
-        });
-        txt.innerHTML = html;
-        
-        notify.classList.add('show');
+        showGiftUnlockNotify(newUnlocks, 4000);
         
         setTimeout(() => {
             fab.classList.remove('gift-shake');
-            notify.classList.remove('show');
         }, 4000); 
     }
     achievedGifts = currentNames;
@@ -6252,7 +6329,7 @@ let __VLIST_READY__ = false;
 let __VLIST_SCROLL_BOUND__ = false;
 let __VLIST_COLS__ = 2;
 let __VLIST_GAP__ = 12;
-let __VLIST_SAFE_PAD__ = 20; // safety padding to prevent row overlap on some devices
+let __VLIST_SAFE_PAD__ = 32; // safety padding to prevent row overlap on promo-heavy cards
 let __VLIST_CARD_H__ = 260;
 let __VLIST_ROW_H__ = 272;
 let __VLIST_TITLE_H__ = 44;
@@ -6617,7 +6694,7 @@ const newBadgeLabel = (function(){
   try{ return escapeHtml(getBadgeName('new', 'NEW')); }catch(e){ return 'NEW'; }
 })();
 const newBadgeHtml = (p.is_new) ? `<div class="new-badge">${newBadgeLabel}</div>` : '';
-    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}<div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div></div></div>`;
+    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div class="p-main"><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}</div><div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div></div>`;
     return card;
 }
 
@@ -6776,12 +6853,8 @@ window.updateCartItem = function(index, delta) {
         msg.innerText = `🎉 恭喜！已獲得新贈品`;
         msg.classList.add('success'); 
         
-        // Also show Top Pill
-        const notify = document.getElementById('top-notify');
-        const txt = document.getElementById('tn-text');
-        txt.innerText = `已獲得 ${newUnlocks[newUnlocks.length-1]}!`;
-        notify.classList.add('show');
-        setTimeout(() => notify.classList.remove('show'), 3000);
+        // Also show clickable top notification
+        showGiftUnlockNotify([newUnlocks[newUnlocks.length-1]], 3000);
 
         setTimeout(() => {
             msg.innerText = originalMsg; 
@@ -6988,6 +7061,7 @@ function refreshCart() {
   list.innerHTML = "";
   document.querySelector(".fb-total").innerText = "$" + Math.round(data.finalTotal).toLocaleString();
   document.querySelector(".fb-count").innerText = CART.reduce((a,b)=>a+b.qty,0) + " 件";
+  try { updateFloatShipBadge(data.finalTotal); } catch(e) {}
   
   data.items.forEach((it, index) => {
     let specStr = it.spec;
@@ -7042,7 +7116,7 @@ function refreshCart() {
   data.gifts.forEach(g => sumHtml += `<div class="sum-line" style="color:#e65100"><span>🎁 ${g.name}</span><span>x${g.qty}</span></div>`);
   finalList.innerHTML = sumHtml; // V22.2 Fix: Ensure HTML is set
 
-  // Update宅配列右側免運提示（僅在展開時顯示）
+  // Update宅配列右側免運提示（結帳二階段展開後即顯示）
   try { syncDeliveryHeaderUI(); } catch(e) {}
 
   try { __detectThresholdToasts(data); } catch(e) {}
@@ -7640,14 +7714,14 @@ try{ initBackGuard(); }catch(e){}
 
 // --- V2.8.8: Click-to-explain for promo badges/pills (non-intrusive) ---
 document.addEventListener('click', function promoHintClick(e){
-  const el = e.target.closest('.promo-badge, .p-price-pill, #shipFreeBadge');
+  const el = e.target.closest('.promo-badge, .p-price-pill, #shipFreeBadge, #floatShipBadge');
   if(!el) return;
   // prevent interfering with +/- buttons etc.
   if(e.target.closest('.s-btn')) return;
 
   // Shipping badge
-  if(el.id === 'shipFreeBadge'){
-    const total = Number(document.getElementById("sumPay")?.innerText?.replace('$','').replace(/,/g,'')) || 0;
+  if(el.id === 'shipFreeBadge' || el.id === 'floatShipBadge'){
+    const total = (typeof calcCart === 'function') ? Number(calcCart().finalTotal||0) : (Number(document.getElementById("sumPay")?.innerText?.replace('$','').replace(/,/g,'')) || 0);
     const thr = getFreeShipThreshold();
     if(!thr) return;
     if(total >= thr) return showPromoHint(`免運門檻：滿 ${Math.round(thr).toLocaleString()} 免運（已達標）`);
