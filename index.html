@@ -657,7 +657,23 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 }
 
 
-.p-pill-row{ margin-top: 6px; }
+.p-pill-row{ margin-top: 6px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-height:24px; }
+.p-bundle-count-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:900;
+  color:#00695c;
+  background:rgba(0,137,123,.10);
+  border:1px solid rgba(0,137,123,.24);
+  padding:3px 8px;
+  border-radius:999px;
+  line-height:1.15;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.p-bundle-count-pill:active{ transform: translateY(1px); background:rgba(0,137,123,.16); }
 
 .p-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; justify-content: flex-start; }
 .p-price { font-size: var(--price-size-lg); font-weight: 800; color: #263238; }
@@ -6624,6 +6640,35 @@ function getTierRangeText(p){
   return `${r.low.toLocaleString()}–${r.high.toLocaleString()}`;
 }
 
+
+function isBundleSelectProduct(p){
+  try{
+    // 本方案的「任選買一送一／選擇內容物」以商品主資料 product_name(p.name) 判斷，
+    // 不使用 category，避免影響另一套以 category/zone/codes 運作的 mixpay 任選優惠。
+    return !!(p && Array.isArray(p.bundle) && p.bundle.length >= 2 && String(p.name||'').includes('任選'));
+  }catch(e){ return false; }
+}
+
+function getBundleSelectCartQty(p){
+  try{
+    if(!p || !Array.isArray(CART)) return 0;
+    const pid = p._id;
+    const code = String(p.code||'').trim();
+    return CART.reduce((sum, it)=>{
+      if(!it || !it.bundleSelection) return sum;
+      const sameId = (it._id === pid);
+      const sameCode = code && String(it.code||'').trim() === code;
+      if(sameId || sameCode) return sum + (Number(it.qty)||0);
+      return sum;
+    }, 0);
+  }catch(e){ return 0; }
+}
+
+function openCartFromBundleCount(ev){
+  try{ if(ev){ ev.preventDefault(); ev.stopPropagation(); } }catch(e){}
+  try{ safeOpenCart(); }catch(e){}
+}
+
 function createProductCard(p, highlightQuery) {
     const inCart = CART.find(x => x._id === p._id && !x.bundleSelection);
     const qty = inCart ? inCart.qty : 0;
@@ -6647,8 +6692,9 @@ const L_tier  = getBadgeName('tier','多件優惠');
     if(info.kind === 'order') badges += `<span class="badge bg-purple promo-badge" data-promo="order_discount" data-zone="${String(info.zone).replace(/"/g,'&quot;')}">${L_order}</span>`;
     else badges += `<span class="badge bg-purple promo-badge" data-promo="tier" data-zone="${String(info.zone).replace(/"/g,'&quot;')}">${L_tier}</span>`;
   })();
+    const isBundleSelect = isBundleSelectProduct(p);
     let actionBtn = "";
-    if(p.bundle.length >= 2 && p.name.includes("任選")) {
+    if(isBundleSelect) {
       const hasSel = SELECTED_BUNDLE.has(p._id);
       actionBtn = `<div class="btn-bundle" onclick="openBundle(${p._id})">${hasSel ? "內容已選 ✓" : "選擇內容物"}</div>`;
     }
@@ -6688,13 +6734,20 @@ const L_tier  = getBadgeName('tier','多件優惠');
       }
     })();
         const codeChipHtml = (p.code && String(p.code).trim()) ? `<div class="p-code-chip">${escapeHtml(p.code)}</div>` : '';
-    const pillRowHtml = pricePack.pillHtml ? `<div class="p-pill-row">${pricePack.pillHtml}</div>` : '';
+    const bundleSelectQty = isBundleSelect ? getBundleSelectCartQty(p) : 0;
+    const bundleCountPillHtml = (isBundleSelect && bundleSelectQty > 0)
+      ? `<span class="p-bundle-count-pill" onclick="openCartFromBundleCount(event)">已購 ${bundleSelectQty} 組</span>`
+      : '';
+    const pillRowHtml = (pricePack.pillHtml || bundleCountPillHtml)
+      ? `<div class="p-pill-row">${pricePack.pillHtml || ''}${bundleCountPillHtml}</div>`
+      : '';
 
 const newBadgeLabel = (function(){
   try{ return escapeHtml(getBadgeName('new', 'NEW')); }catch(e){ return 'NEW'; }
 })();
 const newBadgeHtml = (p.is_new) ? `<div class="new-badge">${newBadgeLabel}</div>` : '';
-    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div class="p-main"><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}</div><div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div></div>`;
+    const stepperHtml = isBundleSelect ? '' : `<div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div>`;
+    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div class="p-main"><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}</div>${stepperHtml}</div>`;
     return card;
 }
 
