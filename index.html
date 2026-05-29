@@ -293,7 +293,8 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   border: 1px solid rgba(255,224,178,0.28);
   color: #ffe0b2;
 }
-.fb-ship-badge.ok { background: rgba(232,245,233,0.16); border-color: rgba(200,230,201,0.35); color: #c8e6c9; }
+.fb-ship-badge.ok { background: rgba(232,245,233,0.16); border-color: rgba(200,230,201,0.35); color: #e8f5e9; }
+.fb-ship-badge.ok::first-letter { color: #69f0ae; }
 @media (max-width: 480px){
   .fb-btn{ padding: 10px 18px; font-size: 14px; }
   .fb-ship-badge{ font-size: 10px; padding: 2px 7px; }
@@ -929,6 +930,33 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .d-collapse-btn { position: absolute; top: 8px; right: 8px; border: none; background: #ef6c00; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; cursor: pointer; display: none; }
 .d-collapse-btn:hover { filter: brightness(0.95); }
 .d-collapse-btn:active { transform: translateY(1px); }
+.d-collapse-btn.ready-hint{
+  animation: deliveryCollapseCue 2.8s ease-in-out infinite;
+  box-shadow: 0 8px 18px rgba(239,108,0,0.28);
+}
+@keyframes deliveryCollapseCue{
+  0%, 68%, 100%{ transform: translateX(0) rotate(0deg); }
+  72%{ transform: translateX(-2px) rotate(-2deg); }
+  76%{ transform: translateX(2px) rotate(2deg); }
+  80%{ transform: translateX(-1.5px) rotate(-1.2deg); }
+  84%{ transform: translateX(1.5px) rotate(1.2deg); }
+  88%{ transform: translateX(0) rotate(0deg); }
+}
+.delivery-collapse-hint{
+  display:none;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  font-weight:800;
+  color:#2e7d32;
+  background:rgba(46,125,50,0.08);
+  border:1px solid rgba(46,125,50,0.16);
+  border-radius:999px;
+  padding:2px 8px;
+  line-height:1.2;
+  white-space:nowrap;
+}
+.delivery-collapse-hint.show{ display:inline-flex; }
 
 
 /* --- V2.8: Delivery free-shipping badge + better spacing when expanded --- */
@@ -953,6 +981,8 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 @media (max-width: 480px){
   .ship-free-badge{ top:6px; right:66px; font-size:11px; padding:3px 8px; }
   .delivery-toggle-wrap.has-badge .d-toggle-label{ padding-right: 156px; }
+  .d-toggle-label{ flex-wrap: wrap; row-gap: 3px; }
+  .delivery-collapse-hint.show{ flex-basis: 100%; margin-left: 28px; width: fit-content; font-size: 11px; padding: 2px 7px; }
 }
 
 /* --- V2.8: Auto-scroll target highlight --- */
@@ -2012,7 +2042,7 @@ body.cfg-error .btn-bundle{
       <div class="delivery-toggle-wrap">
         <label class="d-toggle-label">
           <input type="checkbox" id="chkDelivery" onchange="toggleDelivery()">
-          <span>需宅配寄送</span> <span id="deliveryStatusText" style="font-size:12px;font-weight:400;color:#ef6c00">(請填寫收件資訊)</span>
+          <span>需宅配寄送</span> <span id="deliveryStatusText" style="font-size:12px;font-weight:400;color:#ef6c00">(請填寫收件資訊)</span><span id="deliveryCollapseHint" class="delivery-collapse-hint">資料已填，可收合</span>
         </label>
         <span id="shipFreeBadge" class="ship-free-badge" style="display:none"></span>
         <button type="button" class="d-collapse-btn" id="btnDeliveryCollapse" onclick="collapseDelivery()">收合</button>
@@ -2148,7 +2178,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v1";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v3_delivery_scrollfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -2547,6 +2577,38 @@ function applyShipFreeBadge(el, total, displayValue){
   el.style.display = displayValue || 'inline-flex';
 }
 
+function preserveScrollDuring(fn){
+  const x = window.scrollX || window.pageXOffset || 0;
+  const y = window.scrollY || window.pageYOffset || 0;
+  let ret;
+  try { ret = fn && fn(); } catch(e) { throw e; }
+  const restore = () => {
+    try { window.scrollTo(x, y); } catch(e) {}
+  };
+  try { requestAnimationFrame(() => { restore(); requestAnimationFrame(restore); }); } catch(e) { setTimeout(restore, 0); }
+  setTimeout(restore, 80);
+  return ret;
+}
+
+function isDeliveryRequiredComplete(){
+  const n = (document.getElementById("dName")?.value || "").trim();
+  const p = (document.getElementById("dPhone")?.value || "").trim();
+  const a = (document.getElementById("dAddr")?.value || "").trim();
+  return !!(n && p && a);
+}
+
+function updateDeliveryCollapseCue(){
+  try{
+    const chk = document.getElementById("chkDelivery");
+    const form = document.getElementById("deliveryForm");
+    const btn = document.getElementById("btnDeliveryCollapse");
+    const hint = document.getElementById("deliveryCollapseHint");
+    const ready = !!(chk && chk.checked && form && form.classList.contains("show") && isDeliveryRequiredComplete());
+    if(btn) btn.classList.toggle("ready-hint", ready);
+    if(hint) hint.classList.toggle("show", ready);
+  }catch(e){}
+}
+
 function updateShipFreeBadge(total){
   const badge = document.getElementById('shipFreeBadge');
   applyShipFreeBadge(badge, total, 'inline-flex');
@@ -2605,6 +2667,7 @@ function syncDeliveryHeaderUI(){
     badge.style.display = 'none';
     wrap.classList.remove('has-badge');
   }
+  try { updateDeliveryCollapseCue(); } catch(e) {}
 }
 
 // --- GLOBAL FUNCTIONS ---
@@ -2912,7 +2975,7 @@ window.updateQty = function(btnEl, pid, delta) {
 
   saveState();
   refreshCart();
-  renderList();
+  preserveScrollDuring(() => renderList());
   
   const fab = document.getElementById("float-bar");
   fab.classList.remove("show");
@@ -6832,7 +6895,7 @@ window.confirmBundle = function() {
 
   saveState(); 
   refreshCart(); 
-  renderList(); // Update buttons state
+  preserveScrollDuring(() => renderList()); // Update buttons state without changing current scroll position
   
   // Show toast
   const addedToast = showToast("已加入購物車");
@@ -7302,6 +7365,7 @@ window.toggleDelivery = function() {
       form.classList.add("show");
       if(btn) btn.style.display = "inline-flex";
       setStatus(true);
+      try { updateDeliveryCollapseCue(); } catch(e) {}
       return;
     }
 
@@ -7309,6 +7373,7 @@ window.toggleDelivery = function() {
     if(btn) btn.style.display = "none";
     setStatus(false);
   }
+  try { updateDeliveryCollapseCue(); } catch(e) {}
   try { syncDeliveryHeaderUI(); } catch(e) {}
 };
 
@@ -7344,7 +7409,8 @@ window.collapseDelivery = function() {
 
   // Collapse
   if(form) form.classList.remove("show");
-  if(btn) btn.style.display = "none";
+  if(btn) { btn.style.display = "none"; btn.classList.remove("ready-hint"); }
+  try { updateDeliveryCollapseCue(); } catch(e) {}
 
   // Update status text
   if(status) {
@@ -7377,9 +7443,10 @@ window.syncDeliveryUI = function(opts = { collapse: true }) {
 
     if(opts && opts.collapse) {
       form.classList.remove("show");
-      if(btn) btn.style.display = "none";
+      if(btn) { btn.style.display = "none"; btn.classList.remove("ready-hint"); }
     }
   }
+  try { updateDeliveryCollapseCue(); } catch(e) {}
   try { syncDeliveryHeaderUI(); } catch(e) {}
 };
 
@@ -7387,6 +7454,13 @@ window.syncDeliveryUI = function(opts = { collapse: true }) {
 setTimeout(() => window.syncDeliveryUI && window.syncDeliveryUI({ collapse: true }), 200);
 window.addEventListener("pageshow", () => {
   setTimeout(() => window.syncDeliveryUI && window.syncDeliveryUI({ collapse: true }), 200);
+});
+["dName","dPhone","dAddr"].forEach(id => {
+  const el = document.getElementById(id);
+  if(el){
+    el.addEventListener("input", () => { try { updateDeliveryCollapseCue(); } catch(e) {} }, { passive:true });
+    el.addEventListener("change", () => { try { updateDeliveryCollapseCue(); } catch(e) {} }, { passive:true });
+  }
 });
 
 window.submitOrder = () => {
@@ -7454,7 +7528,7 @@ window.submitOrder = () => {
 
     const btn = document.querySelector(".btn-submit");
     const originalText = btn.innerText;
-    btn.innerText = "資料傳送中...";
+    btn.innerText = "訂單資料傳送中...請勿關閉視窗";
     btn.disabled = true;
     btn.style.opacity = "0.7";
 
