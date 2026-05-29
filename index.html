@@ -2342,7 +2342,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v3_delivery_scrollfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v6_promo_giftpreview_scrollfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -3067,10 +3067,24 @@ function closeGiftImagePreview(opts){
   const main = document.getElementById('gipMainImg');
   if(main) main.removeAttribute('src');
   try{
+    const promoOpen = (typeof isPromoMapOpen === 'function' && isPromoMapOpen());
+
+    // V42 UX v6: gift-image preview can be opened from the promo map drawer.
+    // The preview itself uses body.modal-open, but the promo map uses body.drawer-open.
+    // When closing only the preview, remove modal-open and keep drawer-open, otherwise iOS/Safari
+    // may leave body fixed and the product page cannot scroll after the drawer is closed.
+    if(promoOpen){
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      return;
+    }
+
     const hasOpen = document.querySelector('.modal.open') ||
       document.getElementById('milestone-overlay')?.classList.contains('open') ||
-      document.getElementById('drawer')?.classList.contains('open') ||
-      (typeof isPromoMapOpen === 'function' && isPromoMapOpen());
+      document.getElementById('drawer')?.classList.contains('open');
     if(!hasOpen) cleanupUI();
   }catch(e){}
 }
