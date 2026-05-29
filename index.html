@@ -966,14 +966,39 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .rc-info-cell b{display:block;color:#263238;font-size:13px;margin-top:2px;word-break:break-word;}
 .rc-info-cell.full{grid-column:1/-1;}
 .rc-save-hint{font-size:12px;color:#607d8b;text-align:center;margin:10px 0 12px;line-height:1.55;background:#fff8e1;border:1px solid #ffe0b2;border-radius:10px;padding:9px 10px;}
+#receiptPrintArea { position: fixed; left: -99999px; top: 0; width: 780px; max-width: 780px; background: #fff; color: #263238; z-index: -1; }
+.print-receipt { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif; background:#fff; color:#263238; padding: 0; }
+.pr-card { border: 1px solid #d8e2e0; border-radius: 16px; overflow: hidden; background:#fff; }
+.pr-head { background:#00897b; color:#fff; padding: 18px 20px; text-align:center; }
+.pr-head h1 { margin:0; font-size:22px; letter-spacing:1px; }
+.pr-head .pr-order { margin-top:6px; font-size:13px; opacity:.92; }
+.pr-section { padding: 14px 18px; border-bottom: 1px solid #edf2f1; }
+.pr-section:last-child { border-bottom:0; }
+.pr-hint { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.55; margin-bottom: 12px; }
+.pr-qr { text-align:center; background:#f8fffd; border:1px solid #b2dfdb; border-radius:14px; padding:14px; margin-bottom:12px; }
+.pr-qr img { width:180px; height:180px; background:#fff; border:8px solid #fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.08); }
+.pr-code { display:inline-block; margin-top:8px; padding:8px 12px; border:1px dashed #80cbc4; border-radius:10px; background:#fff; color:#263238; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:18px; font-weight:900; letter-spacing:1px; }
+.pr-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.pr-cell { background:#f7faf9; border:1px solid #e0f2f1; border-radius:10px; padding:8px 10px; font-size:12px; color:#607d8b; }
+.pr-cell b { display:block; color:#263238; font-size:14px; margin-top:3px; word-break:break-word; }
+.pr-cell.full { grid-column:1/-1; }
+.pr-title { font-weight:900; font-size:15px; color:#00695c; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+.pr-table { width:100%; border-collapse: collapse; font-size:13px; }
+.pr-table th { background:#f1f5f4; color:#37474f; text-align:left; padding:8px; border-bottom:1px solid #dfe7e5; }
+.pr-table td { padding:8px; border-bottom:1px solid #edf2f1; vertical-align:top; }
+.pr-table .num { text-align:right; white-space:nowrap; }
+.pr-gift-row td { color:#e65100; }
+.pr-total { display:flex; justify-content:space-between; align-items:center; font-size:18px; font-weight:900; color:#b91c1c; padding-top:12px; border-top:2px solid #263238; margin-top:10px; }
+.pr-footer { text-align:center; color:#78909c; font-size:11px; line-height:1.5; padding:12px 18px 16px; }
 @media print {
+  @page { size: A4; margin: 12mm; }
+  html, body, body.modal-open { background:#fff !important; overflow: visible !important; height: auto !important; position: static !important; width: auto !important; }
   body * { visibility: hidden !important; }
-  #receiptModal, #receiptModal * { visibility: visible !important; }
-  #receiptModal { display: block !important; position: static !important; inset: auto !important; background: #fff !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; backdrop-filter: none !important; }
-  #receiptModal .m-box { width: 100% !important; max-width: none !important; max-height: none !important; height: auto !important; box-shadow: none !important; border-radius: 0 !important; transform: none !important; padding: 0 !important; }
-  #receiptModal .rc-body { overflow: visible !important; padding: 18px !important; }
-  #receiptModal .rc-actions { display: none !important; }
-  #drawer, #float-bar, #back-to-top, #toast-container { display: none !important; }
+  #receiptPrintArea, #receiptPrintArea * { visibility: visible !important; }
+  #receiptPrintArea { display:block !important; position:absolute !important; left:0 !important; top:0 !important; width:100% !important; max-width:none !important; z-index:999999 !important; background:#fff !important; padding:0 !important; margin:0 !important; }
+  .print-receipt { padding:0 !important; }
+  .pr-card { border-radius:0 !important; border:0 !important; }
+  #drawer, #float-bar, #back-to-top, #toast-container, #receiptModal, #giftImagePreviewModal, #milestoneOverlay { display:none !important; }
 }
 
 .flying-gift { position: fixed; z-index: 1300; pointer-events: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 60px; height: 60px; object-fit: contain; background: #fff; border: 2px solid #ffca28; }
@@ -2296,6 +2321,8 @@ body.cfg-error .btn-bundle{
   </div>
 </div>
 
+<div id="receiptPrintArea" aria-hidden="true"></div>
+
 <script>
 const GIFT_IMAGES = {}; 
 
@@ -2355,7 +2382,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_noemail_receipt_stats5min";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_1_receipt_printfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -7977,13 +8004,98 @@ function openReceipt(orderId, res = {}) {
     modal.classList.add("open");
 }
 
+function buildReceiptPrintHtml() {
+    const d = lastOrderData || {};
+    const items = Array.isArray(d.items) ? d.items : [];
+    const gifts = Array.isArray(d.gifts) ? d.gifts : [];
+    const qr = pickupQrUrl();
+    const code = lastPickupCode || lastPickupToken || '';
+    const pickup = d.pickup_info || {};
+    const orderNo = lastOrderId || d.order_id || '';
+    const itemRows = items.length ? items.map(it => `
+      <tr>
+        <td><b>${escapeHtml(it.product_name || '')}</b>${it.spec ? `<div style="font-size:11px;color:#78909c;margin-top:3px;">${escapeHtml(it.spec)}</div>` : ''}</td>
+        <td class="num">x${escapeHtml(it.qty || 0)}</td>
+        <td class="num">$${escapeHtml(it.line_total || 0)}</td>
+      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:#90a4ae;">無商品明細</td></tr>`;
+    const giftRows = gifts.length ? `<tr class="pr-gift-row"><td colspan="3" style="font-weight:900;background:#fff7ed;">🎁 滿額贈品</td></tr>` + gifts.map(g => `
+      <tr class="pr-gift-row">
+        <td><b>${escapeHtml(g.product_name || '')}</b></td>
+        <td class="num">x${escapeHtml(g.qty || 0)}</td>
+        <td class="num">免費</td>
+      </tr>`).join('') : '';
+    const deliveryHtml = (d.pickup_method === '宅配' && pickup) ? `
+      <div class="pr-section">
+        <div class="pr-title">宅配資訊</div>
+        <div class="pr-grid">
+          <div class="pr-cell">收件人<b>${escapeHtml(pickup.name || '')}</b></div>
+          <div class="pr-cell">電話<b>${escapeHtml(pickup.phone || '')}</b></div>
+          <div class="pr-cell full">地址<b>${escapeHtml(pickup.address || '')}</b></div>
+          ${pickup.note ? `<div class="pr-cell full">宅配備註<b>${escapeHtml(pickup.note || '')}</b></div>` : ''}
+        </div>
+      </div>` : '';
+    return `
+      <div class="print-receipt">
+        <div class="pr-card">
+          <div class="pr-head">
+            <h1>台酒生技訂購憑證</h1>
+            <div class="pr-order">訂單編號：${escapeHtml(orderNo)}</div>
+          </div>
+          <div class="pr-section">
+            <div class="pr-hint">請先儲存本憑證，可於付款／取貨時加速流程（出示 QR Code 或取貨碼）。</div>
+            ${qr ? `<div class="pr-qr"><img src="${qr}" alt="取貨 QR Code"><br><div class="pr-code">${escapeHtml(code)}</div><div style="font-size:11px;color:#607d8b;margin-top:6px;">此 QR Code 僅供取貨時掃描辨識訂單使用。</div></div>` : ''}
+            <div class="pr-grid">
+              <div class="pr-cell">訂購人<b>${escapeHtml(d.employee_name || '')}</b></div>
+              <div class="pr-cell">部門<b>${escapeHtml(d.department || '')}</b></div>
+              <div class="pr-cell">付款方式<b>${escapeHtml(d.payment_method || '')}</b></div>
+              <div class="pr-cell">取貨方式<b>${escapeHtml(d.pickup_method || '自取')}</b></div>
+              ${d.remarks ? `<div class="pr-cell full">訂單備註<b>${escapeHtml(d.remarks || '')}</b></div>` : ''}
+            </div>
+          </div>
+          ${deliveryHtml}
+          <div class="pr-section">
+            <div class="pr-title"><span>商品明細</span><span style="color:#b91c1c;">總計 $${escapeHtml(d.totals && d.totals.pay ? d.totals.pay : 0)}</span></div>
+            <table class="pr-table">
+              <thead><tr><th>品項</th><th class="num">數量</th><th class="num">小計</th></tr></thead>
+              <tbody>${itemRows}${giftRows}</tbody>
+            </table>
+            <div class="pr-total"><span>總計金額</span><span>$${escapeHtml(d.totals && d.totals.pay ? d.totals.pay : 0)}</span></div>
+          </div>
+          <div class="pr-footer">本憑證為內部訂購與付款／取貨識別使用，非發票或付款證明。<br>台酒生技 祝您健康美麗</div>
+        </div>
+      </div>`;
+}
+
+function prepareReceiptPrintArea() {
+    const area = document.getElementById("receiptPrintArea");
+    if(!area) return null;
+    area.innerHTML = buildReceiptPrintHtml();
+    return area;
+}
+
+function waitForReceiptPrintImages(area, timeoutMs = 1600) {
+    const imgs = area ? Array.from(area.querySelectorAll('img')) : [];
+    if(!imgs.length) return Promise.resolve();
+    const jobs = imgs.map(img => new Promise(resolve => {
+      if(img.complete && img.naturalWidth > 0) return resolve();
+      const done = () => resolve();
+      img.onload = done;
+      img.onerror = done;
+    }));
+    return Promise.race([
+      Promise.all(jobs),
+      new Promise(resolve => setTimeout(resolve, timeoutMs))
+    ]);
+}
+
 function saveReceiptCredential() {
     const doneBtn = document.getElementById("btnReceiptDone");
     if(doneBtn) doneBtn.style.display = "block";
     try { showToast("若無法儲存，請截圖本畫面留存", "info"); } catch(e) {}
-    setTimeout(() => {
+    const area = prepareReceiptPrintArea();
+    waitForReceiptPrintImages(area).then(() => {
       try { window.print(); } catch(e) {}
-    }, 120);
+    });
 }
 
 function closeReceipt() {
