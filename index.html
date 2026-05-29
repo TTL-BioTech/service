@@ -966,66 +966,71 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .rc-info-cell b{display:block;color:#263238;font-size:13px;margin-top:2px;word-break:break-word;}
 .rc-info-cell.full{grid-column:1/-1;}
 .rc-save-hint{font-size:12px;color:#607d8b;text-align:center;margin:10px 0 12px;line-height:1.55;background:#fff8e1;border:1px solid #ffe0b2;border-radius:10px;padding:9px 10px;}
-#receiptPrintArea { position: fixed; left: -99999px; top: 0; width: 430px; max-width: 430px; background: #fff; color: #263238; z-index: -1; }
-.print-receipt { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif; background:#fff; color:#263238; padding: 0; width:430px; max-width:430px; }
+#receiptPrintArea { position: fixed; left: -99999px; top: 0; width: 760px; max-width: 760px; background: #fff; color: #263238; z-index: -1; }
+.print-receipt { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif; background:#fff; color:#263238; padding: 0; width:760px; max-width:760px; }
 .pr-card { border: 1px solid #d8e2e0; border-radius: 22px; overflow: hidden; background:#fff; box-shadow: 0 10px 26px rgba(0,0,0,.08); }
-.pr-head { background: linear-gradient(135deg,#00897b,#00695c); color:#fff; padding: 20px 18px 17px; text-align:center; }
-.pr-head h1 { margin:0; font-size:30px; letter-spacing:.5px; font-weight:900; line-height:1.12; }
-.pr-head .pr-order { margin-top:7px; font-size:14px; opacity:.94; font-weight:800; }
-.pr-section { padding: 13px 14px; border-bottom: 1px solid #edf2f1; }
+.pr-head { background: linear-gradient(135deg,#00897b,#00695c); color:#fff; padding: 27px 26px 23px; text-align:center; }
+.pr-head h1 { margin:0; font-size:42px; letter-spacing:1px; font-weight:900; line-height:1.12; }
+.pr-head .pr-order { margin-top:10px; font-size:21px; opacity:.94; font-weight:800; }
+.pr-section { padding: 19px 26px; border-bottom: 1px solid #edf2f1; }
 .pr-section:last-child { border-bottom:0; }
-.pr-hint { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius:13px; padding:12px 13px; font-size:16px; line-height:1.45; margin-bottom: 12px; font-weight:900; }
-.pr-qr { text-align:center; background:#f8fffd; border:1px solid #b2dfdb; border-radius:18px; padding:15px 12px 13px; margin-bottom:12px; }
-.pr-qr-title{ font-size:22px; font-weight:900; color:#00796b; margin-bottom:10px; letter-spacing:.2px; }
-.pr-qr img { width:252px; height:252px; max-width:68vw; max-height:68vw; background:#fff; border:10px solid #fff; border-radius:16px; box-shadow:0 7px 20px rgba(0,0,0,.12); }
-.pr-code { display:inline-block; margin-top:10px; padding:9px 18px; border:2px dashed #80cbc4; border-radius:13px; background:#fff; color:#00796b; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:27px; font-weight:900; letter-spacing:2px; }
-.pr-qr-note{ font-size:13px; color:#607d8b; margin-top:9px; line-height:1.4; font-weight:800; }
-.pr-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-.pr-cell { background:#f7faf9; border:1px solid #d7ece8; border-radius:13px; padding:10px 11px; font-size:13px; color:#607d8b; font-weight:800; }
-.pr-cell b { display:block; color:#263238; font-size:18px; margin-top:4px; word-break:break-word; line-height:1.25; }
+.pr-hint { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius:16px; padding:17px 20px; font-size:23px; line-height:1.48; margin-bottom: 18px; font-weight:900; }
+.pr-qr { text-align:center; background:#f8fffd; border:1px solid #b2dfdb; border-radius:24px; padding:20px 20px 18px; margin-bottom:18px; }
+.pr-qr-title{ font-size:34px; font-weight:900; color:#00796b; margin-bottom:16px; letter-spacing:.2px; }
+.pr-qr-main{ display:grid; grid-template-columns: 330px minmax(0,1fr); gap:26px; align-items:center; justify-content:center; max-width:690px; margin:0 auto; }
+.pr-qr-imgbox{ display:flex; align-items:center; justify-content:center; }
+.pr-qr img { width:320px; height:320px; background:#fff; border:13px solid #fff; border-radius:22px; box-shadow:0 8px 24px rgba(0,0,0,.12); box-sizing:border-box; }
+.pr-code-panel{ display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0; }
+.pr-code-label{ font-size:20px; color:#00796b; font-weight:900; margin-bottom:9px; letter-spacing:.08em; }
+.pr-code { display:block; width:100%; max-width:300px; box-sizing:border-box; padding:15px 14px; border:2px dashed #80cbc4; border-radius:16px; background:#fff; color:#00796b; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:36px; font-weight:900; letter-spacing:2px; line-height:1.05; white-space:nowrap; text-align:center; }
+.pr-qr-note{ font-size:18px; color:#607d8b; margin-top:13px; line-height:1.45; font-weight:800; }
+.pr-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.pr-cell { background:#f7faf9; border:1px solid #d7ece8; border-radius:16px; padding:14px 16px; font-size:19px; color:#607d8b; font-weight:800; }
+.pr-cell b { display:block; color:#263238; font-size:25px; margin-top:6px; word-break:break-word; line-height:1.24; }
 .pr-cell.full { grid-column:1/-1; }
-.pr-title { font-weight:900; font-size:20px; color:#00695c; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.pr-title span:last-child{ color:#b91c1c; font-size:19px; white-space:nowrap; }
-.pr-table { width:100%; border-collapse: collapse; font-size:15px; }
-.pr-table th { background:#f1f5f4; color:#37474f; text-align:left; padding:9px 8px; border-bottom:1px solid #dfe7e5; font-size:15px; }
-.pr-table td { padding:9px 8px; border-bottom:1px solid #edf2f1; vertical-align:top; line-height:1.35; }
-.pr-table td b{ font-size:15px; }
-.pr-table td div{ font-size:12px !important; color:#78909c !important; margin-top:3px !important; }
+.pr-title { font-weight:900; font-size:28px; color:#00695c; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.pr-title span:last-child{ color:#b91c1c; font-size:26px; white-space:nowrap; }
+.pr-table { width:100%; border-collapse: collapse; font-size:20px; }
+.pr-table th { background:#f1f5f4; color:#37474f; text-align:left; padding:12px 11px; border-bottom:1px solid #dfe7e5; font-size:20px; }
+.pr-table td { padding:12px 11px; border-bottom:1px solid #edf2f1; vertical-align:top; line-height:1.35; }
+.pr-table td b{ font-size:20px; }
+.pr-table td div{ font-size:15px !important; color:#78909c !important; margin-top:4px !important; }
 .pr-table .num { text-align:right; white-space:nowrap; }
 .pr-gift-row td { color:#e65100; font-weight:800; }
-.pr-total { display:flex; justify-content:space-between; align-items:center; font-size:26px; font-weight:900; color:#b91c1c; padding-top:12px; border-top:3px solid #263238; margin-top:11px; }
-.pr-footer { text-align:center; color:#78909c; font-size:13px; line-height:1.5; padding:12px 16px 15px; font-weight:800; }
+.pr-total { display:flex; justify-content:space-between; align-items:center; font-size:36px; font-weight:900; color:#b91c1c; padding-top:16px; border-top:3px solid #263238; margin-top:14px; }
+.pr-footer { text-align:center; color:#78909c; font-size:18px; line-height:1.55; padding:16px 22px 20px; font-weight:800; }
 @media print {
-  @page { size: 430px 1120px; margin: 0; }
-  html, body, body.modal-open { background:#fff !important; overflow: visible !important; height: auto !important; min-height:0 !important; position: static !important; width: 430px !important; max-width: 430px !important; padding:0 !important; margin:0 !important; }
+  @page { size: A4 portrait; margin: 0; }
+  html, body, body.modal-open { background:#fff !important; overflow: visible !important; height: auto !important; min-height:0 !important; position: static !important; width: auto !important; padding:0 !important; margin:0 !important; }
   body > *:not(#receiptPrintArea) { display: none !important; }
-  #receiptPrintArea { display:block !important; position:static !important; left:auto !important; top:auto !important; width:430px !important; max-width:430px !important; z-index:auto !important; background:#fff !important; padding:0 !important; margin:0 !important; color:#263238 !important; }
+  #receiptPrintArea { display:block !important; position:static !important; left:auto !important; top:auto !important; width:100% !important; max-width:none !important; z-index:auto !important; background:#fff !important; padding:0 !important; margin:0 !important; color:#263238 !important; }
   #receiptPrintArea * { visibility: visible !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .print-receipt { width:430px !important; max-width:430px !important; margin:0 !important; padding:0 !important; }
-  .pr-card { width:430px !important; min-height:auto !important; border-radius:0 !important; border:0 !important; box-shadow:none !important; page-break-inside: avoid !important; break-inside: avoid !important; overflow:visible !important; }
-  .pr-head { padding:20px 18px 17px !important; }
-  .pr-head h1 { font-size:30px !important; line-height:1.12 !important; }
-  .pr-head .pr-order { font-size:14px !important; margin-top:7px !important; }
-  .pr-section { padding:13px 14px !important; }
-  .pr-hint { font-size:16px !important; padding:12px 13px !important; margin-bottom:12px !important; border-radius:13px !important; }
-  .pr-qr { padding:15px 12px 13px !important; margin-bottom:12px !important; border-radius:18px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
-  .pr-qr-title{ font-size:22px !important; margin-bottom:10px !important; }
-  .pr-qr img { width:252px !important; height:252px !important; max-width:252px !important; max-height:252px !important; border-width:10px !important; border-radius:16px !important; }
-  .pr-code { font-size:27px !important; padding:9px 18px !important; margin-top:10px !important; color:#00796b !important; }
-  .pr-qr-note { font-size:13px !important; margin-top:9px !important; }
-  .pr-grid { gap:9px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
-  .pr-cell { padding:10px 11px !important; font-size:13px !important; border-radius:13px !important; }
-  .pr-cell b { font-size:18px !important; }
-  .pr-title { font-size:20px !important; margin-bottom:8px !important; page-break-after: avoid !important; break-after: avoid !important; }
-  .pr-title span:last-child{ font-size:19px !important; }
-  .pr-table { font-size:15px !important; }
-  .pr-table th, .pr-table td { padding:9px 8px !important; }
-  .pr-table td b { font-size:15px !important; }
-  .pr-table td div { font-size:12px !important; }
-  .pr-total { font-size:26px !important; padding-top:12px !important; margin-top:11px !important; }
-  .pr-footer { font-size:13px !important; padding:12px 16px 15px !important; }
+  .print-receipt { width:100% !important; max-width:none !important; margin:0 !important; padding:0 !important; }
+  .pr-card { width:100% !important; min-height:auto !important; border-radius:0 !important; border:0 !important; box-shadow:none !important; page-break-inside: avoid !important; break-inside: avoid !important; overflow:visible !important; }
+  .pr-head { padding:27px 26px 23px !important; }
+  .pr-head h1 { font-size:42px !important; line-height:1.12 !important; }
+  .pr-head .pr-order { font-size:21px !important; margin-top:10px !important; }
+  .pr-section { padding:19px 26px !important; }
+  .pr-hint { font-size:23px !important; padding:17px 20px !important; margin-bottom:18px !important; border-radius:16px !important; }
+  .pr-qr { padding:20px 20px 18px !important; margin-bottom:18px !important; border-radius:24px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+  .pr-qr-title{ font-size:34px !important; margin-bottom:16px !important; }
+  .pr-qr-main{ display:grid !important; grid-template-columns:330px minmax(0,1fr) !important; gap:26px !important; max-width:690px !important; }
+  .pr-qr img { width:320px !important; height:320px !important; max-width:320px !important; max-height:320px !important; border-width:13px !important; border-radius:22px !important; }
+  .pr-code-label { font-size:20px !important; margin-bottom:9px !important; }
+  .pr-code { font-size:36px !important; padding:15px 14px !important; max-width:300px !important; color:#00796b !important; }
+  .pr-qr-note { font-size:18px !important; margin-top:13px !important; }
+  .pr-grid { gap:13px !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+  .pr-cell { padding:14px 16px !important; font-size:19px !important; border-radius:16px !important; }
+  .pr-cell b { font-size:25px !important; }
+  .pr-title { font-size:28px !important; margin-bottom:12px !important; page-break-after: avoid !important; break-after: avoid !important; }
+  .pr-title span:last-child{ font-size:26px !important; }
+  .pr-table { font-size:20px !important; }
+  .pr-table th, .pr-table td { padding:12px 11px !important; }
+  .pr-table td b { font-size:20px !important; }
+  .pr-table td div { font-size:15px !important; }
+  .pr-total { font-size:36px !important; padding-top:16px !important; margin-top:14px !important; }
+  .pr-footer { font-size:18px !important; padding:16px 22px 20px !important; }
 }
-
 
 
 .flying-gift { position: fixed; z-index: 1300; pointer-events: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 60px; height: 60px; object-fit: contain; background: #fff; border: 2px solid #ffca28; }
@@ -2409,7 +2414,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_4_receipt_screenshot_hint";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_5_receipt_fullwidth_qrleft";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -8070,7 +8075,7 @@ function buildReceiptPrintHtml() {
           </div>
           <div class="pr-section">
             <div class="pr-hint">請「自行截圖」或「儲存憑證」，可於付款／取貨時加速流程（出示 QR Code 或取貨碼）。</div>
-            ${qr ? `<div class="pr-qr"><div class="pr-qr-title">取貨 QR Code</div><img src="${qr}" alt="取貨 QR Code"><br><div class="pr-code">${escapeHtml(code)}</div><div class="pr-qr-note">此 QR Code 僅供取貨時掃描辨識訂單使用。</div></div>` : ''}
+            ${qr ? `<div class="pr-qr"><div class="pr-qr-title">取貨 QR Code</div><div class="pr-qr-main"><div class="pr-qr-imgbox"><img src="${qr}" alt="取貨 QR Code"></div><div class="pr-code-panel"><div class="pr-code-label">取貨碼</div><div class="pr-code">${escapeHtml(code)}</div><div class="pr-qr-note">此 QR Code 僅供取貨時掃描辨識訂單使用。</div></div></div></div>` : ''}
             <div class="pr-grid">
               <div class="pr-cell">訂購人<b>${escapeHtml(d.employee_name || '')}</b></div>
               <div class="pr-cell">部門<b>${escapeHtml(d.department || '')}</b></div>
