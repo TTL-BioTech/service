@@ -3078,14 +3078,17 @@ function closeGiftImagePreview(opts){
 function createSeriesGiftItem(g, reached, baseQty) {
     let gName = (PRODUCT_MAP.get(g.gift) || {}).name || g.gift;
     gName = gName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, "");
-    let imgHtml = renderGiftImages(g.gift, perText);
-    if(!imgHtml) imgHtml = '<div class="g-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px">🎁</div>';
 
+    // V42 UX v5: define display meta before rendering clickable gift image.
+    // v4 used perText before declaration, which broke 「查看好禮」 when series gifts existed.
     const unit = seriesGiftUnit(g.prefix);
     const thr = Number(g.amt);
     const ruleText = (Number.isFinite(thr) && thr > 0) ? `每 ${thr} ${unit}送` : `每${unit}送`;
     const perQty = (Number(g.qty) || 0);
     const perText = `${ruleText} ${perQty} 個`;
+
+    let imgHtml = renderGiftImages(g.gift, perText);
+    if(!imgHtml) imgHtml = '<div class="g-thumb" style="display:flex;align-items:center;justify-content:center;font-size:16px">🎁</div>';
 
     // earned gift count (consider mult)
     let giftTimes = 0;
