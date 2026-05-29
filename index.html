@@ -7932,7 +7932,7 @@ function openReceipt(orderId, res = {}) {
             <div class="pickup-proof-title"><span class="material-icons-round" style="font-size:18px">qr_code_2</span>取貨 QR Code</div>
             ${pickupQrUrl() ? `<img class="pickup-qr-img" src="${pickupQrUrl()}" alt="取貨 QR Code">` : ''}
             <div class="pickup-code">${escapeHtml(lastPickupCode || lastPickupToken)}</div>
-            <div style="font-size:11px;color:#607d8b;line-height:1.45;">此 QR Code 僅供工作人員於後台掃描辨識訂單，不含後台網址。</div>
+            <div style="font-size:11px;color:#607d8b;line-height:1.45;">此 QR Code 僅供取貨時掃描辨識訂單。</div>
         </div>`;
     }
 
