@@ -955,9 +955,26 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .rc-meta { display: flex; justify-content: space-between; font-size: 13px; color: #78909c; }
 .rc-actions { padding: 20px; background: #fafafa; border-top: 1px solid #eee; }
 .btn-email { width: 100%; padding: 12px; border: 1px solid #cfd8dc; background: #fff; border-radius: 10px; color: #546e7a; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.btn-save-rc { width: 100%; padding: 15px; background: linear-gradient(135deg, #00897b, #00695c); color: #fff; border: none; border-radius: 12px; font-weight: 900; font-size: 16px; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 18px rgba(0,137,123,.22); }
+.btn-save-rc:active { transform: scale(.985); opacity:.92; }
 .btn-close-rc { width: 100%; padding: 14px; background: var(--text-main); color: #fff; border: none; border-radius: 10px; font-weight: 700; font-size: 16px; }
+.btn-close-rc.receipt-finish { margin-top: 10px; display: none; }
 .email-input-box { display: none; gap: 8px; margin-bottom: 10px; }
 .email-input-box.show { display: flex; }
+.rc-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px;}
+.rc-info-cell{background:#f7faf9;border:1px solid #e0f2f1;border-radius:10px;padding:8px 10px;font-size:12px;color:#546e7a;}
+.rc-info-cell b{display:block;color:#263238;font-size:13px;margin-top:2px;word-break:break-word;}
+.rc-info-cell.full{grid-column:1/-1;}
+.rc-save-hint{font-size:12px;color:#607d8b;text-align:center;margin:10px 0 12px;line-height:1.55;background:#fff8e1;border:1px solid #ffe0b2;border-radius:10px;padding:9px 10px;}
+@media print {
+  body * { visibility: hidden !important; }
+  #receiptModal, #receiptModal * { visibility: visible !important; }
+  #receiptModal { display: block !important; position: static !important; inset: auto !important; background: #fff !important; padding: 0 !important; margin: 0 !important; width: 100% !important; height: auto !important; overflow: visible !important; backdrop-filter: none !important; }
+  #receiptModal .m-box { width: 100% !important; max-width: none !important; max-height: none !important; height: auto !important; box-shadow: none !important; border-radius: 0 !important; transform: none !important; padding: 0 !important; }
+  #receiptModal .rc-body { overflow: visible !important; padding: 18px !important; }
+  #receiptModal .rc-actions { display: none !important; }
+  #drawer, #float-bar, #back-to-top, #toast-container { display: none !important; }
+}
 
 .flying-gift { position: fixed; z-index: 1300; pointer-events: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 60px; height: 60px; object-fit: contain; background: #fff; border: 2px solid #ffca28; }
 
@@ -2216,7 +2233,6 @@ body.cfg-error .btn-bundle{
           <option value="薪資扣款">薪資扣款</option>
           <option value="匯款">匯款</option>
         </select>
-        <input id="fEmail" type="email" inputmode="email" autocomplete="email" placeholder="訂單備份 Email (必填)">
         <input id="fNote" placeholder="訂單備註">
       </div>
     </div>
@@ -2268,17 +2284,14 @@ body.cfg-error .btn-bundle{
     </div>
     <div class="rc-body" id="rcBody"></div>
     <div class="rc-actions">
-      <button class="btn-email" onclick="toggleEmailInput()">
-        <span class="material-icons-round">email</span> 重新寄送訂單 Email
+      <button class="btn-save-rc" id="btnSaveReceipt" onclick="saveReceiptCredential()">
+        <span class="material-icons-round">ios_share</span> 儲存憑證
       </button>
-      <div class="email-input-box" id="emailBox">
-        <input type="email" id="rcEmail" placeholder="請輸入 Email..." style="flex:1;">
-        <button class="btn-submit" style="flex:0 0 80px;padding:10px;" onclick="sendReceipt()">發送</button>
+      <div class="rc-save-hint">
+        請先儲存本憑證，可於付款／取貨時加速流程（出示 QR Code 或取貨碼）。<br>
+        若手機無法儲存，請截圖本畫面留存。
       </div>
-      <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:15px;line-height:1.5;">
-        請保留此畫面截圖或 Email。取貨時出示 QR Code 或取貨碼，由工作人員掃描帶出訂單。
-      </div>
-      <button class="btn-close-rc" onclick="closeReceipt()">關閉並完成</button>
+      <button class="btn-close-rc receipt-finish" id="btnReceiptDone" onclick="closeReceipt()">我已儲存憑證，完成</button>
     </div>
   </div>
 </div>
@@ -2342,7 +2355,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v6_promo_giftpreview_scrollfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_noemail_receipt_stats5min";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -7744,25 +7757,20 @@ window.submitOrder = () => {
     const f = (id) => document.getElementById(id).value.trim();
     const nameEl = document.getElementById("fName");
     const deptEl = document.getElementById("fDept");
-    const emailEl = document.getElementById("fEmail");
-
     // 錯誤提示重置
     nameEl.classList.remove("input-error", "flash-anim");
     deptEl.classList.remove("input-error", "flash-anim");
-    if(emailEl) emailEl.classList.remove("input-error", "flash-anim");
     const dInputs = ['dName', 'dPhone', 'dAddr'];
     dInputs.forEach(id => document.getElementById(id).classList.remove("input-error", "flash-anim"));
 
     void nameEl.offsetWidth; // Trigger reflow
 
     let hasError = false;
-    const receiptEmail = f("fEmail");
-    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(receiptEmail);
+    const receiptEmail = "";
 
     // 1. 基本驗證
     if(!f("fName")) { nameEl.classList.add("input-error", "flash-anim"); hasError = true; }
     if(!f("fDept")) { deptEl.classList.add("input-error", "flash-anim"); hasError = true; }
-    if(!receiptEmail || !isValidEmail) { if(emailEl) emailEl.classList.add("input-error", "flash-anim"); hasError = true; }
 
     // 2. 宅配驗證
     const isDelivery = document.getElementById("chkDelivery").checked;
@@ -7784,7 +7792,7 @@ window.submitOrder = () => {
     }
 
     if(hasError) {
-        showToast(isDelivery ? "請填寫完整訂購、Email 與宅配資訊" : "請填寫姓名、部門與有效 Email", "warn");
+        showToast(isDelivery ? "請填寫完整訂購與宅配資訊" : "請填寫姓名與部門", "warn");
         return;
     }
 
@@ -7896,13 +7904,12 @@ window.submitOrder = () => {
             lastOrderId = res.order_id || null;
             lastPickupToken = res.pickup_token || '';
             lastPickupCode = res.pickup_code || '';
-            lastReceiptEmail = receiptEmail;
-            lastReceiptEmailStatus = res.email_status || (res.email_ok ? 'sent' : (res.email_error ? 'failed' : 'skipped'));
-            lastReceiptEmailError = res.email_error || '';
+            lastReceiptEmail = "";
+            lastReceiptEmailStatus = null;
+            lastReceiptEmailError = '';
             lastOrderData.order_id = lastOrderId;
             lastOrderData.pickup_token = lastPickupToken;
             lastOrderData.pickup_code = lastPickupCode;
-            lastOrderData.email_status = lastReceiptEmailStatus;
             showToast("訂單送出成功！");
             openReceipt(lastOrderId, res);
         } else {
@@ -7928,18 +7935,8 @@ function openReceipt(orderId, res = {}) {
     const modal = document.getElementById("receiptModal");
     const body = document.getElementById("rcBody");
     document.getElementById("rcOrderId").innerText = `No. ${orderId || ''}`;
-    const emailInput = document.getElementById("rcEmail");
-    if(emailInput) emailInput.value = lastReceiptEmail || (lastOrderData && lastOrderData.receipt_email) || '';
 
-    let html = "";
-    const emailStatus = lastReceiptEmailStatus || res.email_status;
-    if(emailStatus === 'sent') {
-        html += `<div class="receipt-status ok">✅ 訂單明細與取貨 QR Code 已寄送至：<br><b>${escapeHtml(lastReceiptEmail)}</b></div>`;
-    } else if(emailStatus === 'failed') {
-        html += `<div class="receipt-status fail">⚠️ 訂單已建立，但 Email 寄送失敗。請先截圖留存，或使用下方按鈕重新寄送。${lastReceiptEmailError ? `<br><span style="font-size:11px">${escapeHtml(lastReceiptEmailError)}</span>` : ''}</div>`;
-    } else {
-        html += `<div class="receipt-status warn">提醒：請保留此畫面截圖，取貨時可出示 QR Code 或取貨碼。</div>`;
-    }
+    let html = `<div class="receipt-status warn">請先儲存本憑證，可於付款／取貨時加速流程（出示 QR Code 或取貨碼）。</div>`;
 
     if(lastPickupToken || lastPickupCode) {
         html += `<div class="pickup-proof-card">
@@ -7950,6 +7947,14 @@ function openReceipt(orderId, res = {}) {
         </div>`;
     }
 
+    html += `<div class="rc-info-grid">
+      <div class="rc-info-cell">訂購人<b>${escapeHtml(lastOrderData.employee_name || '')}</b></div>
+      <div class="rc-info-cell">部門<b>${escapeHtml(lastOrderData.department || '')}</b></div>
+      <div class="rc-info-cell">付款方式<b>${escapeHtml(lastOrderData.payment_method || '')}</b></div>
+      <div class="rc-info-cell">取貨方式<b>${escapeHtml(lastOrderData.pickup_method || '自取')}</b></div>
+      ${lastOrderData.remarks ? `<div class="rc-info-cell full">訂單備註<b>${escapeHtml(lastOrderData.remarks)}</b></div>` : ''}
+    </div>`;
+
     // 收據顯示宅配資訊
     if (lastOrderData.pickup_method === '宅配' && lastOrderData.pickup_info) {
         html += `
@@ -7957,6 +7962,7 @@ function openReceipt(orderId, res = {}) {
             <b>🚚 宅配資訊</b><br>
             ${escapeHtml(lastOrderData.pickup_info.name)} / ${escapeHtml(lastOrderData.pickup_info.phone)}<br>
             ${escapeHtml(lastOrderData.pickup_info.address)}
+            ${lastOrderData.pickup_info.note ? `<br>備註：${escapeHtml(lastOrderData.pickup_info.note)}` : ''}
         </div>`;
     }
     lastOrderData.items.forEach(it => { html += `<div class="rc-item"><div class="rc-name">${escapeHtml(it.product_name)}</div><div class="rc-meta"><span>${escapeHtml(it.spec)}</span><span>x${it.qty}</span><span>$${it.line_total}</span></div></div>`; });
@@ -7966,7 +7972,18 @@ function openReceipt(orderId, res = {}) {
     }
     html += `<div class="rc-row bold"><span>總計金額</span><span>$${lastOrderData.totals.pay}</span></div>`;
     body.innerHTML = html;
+    const doneBtn = document.getElementById("btnReceiptDone");
+    if(doneBtn) doneBtn.style.display = "none";
     modal.classList.add("open");
+}
+
+function saveReceiptCredential() {
+    const doneBtn = document.getElementById("btnReceiptDone");
+    if(doneBtn) doneBtn.style.display = "block";
+    try { showToast("若無法儲存，請截圖本畫面留存", "info"); } catch(e) {}
+    setTimeout(() => {
+      try { window.print(); } catch(e) {}
+    }, 120);
 }
 
 function closeReceipt() {
@@ -7979,8 +7996,6 @@ function closeReceipt() {
     closeCart();
     renderList();
     document.getElementById("fNote").value = "";
-    const emailEl = document.getElementById("fEmail");
-    if(emailEl) emailEl.value = "";
     lastOrderData = null;
     lastOrderId = null;
     lastPickupToken = '';
@@ -7989,40 +8004,8 @@ function closeReceipt() {
     lastReceiptEmailStatus = null;
     lastReceiptEmailError = '';
 }
-function toggleEmailInput() { const box = document.getElementById("emailBox"); box.classList.toggle("show"); if(box.classList.contains("show")) document.getElementById("rcEmail").focus(); }
-function sendReceipt() {
-    const email = document.getElementById("rcEmail").value.trim();
-    if(!email || !email.includes('@')) { showToast("請輸入有效的 Email", "warn"); return; }
-    if(!lastOrderData || !lastOrderId) { showToast("找不到訂單資料，請先截圖留存", "warn"); return; }
-    const btn = document.querySelector("#emailBox .btn-submit");
-    const orgTxt = btn.innerText;
-    btn.innerText = "...";
-    btn.disabled = true;
-    const payload = {
-        action: 'send_email',
-        email: email,
-        order_id: lastOrderId,
-        pickup_token: lastPickupToken,
-        pickup_code: lastPickupCode,
-        order_data: Object.assign({}, lastOrderData, { receipt_email: email, pickup_token: lastPickupToken, pickup_code: lastPickupCode })
-    };
-    fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "payload=" + encodeURIComponent(JSON.stringify(payload)) })
-    .then(res => res.json()).then(res => {
-        if(res.ok) {
-            lastReceiptEmail = email;
-            lastReceiptEmailStatus = 'sent';
-            lastReceiptEmailError = '';
-            if(lastOrderData) lastOrderData.receipt_email = email;
-            showToast("✅ 已寄送至信箱");
-            toggleEmailInput();
-            openReceipt(lastOrderId, res);
-        } else {
-            lastReceiptEmailStatus = 'failed';
-            lastReceiptEmailError = res.error || '未知錯誤';
-            alert("寄送失敗：" + lastReceiptEmailError);
-        }
-    }).catch(err => alert("連線錯誤")) .finally(() => { btn.innerText = orgTxt; btn.disabled = false; });
-}
+function toggleEmailInput() { showToast("此版本已改以取貨憑證為主，不再寄送 Email", "info"); }
+function sendReceipt() { showToast("此版本已改以取貨憑證為主，不再寄送 Email", "info"); }
 
 // Start
 window.addEventListener('scroll', () => {
