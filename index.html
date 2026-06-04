@@ -2414,7 +2414,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_5_receipt_fullwidth_qrleft";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_6_ranking_setbadge";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5701,12 +5701,25 @@ function jumpToGroupByCode(groupCode, source){
   return false;
 }
 function handleRankingClick(p){
+  const unavailableMsg = '本活動暫無此商品可供選購，感謝支持，請挑選其他品項。';
   try{
-    if(p && p.is_hidden && p.group_code){
+    if(!p) { showPromoHint(unavailableMsg); return; }
+    if(p.is_hidden && p.group_code){
       if(jumpToGroupByCode(p.group_code, 'rank')) return;
+      showPromoHint(unavailableMsg);
+      return;
     }
-  }catch(e){}
-  jumpToProduct(p._id, 'rank');
+    const pid = p._id;
+    const code = String(p.code || '').trim();
+    const target = (Array.isArray(PRODUCTS) ? PRODUCTS.find(x => x && !x.is_hidden && (x._id === pid || (code && String(x.code||'').trim() === code))) : null);
+    if(!target){
+      showPromoHint(unavailableMsg);
+      return;
+    }
+    jumpToProduct(target._id, 'rank');
+  }catch(e){
+    try{ showPromoHint(unavailableMsg); }catch(_e){}
+  }
 }
 
 
@@ -7079,6 +7092,7 @@ const L_addon = getBadgeName('addon','加價購');
 const L_bogo  = getBadgeName('bogo','買一送一');
 const L_mixpay = getBadgeName('mixpay','任選優惠');
 const L_bundleSel = getBadgeName('bundle_select','優惠組合');
+const L_setBundle = getBadgeName('set_bundle','精選套組');
 const L_order = getBadgeName('order_discount','訂單折扣');
 const L_tier  = getBadgeName('tier','多件優惠');
 
@@ -7087,6 +7101,10 @@ const L_tier  = getBadgeName('tier','多件優惠');
     if(RULES && Array.isArray(RULES.mixpay) && RULES.mixpay.some(r => (r && r.zone && String(p.category||'').includes(String(r.zone||''))) || (r && Array.isArray(r.codes) && r.codes.includes(String(p.code||'').trim())))) badges += `<span class="badge bg-gold promo-badge" data-promo="mixpay" data-code="${String(p.code||'').replace(/"/g,'&quot;')}" data-zone="${String(p.category||'').replace(/"/g,'&quot;')}">${L_mixpay}</span>`;
     if(RULES.bogo.some(b => b.code === p.code)) badges += `<span class="badge bg-blue promo-badge" data-promo="bogo" data-code="${p.code}">${L_bogo}</span>`;
     if(p.name.includes("任選")) badges += `<span class="badge bg-gold promo-badge" data-promo="bundle_select">${L_bundleSel}</span>`;
+    const _pNameForSetBadge = String(p.name || '');
+    const _pCatForSetBadge = String(p.category || '');
+    const isSelectedSetBundle = !_pNameForSetBadge.includes("任選") && (_pNameForSetBadge.includes("超值組") || _pCatForSetBadge.includes("超值組"));
+    if(isSelectedSetBundle) badges += `<span class="badge bg-teal promo-badge" data-promo="set_bundle">${L_setBundle}</span>`;
     (function(){
     const info = getTierBadgeInfoByCategory(p.category);
     if(!info) return;
@@ -8310,6 +8328,9 @@ document.addEventListener('click', function promoHintClick(e){
   }
   if(promo === 'bundle_select'){
     return showPromoHint(`${getBadgeName('bundle_select','優惠組合')}：依商品內容任選搭配`);
+  }
+  if(promo === 'set_bundle'){
+    return showPromoHint(`${getBadgeName('set_bundle','精選套組')}：已搭配好的主題組合商品`);
   }
   if(promo === 'bundle_price'){
     return showPromoHint('優惠價：以活動設定為準');
