@@ -3260,6 +3260,106 @@ body.cfg-error .btn-bundle{
   }
 }
 
+
+
+/* ==========================================================
+   V7.17 手機版跑馬燈再壓縮 + 商品背板淡化
+   - 圖片尺寸維持 V7.16，不再放大/縮小
+   - 再降低卡片高度與上下留白
+   - 商品白色底板縮小、淡化，降低多商品重疊感
+   ========================================================== */
+@media (max-width: 520px){
+  #promoMarqueeSlot{
+    padding: 8px 0 28px !important;
+  }
+  #promoMarqueeSlot .pm-viewport{
+    padding: 1px 0 5px !important;
+  }
+  #promoMarqueeSlot .pm-track{
+    gap: 10px !important;
+    padding: 0 13px !important;
+  }
+  #promoMarqueeSlot .pm-card{
+    flex-basis: 156px !important;
+    min-height: 145px !important;
+    padding: 7px 7px 8px !important;
+  }
+  #promoMarqueeSlot .pm-basket{
+    height: 56px !important;
+    margin-bottom: 4px !important;
+  }
+  #promoMarqueeSlot .pm-basket::before{
+    left: 28px !important;
+    right: 28px !important;
+    bottom: 9px !important;
+    height: 18px !important;
+    border-radius: 10px 10px 13px 13px !important;
+    background: rgba(255,255,255,0.30) !important;
+    border-color: rgba(255,255,255,0.34) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), 0 2px 6px rgba(15,118,110,0.025) !important;
+  }
+  #promoMarqueeSlot .pm-basket-base{
+    left: 37px !important;
+    right: 37px !important;
+    bottom: 6px !important;
+    height: 2px !important;
+    opacity: .36 !important;
+  }
+  #promoMarqueeSlot .pm-basket-img{
+    background: rgba(255,255,255,0.46) !important;
+    border-color: rgba(255,255,255,0.42) !important;
+    box-shadow: 0 5px 10px rgba(17,24,39,0.052) !important;
+  }
+  #promoMarqueeSlot .pm-basket-img + .pm-basket-img{
+    margin-left: -3px !important;
+  }
+  #promoMarqueeSlot .pm-basket-img-1{ transform: rotate(-5deg) translateY(2px) !important; }
+  #promoMarqueeSlot .pm-basket-img-2{ transform: translateY(-4px) !important; z-index: 3; }
+  #promoMarqueeSlot .pm-basket-img-3{ transform: rotate(5deg) translateY(2px) !important; }
+  #promoMarqueeSlot .pm-basket.pm-basket-single{
+    height: 72px !important;
+    margin-bottom: 3px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single::before{
+    left: 43px !important;
+    right: 43px !important;
+    bottom: 10px !important;
+    height: 21px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single .pm-basket-base{
+    left: 51px !important;
+    right: 51px !important;
+    bottom: 5px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single .pm-basket-img{
+    transform: translateY(-7px) !important;
+  }
+  #promoMarqueeSlot .pm-card:has(.pm-basket-single){
+    min-height: 160px !important;
+  }
+  #promoMarqueeSlot .pm-name{
+    min-height: 35px !important;
+    margin-bottom: 5px !important;
+    line-height: 1.18 !important;
+  }
+  #promoMarqueeSlot .pm-hint{
+    padding: 3px 8px !important;
+  }
+}
+@media (max-width: 380px){
+  #promoMarqueeSlot .pm-card{
+    flex-basis: 148px !important;
+    min-height: 142px !important;
+    padding: 7px 6px 8px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single{
+    height: 70px !important;
+  }
+  #promoMarqueeSlot .pm-card:has(.pm-basket-single){
+    min-height: 156px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3596,7 +3696,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_16_marquee_notice_mobile";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_17_marquee_density_speed_sheet";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4782,6 +4882,20 @@ function uiGetNumber(key, fallback){
   if(isFinite(n)) return n;
   return fallback;
 }
+function getPromoMarqueeSpeedPx(){
+  const prefersReduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const keys = prefersReduce
+    ? ['ui|promo_marquee_reduce_speed_px', 'promo_marquee_reduce_speed_px']
+    : ['ui|promo_marquee_speed_px', 'promo_marquee_speed_px'];
+  let speed = NaN;
+  for(const k of keys){
+    const v = uiGetNumber(k, NaN);
+    if(isFinite(v) && v > 0){ speed = v; break; }
+  }
+  if(!isFinite(speed)) speed = prefersReduce ? 15 : 33;
+  speed = Math.max(1, Math.min(120, Number(speed)));
+  return speed;
+}
 function getPromoHintDurationMs(){
   let ms = uiGetNumber('ui|promo_hint_ms', NaN);
   if(!isFinite(ms)) ms = uiGetNumber('promo_hint_ms', NaN);
@@ -5312,8 +5426,8 @@ function initPromoMarqueeAutoScroll(){
         track.style.willChange = 'transform';
         track.style.transform = `translate3d(${-__PM_MARQ_CTRL__.x}px,0,0)`;
 
-        const prefersReduce = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-        const speed = prefersReduce ? 15 : 33; // px/s (v38: +50%)
+        const speed = getPromoMarqueeSpeedPx(); // px/s；優先讀取 Sheet ui_config 設定
+        track.dataset.speedPx = String(speed);
 
         let last = performance.now();
         const tick = (t)=>{
@@ -7234,7 +7348,8 @@ function __getCoreParseWorker(){
             const rawAmt = String(pick('threshold_amount')||'').trim().replace(/,/g,'');
             const amt = Number(rawAmt);
             if(key){
-              rules.uiCfg[key] = (txt ? txt : (isFinite(amt) ? amt : ''));
+              const preferAmt = /^ui\|promo_marquee_(reduce_)?speed_px$/.test(key) || /^promo_marquee_(reduce_)?speed_px$/.test(key);
+              rules.uiCfg[key] = (preferAmt && isFinite(amt)) ? amt : (txt ? txt : (isFinite(amt) ? amt : ''));
             }
           }
           else if(type.includes('ui_note')){
@@ -7423,7 +7538,8 @@ function parseCoreOnMain(pText, rText){
       const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
       const amt = Number(rawAmt);
       if(key){
-        rules.uiCfg[key] = (txt ? txt : (isFinite(amt) ? amt : ""));
+        const preferAmt = /^ui\|promo_marquee_(reduce_)?speed_px$/.test(key) || /^promo_marquee_(reduce_)?speed_px$/.test(key);
+        rules.uiCfg[key] = (preferAmt && isFinite(amt)) ? amt : (txt ? txt : (isFinite(amt) ? amt : ""));
       }
     }
     else if(type.includes("ui_note")) {
