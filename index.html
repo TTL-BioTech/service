@@ -3360,6 +3360,129 @@ body.cfg-error .btn-bundle{
   }
 }
 
+
+/* ==========================================================
+   V7.18 跑馬燈順滑化 + 滿額贈入口移入購物車 BAR
+   - 跑馬燈 GPU 合成、較低重繪負擔、接縫寬度穩定
+   - 禮物入口改為 BAR 內純 icon，新增禮物未查看時持續輕微晃動
+   ========================================================== */
+#promoMarqueeSlot .pm-track{
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+#promoMarqueeSlot .pm-card{
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout paint;
+}
+#promoMarqueeSlot .pm-basket-img{
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+#float-bar{
+  cursor: default;
+  gap: 10px;
+}
+#float-bar .fb-info{
+  pointer-events: none;
+}
+#float-bar #floatShipBadge{
+  pointer-events: auto;
+  cursor: pointer;
+}
+#float-bar .fb-btn{
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+#gift-fab.fb-gift-btn{
+  position: static !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+.fb-gift-btn{
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0 0 0 2px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.82);
+  -webkit-text-fill-color: rgba(255,255,255,0.82);
+  transform-origin: center center;
+}
+.fb-gift-btn .material-icons-round{
+  font-size: 25px;
+  line-height: 1;
+  color: rgba(255,255,255,0.82);
+  -webkit-text-fill-color: rgba(255,255,255,0.82);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+}
+#gift-fab.fb-gift-btn:active,
+.fb-gift-btn:active{
+  transform: scale(0.94) !important;
+}
+#gift-fab.fb-gift-btn.attn,
+.fb-gift-btn.attn{
+  animation: giftShake 2.6s ease-in-out infinite !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+@media (max-width: 520px){
+  #promoMarqueeSlot .pm-card{
+    box-shadow: 0 2px 7px rgba(13,148,136,0.045) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  #promoMarqueeSlot .pm-card:hover,
+  #promoMarqueeSlot .pm-card.is-focus{
+    transform: translateZ(0) !important;
+    box-shadow: 0 3px 9px rgba(13,148,136,0.055) !important;
+  }
+  #promoMarqueeSlot .pm-basket-img{
+    box-shadow: 0 4px 8px rgba(17,24,39,0.045) !important;
+  }
+  #float-bar{
+    gap: 8px;
+    padding-right: 8px;
+  }
+  #gift-fab.fb-gift-btn,
+  .fb-gift-btn{
+    flex-basis: 32px;
+    width: 32px !important;
+    height: 32px !important;
+    margin-left: 0;
+  }
+  .fb-gift-btn .material-icons-round{
+    font-size: 24px;
+  }
+}
+@media (max-width: 380px){
+  #float-bar{ gap: 6px; }
+  #gift-fab.fb-gift-btn, .fb-gift-btn{ flex-basis: 30px; width: 30px !important; height: 30px !important; }
+  .fb-gift-btn .material-icons-round{ font-size: 23px; }
+}
+
 </style>
 </head>
 <body>
@@ -3404,9 +3527,6 @@ body.cfg-error .btn-bundle{
 </div>
 
 
-<div id="gift-fab" onclick="showMilestoneCard()">
-  <span class="material-icons-round" style="color:#ffca28">card_giftcard</span>
-</div>
 
 <div id="top-notify" onclick="openMilestoneFromNotify()" role="button" aria-label="查看滿額贈進度">
   <div class="tn-head"><span class="material-icons-round">emoji_events</span> 獲得贈品</div>
@@ -3492,15 +3612,18 @@ body.cfg-error .btn-bundle{
   <p>找不到相關商品</p>
 </div>
 
-<div id="float-bar" onclick="safeOpenCart()">
+<div id="float-bar">
   <div class="fb-info">
     <span class="fb-total">$0</span>
     <div class="fb-meta">
       <span class="fb-count">0 件商品</span>
-      <span id="floatShipBadge" class="fb-ship-badge"></span>
+      <span id="floatShipBadge" class="fb-ship-badge" onclick="openCartFromShipBadge(event)" role="button" aria-label="查看宅配與免運提示"></span>
     </div>
   </div>
-  <div class="fb-btn">查看購物車 <span class="material-icons-round" style="font-size:18px">arrow_forward</span></div>
+  <button type="button" id="gift-fab" class="fb-gift-btn" onclick="openMilestoneFromGiftFab(event)" aria-label="查看滿額贈進度">
+    <span class="material-icons-round">card_giftcard</span>
+  </button>
+  <button type="button" class="fb-btn" onclick="safeOpenCart(event)">查看購物車 <span class="material-icons-round" style="font-size:18px">arrow_forward</span></button>
 </div>
 
 <div id="drawer">
@@ -3696,7 +3819,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_17_marquee_density_speed_sheet";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_18_marquee_smooth_giftbar";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4210,13 +4333,44 @@ window.closeWelcome = function() {
   }, 520);
 };
 
-window.safeOpenCart = function() {
+window.safeOpenCart = function(ev) {
+  try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
   if(!CART || CART.length === 0) {
     showToast("購物車還是空的喔！趕快去選購吧", "warn");
     return;
   }
   openCart();
 };
+
+window.openMilestoneFromGiftFab = function(ev){
+  try{ if(ev && ev.preventDefault) ev.preventDefault(); if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
+  try{ showMilestoneCard(); }catch(e){}
+};
+
+window.openCartFromShipBadge = function(ev){
+  try{ if(ev && ev.preventDefault) ev.preventDefault(); if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
+  try{
+    const data = calcCart();
+    const st = getShipFreeStatus(data && data.finalTotal);
+    if(st && st.enabled){
+      showToast(st.ok ? "已達滿額免運，可確認宅配資料" : `開啟購物車，再差 $${Math.round(st.diff||0).toLocaleString()} 免運`, st.ok ? "" : "warn");
+    }else{
+      showToast("開啟購物車，可確認宅配資料");
+    }
+  }catch(e){}
+  try{ safeOpenCart(ev); }catch(e){}
+};
+
+let __NEW_GIFT_UNVIEWED__ = false;
+function setGiftUnviewed(flag){
+  __NEW_GIFT_UNVIEWED__ = !!flag;
+  try{
+    const fab = document.getElementById('gift-fab');
+    if(fab) fab.classList.toggle('attn', __NEW_GIFT_UNVIEWED__);
+  }catch(e){}
+}
+function markNewGiftUnviewed(){ setGiftUnviewed(true); }
+function clearNewGiftUnviewed(){ setGiftUnviewed(false); }
 
 
 /* --- V2.9.3: Two-stage checkout (二階結帳 + 收合) --- */
@@ -4570,13 +4724,6 @@ window.updateQty = function(btnEl, pid, delta) {
   
   if(delta > 0 && isFirstAdd) {
       isFirstAdd = false;
-      try{
-        const openedOnce = localStorage.getItem('ttl_ms_opened_once') === '1';
-        const fab = document.getElementById('gift-fab');
-        if(fab && !openedOnce){
-          fab.classList.add('attn');
-        }
-      }catch(e){}
   }
   if (delta > 0) {
       showToast("已加入購物車");
@@ -4607,7 +4754,7 @@ window.updateQty = function(btnEl, pid, delta) {
 
 window.showMilestoneCard = function() {
     try{ localStorage.setItem('ttl_ms_opened_once','1'); }catch(e){}
-    try{ const fab=document.getElementById('gift-fab'); if(fab) fab.classList.remove('attn'); }catch(e){}
+    try{ clearNewGiftUnviewed(); }catch(e){}
     renderMilestoneContent();
     document.getElementById('milestone-overlay').classList.add('open');
     document.getElementById('msCard').classList.remove('shrinking');
@@ -4770,25 +4917,12 @@ function showGiftUnlockNotify(unlocks, durationMs){
 }
 
 function checkNewGifts(currentGifts) {
-    const currentNames = currentGifts.map(g => g.name);
+    const currentNames = (currentGifts || []).map(g => g.name);
     const newUnlocks = currentNames.filter(n => !achievedGifts.includes(n));
     
     if(newUnlocks.length > 0) {
-        const fab = document.getElementById('gift-fab');
-        const notify = document.getElementById('top-notify');
-        const txt = document.getElementById('tn-text');
-        
-        if(document.getElementById('milestone-overlay').classList.contains('open') === false) {
-             fab.style.display = 'flex'; 
-        }
-
-        fab.classList.add('gift-shake');
-        
+        try{ markNewGiftUnviewed(); }catch(e){}
         showGiftUnlockNotify(newUnlocks, 4000);
-        
-        setTimeout(() => {
-            fab.classList.remove('gift-shake');
-        }, 4000); 
     }
     achievedGifts = currentNames;
 }
@@ -4815,6 +4949,7 @@ function loadState() {
     
     const cData = calcCart();
     achievedGifts = cData.gifts.map(g => g.name);
+    try{ clearNewGiftUnviewed(); }catch(e){}
     
     refreshCart();
     renderList();
@@ -5183,6 +5318,7 @@ let __PM_MARQ_ORIG_W__ = 0; // width of one loop
 let __PM_MARQ_CTRL__ = null; // transform marquee controller
 let __PM_MARQ_LAST_AUTO_T__ = 0; // last auto-scroll timestamp
 let __PM_MARQ_BOUND__ = false; // whether listeners are bound
+let __PM_MARQ_IO__ = null; // pauses marquee work when slot leaves viewport
 
 function stopPromoMarqueeAutoScroll(){
   try{ if(__PM_MARQ_RAF__){ cancelAnimationFrame(__PM_MARQ_RAF__); __PM_MARQ_RAF__ = null; } }catch(e){}
@@ -5388,6 +5524,45 @@ function initPromoMarqueeArrows(){
 }
 
 
+function predecodePromoMarqueeImages(track){
+  try{
+    if(!track || track.dataset.predecoded === '1') return;
+    track.dataset.predecoded = '1';
+    const kids = Array.from(track.children || []);
+    const half = Math.max(1, Math.floor(kids.length / 2));
+    const imgs = [];
+    for(let i=0;i<half;i++){
+      kids[i].querySelectorAll && kids[i].querySelectorAll('img').forEach(img => imgs.push(img));
+    }
+    imgs.slice(0, 18).forEach(img => {
+      try{
+        img.loading = img.loading || 'eager';
+        img.decoding = 'async';
+        if(img.decode) img.decode().catch(()=>{});
+      }catch(e){}
+    });
+  }catch(e){}
+}
+
+function bindPromoMarqueeVisibility(slot){
+  try{
+    if(!slot || slot.__pmIoBound) return;
+    slot.__pmIoBound = true;
+    if(!('IntersectionObserver' in window)) return;
+    __PM_MARQ_IO__ = new IntersectionObserver((entries)=>{
+      try{
+        const entry = entries && entries[0];
+        const visible = !!(entry && entry.isIntersecting);
+        if(__PM_MARQ_CTRL__){
+          __PM_MARQ_CTRL__.inView = visible;
+          __PM_MARQ_CTRL__.resumeAt = visible ? (performance.now() + 120) : 0;
+        }
+      }catch(e){}
+    }, { threshold: 0.02 });
+    __PM_MARQ_IO__.observe(slot);
+  }catch(e){}
+}
+
 function initPromoMarqueeAutoScroll(){
   try{
     stopPromoMarqueeAutoScroll();
@@ -5412,18 +5587,26 @@ function initPromoMarqueeAutoScroll(){
         if(kids.length === 0) return;
         const half = Math.floor(kids.length/2);
         let ow = 0;
-        for(let i=0;i<half;i++){
-          ow += kids[i].getBoundingClientRect().width;
+        try{
+          if(kids[0] && kids[half]){
+            ow = Math.round(kids[half].getBoundingClientRect().left - kids[0].getBoundingClientRect().left);
+          }
+        }catch(e){}
+        if(!ow || ow < 1){
+          ow = Math.max(1, Math.round((track.scrollWidth || 0) / 2));
         }
-        ow = Math.max(1, Math.round(ow));
         track.dataset.origW = String(ow);
         __PM_MARQ_ORIG_W__ = ow;
 
-        __PM_MARQ_CTRL__ = { x: (__PM_MARQ_CTRL__ && __PM_MARQ_CTRL__.x) || 0, ow, viewport, track, dragging:false, paused:false, resumeAt:0 };
+        const prevX = (__PM_MARQ_CTRL__ && isFinite(__PM_MARQ_CTRL__.x)) ? __PM_MARQ_CTRL__.x : 0;
+        __PM_MARQ_CTRL__ = { x: (prevX % ow), ow, viewport, track, dragging:false, paused:false, resumeAt:0, inView:true };
+        predecodePromoMarqueeImages(track);
+        bindPromoMarqueeVisibility(slot);
 
         // Ensure styles for transform marquee
         viewport.style.overflow = 'hidden';
         track.style.willChange = 'transform';
+        track.style.backfaceVisibility = 'hidden';
         track.style.transform = `translate3d(${-__PM_MARQ_CTRL__.x}px,0,0)`;
 
         const speed = getPromoMarqueeSpeedPx(); // px/s；優先讀取 Sheet ui_config 設定
@@ -5438,7 +5621,11 @@ function initPromoMarqueeAutoScroll(){
             const dt = Math.min(48, Math.max(0, now - last)); // cap
             last = now;
 
-            // Pause while dragging or recent user scroll
+            // Pause while dragging, recent user scroll, or when marquee is outside viewport
+            if(c.inView === false){
+              __PM_MARQ_RAF__ = requestAnimationFrame(tick);
+              return;
+            }
             if(c.dragging || c.paused){
               if(c.resumeAt && now > c.resumeAt){ c.paused = false; c.resumeAt = 0; }
               __PM_MARQ_RAF__ = requestAnimationFrame(tick);
@@ -8699,6 +8886,7 @@ window.clearCart = function() {
     CART = []; 
     SELECTED_BUNDLE.clear(); 
     achievedGifts = []; // Reset gifts memory
+    try{ clearNewGiftUnviewed(); }catch(e){}
     saveState(); 
     refreshCart(); 
     renderList(); 
@@ -8748,7 +8936,8 @@ window.updateCartItem = function(index, delta) {
         msg.innerText = `🎉 恭喜！已獲得新贈品`;
         msg.classList.add('success'); 
         
-        // Also show clickable top notification
+        // Also show clickable top notification and keep BAR gift icon gently shaking until viewed
+        try{ markNewGiftUnviewed(); }catch(e){}
         showGiftUnlockNotify([newUnlocks[newUnlocks.length-1]], 3000);
 
         setTimeout(() => {
