@@ -125,114 +125,211 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 
 /* Promo Marquee (優惠導覽：排行榜與公告之間) */
 #promoMarqueeSlot{
-  margin: 0 12px 12px;
-  padding: 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(0,0,0,0.06);
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  margin: 0 14px 16px;
+  padding: 18px 18px 16px;
+  border-radius: 28px;
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255,255,255,0.95) 0, rgba(255,255,255,0) 22%),
+    radial-gradient(circle at 92% 0%, rgba(248, 194, 126, 0.20) 0, rgba(248, 194, 126, 0) 30%),
+    linear-gradient(135deg, rgba(242, 250, 247, 0.98) 0%, rgba(255,255,255,0.98) 50%, rgba(247, 252, 250, 0.98) 100%);
+  box-shadow: 0 18px 46px rgba(15, 72, 61, 0.10);
+  overflow: hidden;
+  isolation: isolate;
+}
+#promoMarqueeSlot::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(120deg, rgba(15,118,110,0.035) 0 1px, transparent 1px 58px),
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.64) 42%, transparent 76%);
+  opacity:.75;
+  pointer-events:none;
+  z-index:0;
+}
+#promoMarqueeSlot::after{
+  content:'';
+  position:absolute;
+  right:-54px;
+  top:-68px;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(15,118,110,0.13) 0, rgba(15,118,110,0.07) 36%, transparent 68%);
+  pointer-events:none;
+  z-index:0;
 }
 .pm-head{
+  position: relative;
+  z-index: 1;
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.pm-head-main{ min-width:0; padding-top: 1px; }
+.pm-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding: 4px 9px;
+  margin-bottom: 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .12em;
+  color: rgba(15, 118, 110, .88);
+  background: rgba(15,118,110,0.075);
+  border: 1px solid rgba(15,118,110,0.08);
 }
 .pm-title{
   display:flex;
   align-items:center;
-  gap: 8px;
-  font-weight: 900;
-  color: #111827;
+  gap: 10px;
+  font-weight: 950;
+  color: #0f3f35;
+  letter-spacing: .015em;
+  font-size: 18px;
+  line-height: 1.2;
 }
-.pm-title .material-icons-round{ color:#ff8f00; font-size:20px; }
-
-.pm-shell{ position: relative; }
+.pm-title .material-icons-round{
+  color:#0f766e;
+  font-size:21px;
+  background: linear-gradient(135deg, rgba(15,118,110,0.12), rgba(255,255,255,0.72));
+  border: 1px solid rgba(15,118,110,0.12);
+  border-radius: 14px;
+  padding: 7px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 8px 18px rgba(15,118,110,0.10);
+}
+.pm-subtitle{
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 650;
+  color: rgba(24, 64, 55, 0.66);
+  line-height: 1.38;
+}
+.pm-shell{
+  position: relative;
+  z-index:1;
+}
 .pm-viewport{
   overflow-x:auto;
   overflow-y:hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 2px 36px 8px; /* 留給左右箭頭 */
+  padding: 1px 38px 6px;
   scroll-behavior: smooth;
-
   touch-action: pan-y;
   overscroll-behavior: contain;
 }
 .pm-viewport::-webkit-scrollbar{ display:none; }
 .pm-track{
   display:flex;
-  gap: 10px;
-  padding: 2px 2px 2px;
+  align-items:stretch;
+  gap: 12px;
+  padding: 2px;
 }
-
 .pm-card{
-  flex: 0 0 132px; /* 窄卡：5字寬節奏 */
-  border-radius: 16px;
-  padding: 12px 12px 10px 14px;
-  background: rgba(255,255,255,0.94);
-  border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  flex: 0 0 156px;
+  min-height: 82px;
+  border-radius: 22px;
+  padding: 14px 14px 12px;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(250, 253, 252,0.96) 100%);
+  border: 1px solid rgba(23, 93, 78, 0.10);
+  box-shadow: 0 10px 26px rgba(32, 84, 70, 0.08);
   cursor:pointer;
-  transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+  transition: transform .14s ease, box-shadow .20s ease, border-color .20s ease, filter .20s ease;
   position:relative;
   overflow:hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 .pm-card::before{
   content:'';
   position:absolute;
-  left:0; top:0; bottom:0;
-  width:6px;
-  background: var(--pm-rail, #cfd8dc);
-  border-radius: 16px 0 0 16px;
-  opacity: 0.95;
+  inset:0;
+  background: linear-gradient(135deg, var(--pm-wash, rgba(207,216,220,0.12)) 0%, transparent 60%);
+  opacity:.9;
   pointer-events:none;
 }
 .pm-card::after{
   content:'';
   position:absolute;
-  inset:0;
-  background: linear-gradient(135deg, var(--pm-wash, rgba(207,216,220,0.16)) 0%, rgba(255,255,255,0) 62%);
-  pointer-events:none;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  height: 4px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, var(--pm-rail, #9e9e9e), rgba(255,255,255,0));
+  opacity:.95;
 }
-.pm-card:hover{ filter: brightness(1.02); box-shadow: 0 14px 28px rgba(0,0,0,0.08); }
+.pm-card:hover,
+.pm-card:focus-visible{
+  filter: brightness(1.015);
+  border-color: rgba(15,118,110,0.20);
+  box-shadow: 0 16px 34px rgba(32, 84, 70, 0.13);
+}
 .pm-card:active{ transform: translateY(1px) scale(0.996); }
-
-
 .pm-card > *{ position: relative; z-index: 1; }
+.pm-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pm-kicker{
+  display:inline-flex;
+  align-items:center;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.74);
+  border: 1px solid rgba(255,255,255,0.66);
+  color: rgba(35,74,64,0.70);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.80);
+}
+.pm-dot{
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--pm-rail, #9e9e9e);
+  box-shadow: 0 0 0 5px var(--pm-wash, rgba(158,158,158,0.12));
+}
 .pm-name{
   font-weight: 950;
-  color:#111827;
-  font-size: 16px; /* 主標題放大 */
+  color:#102f29;
+  font-size: 16px;
   line-height:1.18;
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient: vertical;
   overflow:hidden;
-  min-height: 40px;
-  max-width: 5.0em; /* 約 5 個中文字寬 */
+  min-height: 38px;
 }
 .pm-hint{
-  margin-top: 6px;
+  margin-top: 7px;
   font-size: 12px;
-  font-weight: 800;
-  color: #455a64;
+  font-weight: 780;
+  color: rgba(32, 71, 61, 0.62);
   line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
 }
-
-.pm-theme-drink{ --pm-rail: #ffa726; --pm-wash: rgba(255,167,38,0.16); }
-.pm-theme-health{ --pm-rail: #64b5f6; --pm-wash: rgba(100,181,246,0.16); }
-.pm-theme-beauty{ --pm-rail: #f48fb1; --pm-wash: rgba(244,143,177,0.16); }
-.pm-theme-clean{ --pm-rail: #81c784; --pm-wash: rgba(129,199,132,0.16); }
-.pm-theme-default{ --pm-rail: #cfd8dc; --pm-wash: rgba(207,216,220,0.16); }
-
+.pm-theme-drink{ --pm-rail: #e6a245; --pm-wash: rgba(230,162,69,0.13); }
+.pm-theme-health{ --pm-rail: #3f9bd0; --pm-wash: rgba(63,155,208,0.12); }
+.pm-theme-beauty{ --pm-rail: #d96d99; --pm-wash: rgba(217,109,153,0.13); }
+.pm-theme-clean{ --pm-rail: #5eb36a; --pm-wash: rgba(94,179,106,0.12); }
+.pm-theme-default{ --pm-rail: #90a4ae; --pm-wash: rgba(144,164,174,0.12); }
 .pm-nav{
   position:absolute;
   top: 50%;
@@ -240,28 +337,71 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(25, 85, 72, 0.10);
+  box-shadow: 0 10px 20px rgba(31, 86, 72, 0.13);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  opacity: 0.88;
+  opacity: 0.94;
   user-select:none;
   -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 .pm-nav:hover{ opacity: 1; }
 .pm-nav:active{ transform: translateY(-50%) scale(0.98); }
-.pm-nav.left{ left: 4px; }
-.pm-nav.right{ right: 4px; }
+.pm-nav.left{ left: 3px; }
+.pm-nav.right{ right: 3px; }
 .pm-nav.hidden{ display:none; }
-.pm-nav .material-icons-round{ font-size: 20px; color: rgba(17,24,39,0.72); }
-
-#promoMarqueeCtaHost .pm-cta-btn{ margin-left: 6px; }
-
+.pm-nav .material-icons-round{ font-size: 20px; color: rgba(16,47,41,0.74); }
+#promoMarqueeCtaHost{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+#promoMarqueeCtaHost .pm-cta-btn,
+#promoMarqueeCtaHost .sys-ann-cta{ margin-left: 0; }
+#promoMarqueeCtaHost .sys-ann-cta{
+  display:inline-flex;
+  align-items:center;
+  gap: 7px;
+  padding: 11px 15px;
+  border-radius: 999px;
+  color:#7a4b12;
+  background: linear-gradient(135deg, rgba(255,248,238,0.98), rgba(255,255,255,0.93));
+  border: 1px solid rgba(217, 151, 61, 0.24);
+  box-shadow: 0 12px 26px rgba(170, 106, 32, 0.11);
+  font-weight: 950;
+  font-size: 13px;
+  white-space:nowrap;
+}
+#promoMarqueeCtaHost .sys-ann-cta .cta-icon{
+  margin-right:0;
+  color:#cf8526;
+}
+#promoMarqueeCtaHost .sys-ann-cta:active{ transform: translateY(1px); }
+#promoMarqueeCtaHost .sys-ann-cta.pm-attn{
+  border-color: rgba(217,151,61,0.46);
+  background: linear-gradient(135deg, rgba(255,239,212,0.98), rgba(255,255,255,0.95));
+  box-shadow: 0 14px 30px rgba(217,151,61,0.18);
+  animation: pmCtaPulse 1.8s ease-in-out infinite;
+}
+@keyframes pmCtaPulse{
+  0%,100%{ transform: translateY(0); filter: saturate(1); }
+  50%{ transform: translateY(-1px); filter: saturate(1.08); }
+}
+@media (max-width: 520px){
+  #promoMarqueeSlot{ margin:0 10px 14px; padding: 16px 14px 15px; border-radius: 24px; }
+  .pm-head{ flex-direction: column; align-items: stretch; gap: 12px; }
+  #promoMarqueeCtaHost{ justify-content: flex-start; }
+  #promoMarqueeCtaHost .sys-ann-cta{ width: 100%; justify-content:center; }
+  .pm-viewport{ padding-left: 34px; padding-right: 34px; }
+  .pm-card{ flex-basis: 150px; }
+}
 
 /* --- Float Bar & Buttons --- */
 #float-bar { 
@@ -1177,81 +1317,151 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 }
 
 /* --- V2.8.8: System announcement slot (between rankings and categories) --- */
-#systemAnnouncementSlot{ padding:0 14px; margin: 10px 0 6px; }
+#systemAnnouncementSlot{ padding:0 14px; margin: 10px 0 14px; }
 .sys-ann{
-  background: rgba(0,137,123,0.08);
-  border: 1px solid rgba(0,137,123,0.18);
-  color: #004d40;
-  border-radius: 14px;
-  padding: 10px 12px;
+  position: relative;
+  background:
+    radial-gradient(circle at 7% 12%, rgba(255,255,255,0.92), rgba(255,255,255,0) 26%),
+    linear-gradient(135deg, rgba(255,249,240,0.98), rgba(255,253,248,0.98));
+  border: 1px solid rgba(222, 168, 100, 0.24);
+  color: #6d4a18;
+  border-radius: 24px;
+  padding: 16px 18px;
   font-size: 13px;
-  line-height: 1.35;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+  line-height: 1.46;
+  box-shadow: 0 16px 38px rgba(133, 88, 28, 0.08);
+  overflow: hidden;
+  isolation:isolate;
 }
-.sys-ann .title{ font-weight: 800; margin-bottom: 4px; }
-
-@media (max-width:380px){
-  .sys-ann--row{ flex-wrap:nowrap; }
-  .sys-ann-main{ flex:1 1 auto; }
-  .sys-ann-cta .cta-text{ display:none; }
-  .sys-ann-cta{ padding: 8px 10px; }
+.sys-ann::before{
+  content:'';
+  position:absolute;
+  right:-42px;
+  top:-54px;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(228, 160, 78, 0.16), rgba(228,160,78,0.04) 46%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
 }
-
-
-/* --- V2.8.9: Promo Map (優惠地圖) entry + drawer --- */
+.sys-ann::after{
+  content:'';
+  position:absolute;
+  left:18px;
+  right:18px;
+  top:0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(222,147,58,0.85), rgba(255,214,153,0.38), rgba(255,255,255,0));
+  border-radius: 0 0 999px 999px;
+  pointer-events:none;
+  z-index:1;
+}
 .sys-ann--row{
+  position:relative;
+  z-index:2;
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
   flex-wrap:nowrap;
 }
-.sys-ann-main{ flex: 1 1 200px; min-width: 0;
-  overflow:hidden;
+.sys-ann-main{
+  flex: 1 1 200px;
+  min-width: 0;
+  display:flex;
+  gap: 13px;
+  align-items:flex-start;
 }
-.sys-ann-main .title{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.sys-ann-main .desc{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.sys-ann-icon{
+  flex: 0 0 38px;
+  width:38px;
+  height:38px;
+  border-radius: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#c77a1d;
+  background: linear-gradient(135deg, rgba(255,237,207,0.96), rgba(255,255,255,0.72));
+  border: 1px solid rgba(214,145,60,0.20);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 10px 22px rgba(180,104,28,0.09);
+}
+.sys-ann-icon .material-icons-round{ font-size:20px; }
+.sys-ann-body{ min-width:0; }
+.sys-ann-main .title{
+  font-weight: 950;
+  color: #6d4410;
+  margin: 0 0 6px;
+  font-size: 15px;
+  letter-spacing:.01em;
+}
+.sys-ann-list{
+  display:grid;
+  gap: 4px;
+}
+.sys-ann-item{
+  position:relative;
+  padding-left: 14px;
+  color: rgba(91,65,31,0.86);
+  font-weight: 680;
+  line-height:1.42;
+}
+.sys-ann-item::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:.64em;
+  width:5px;
+  height:5px;
+  border-radius:999px;
+  background: rgba(214,132,37,0.75);
+  box-shadow: 0 0 0 4px rgba(214,132,37,0.08);
+}
+.sys-ann-empty{
+  color: rgba(91,65,31,0.72);
+  font-weight: 680;
+}
 .sys-ann-cta{
   flex: 0 0 auto;
-  border: 1px solid rgba(0,137,123,0.35);
-  background: rgba(255,255,255,0.85);
-  color: #004d40;
+  border: 1px solid rgba(217,155,76,0.30);
+  background: rgba(255,255,255,0.88);
+  color: #7a4c14;
   border-radius: 999px;
   padding: 8px 12px;
-  font-weight: 800;
+  font-weight: 850;
   font-size: 13px;
   white-space: nowrap;
   cursor: pointer;
   transition: transform .12s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
 }
 .sys-ann-cta:active{ transform: translateY(1px); }
-
 .sys-ann-cta .cta-icon{
   display:inline-block;
   margin-right: 6px;
   font-weight: 900;
-  color: var(--ann-icon-fg, #ff6f00);
+  color: var(--ann-icon-fg, #d48822);
 }
 .sys-ann-cta .cta-text{ display:inline-block; }
-
 .sys-ann-cta.pm-attn{
   border-color: rgba(255,111,0,0.55);
   background: linear-gradient(135deg, rgba(255,111,0,0.16), rgba(255,111,0,0.03));
   box-shadow: 0 10px 24px rgba(255,111,0,0.18);
-  animation: pmShake 1.15s ease-in-out infinite, pmGlow 1.55s ease-in-out infinite;
+  animation: pmCtaPulse 1.8s ease-in-out infinite;
 }
-@keyframes pmShake{
-  0%, 100%{ transform: translateX(0); }
-  12%{ transform: translateX(-2px); }
-  24%{ transform: translateX(2px); }
-  36%{ transform: translateX(-2px); }
-  48%{ transform: translateX(1px); }
-  60%{ transform: translateX(0); }
+@media (max-width:520px){
+  #systemAnnouncementSlot{ padding:0 10px; }
+  .sys-ann{ border-radius:22px; padding:15px 14px; }
+  .sys-ann--row{ gap:10px; }
+  .sys-ann-main{ gap: 11px; }
+  .sys-ann-icon{ width:36px; height:36px; flex-basis:36px; }
 }
-@keyframes pmGlow{
-  0%, 100%{ filter: drop-shadow(0 0 0 rgba(255,111,0,0)); }
-  50%{ filter: drop-shadow(0 0 8px rgba(255,111,0,0.35)); }
+@media (max-width:380px){
+  .sys-ann-main .title{ font-size:14px; }
+  .sys-ann-item{ font-size:12.5px; }
 }
+
+/* --- V2.8.9: Promo Map (優惠地圖) entry + drawer --- */
+body.drawer-open { overflow:hidden; }
 
 /* Drawer */
 body.drawer-open { overflow:hidden; }
@@ -2078,6 +2288,755 @@ body.cfg-error .btn-bundle{
 .receipt-status.warn{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
 .receipt-status.fail{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
 
+
+/* ==========================================================
+   V7.10 生技微流體樞紐 (Bio-Fluid Promo Hub)
+   結合公告區與優惠導覽，利用水流淡出與分子鏈概念串接
+   ========================================================== */
+
+/* --- 1. 容器一體化 (公告區) --- */
+#systemAnnouncementSlot {
+  padding: 0 12px;
+  margin: 10px 0 0 0;
+  position: relative;
+  z-index: 2;
+}
+
+.sys-ann {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid rgba(0, 137, 123, 0.12);
+  border-radius: 24px 24px 0 0;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 137, 123, 0.04);
+  border-bottom: none;
+  overflow: hidden;
+  isolation: auto;
+}
+.sys-ann::before,
+.sys-ann::after { display: none; }
+
+.sys-ann--row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sys-ann-main {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sys-ann-icon {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, rgba(224, 242, 241, 0.8), rgba(255, 255, 255, 1));
+  border: 1px solid rgba(0, 137, 123, 0.1);
+  color: #00897b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 137, 123, 0.05);
+}
+.sys-ann-icon .material-icons-round { font-size: 20px; }
+
+.sys-ann-main .title {
+  font-weight: 900;
+  color: #00695c;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.sys-ann-list {
+  color: #546e7a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.sys-ann-item {
+  display: inline;
+}
+.sys-ann-item + .sys-ann-item::before {
+  content: "　｜　";
+  color: rgba(0, 137, 123, 0.42);
+}
+.sys-ann-empty {
+  color: #546e7a;
+  font-size: 12px;
+}
+
+/* --- 2. 源頭核心 (發光膠囊按鈕) --- */
+.sys-ann-cta {
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #00897b, #00695c);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 137, 123, 0.25);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulseBioNucleus 3s infinite alternate;
+  white-space: nowrap;
+}
+.sys-ann-cta:active { transform: scale(0.96); }
+.sys-ann-cta .cta-icon,
+.sys-ann-cta .cta-text {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+@keyframes pulseBioNucleus {
+  0% { box-shadow: 0 4px 12px rgba(0, 137, 123, 0.2); }
+  100% { box-shadow: 0 8px 24px rgba(0, 137, 123, 0.45); }
+}
+
+/* --- 3. 微流道軌道 (優惠導覽跑馬燈區塊) --- */
+#promoMarqueeSlot {
+  position: relative;
+  margin: 0 12px 16px;
+  padding: 16px 0 16px;
+  border-radius: 0 0 24px 24px;
+  border: 1px solid rgba(0, 137, 123, 0.12);
+  border-top: 1px dashed rgba(0, 137, 123, 0.2);
+  background: #ffffff;
+  box-shadow: 0 15px 30px rgba(0, 137, 123, 0.04);
+  overflow: hidden;
+  isolation: auto;
+}
+#promoMarqueeSlot::before,
+#promoMarqueeSlot::after { display: none; }
+#promoMarqueeSlot .pm-head { display: none; }
+
+/* 分子鏈引導線 */
+.pm-shell {
+  position: relative;
+  z-index: 1;
+}
+.pm-shell::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 137, 123, 0.15) 10%, rgba(0, 137, 123, 0.15) 90%, transparent);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+.pm-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0 14px;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.pm-viewport::-webkit-scrollbar { display: none; }
+
+.pm-track {
+  display: flex;
+  gap: 14px;
+  padding: 0 24px;
+}
+
+/* --- 4. 氣泡分子卡片 (承載標籤) --- */
+.pm-card {
+  flex: 0 0 148px;
+  min-height: 96px;
+  border-radius: 20px;
+  padding: 14px 16px;
+  background: rgba(240, 253, 246, 0.44);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 137, 123, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 137, 123, 0.03);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.pm-card::before,
+.pm-card::after { display: none; }
+.pm-card:hover {
+  background: rgba(224, 242, 241, 0.7);
+  border-color: rgba(0, 137, 123, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 137, 123, 0.08);
+}
+.pm-card:active { transform: translateY(0) scale(0.98); }
+
+/* 標籤內容排版優化 */
+.pm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 137, 123, 0.15);
+  color: #00796b;
+  font-size: 11px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+.pm-name {
+  font-weight: 900;
+  color: #173d35;
+  font-size: 15px;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: auto;
+  max-width: none;
+  margin-left: 0;
+}
+.pm-hint {
+  margin-top: 6px;
+  margin-left: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #00897b;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 讓原本的導航箭頭融入微流體軌道 */
+.pm-nav {
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,137,123,0.12);
+  box-shadow: 0 8px 18px rgba(0,137,123,0.08);
+}
+.pm-nav .material-icons-round {
+  color: rgba(0,105,92,0.72);
+}
+
+@media (max-width: 430px){
+  .sys-ann { padding: 14px 12px; }
+  .sys-ann-icon { width: 34px; height: 34px; flex-basis: 34px; }
+  .sys-ann-cta { padding: 8px 12px; font-size: 12px; }
+  .sys-ann-cta .cta-text { max-width: 5.8em; overflow: hidden; text-overflow: ellipsis; }
+  .sys-ann-item { display: block; }
+  .sys-ann-item + .sys-ann-item::before { content: ""; }
+  .pm-card { flex-basis: 142px; min-height: 92px; }
+  .pm-track { gap: 12px; padding: 0 22px; }
+}
+
+
+/* ==========================================================
+   現代化質感特區 (Modern Premium Hub)
+   Apple Store 風格：大圓角、極簡留白、高對比行動呼籲、懸浮陰影
+   ========================================================== */
+
+/* --- 1. 公告區 (頂部樞紐 Header) --- */
+#systemAnnouncementSlot {
+  padding: 0 12px;
+  margin: 16px 0 0 0;
+  position: relative;
+  z-index: 5;
+}
+
+.sys-ann {
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid #ffffff;
+  border-radius: 28px 28px 0 0; /* 極具現代感的大圓角 */
+  padding: 20px 20px 16px 20px;
+  box-shadow: 0 12px 32px rgba(0, 40, 30, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03); /* 極淡的結構分隔線 */
+}
+
+.sys-ann::before { display: none; } /* 乾淨無雜訊 */
+
+.sys-ann-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+}
+
+/* 現代化 Squircle 圓角矩形 Icon */
+.sys-ann-icon {
+  flex: 0 0 46px;
+  width: 46px; height: 46px;
+  background: #f0fdf4; /* 現代水洗薄荷綠 */
+  color: #0d9488;
+  border-radius: 14px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.02);
+  border: 1px solid rgba(13, 148, 136, 0.1);
+}
+.sys-ann-icon .material-icons-round { font-size: 24px; }
+
+.sys-ann-body { 
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+
+/* 高對比現代排版 */
+.sys-ann-main .title {
+  font-weight: 900;
+  font-size: 16px;
+  color: #111827; /* 極黑 */
+  letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sys-ann-main .desc {
+  color: #6b7280; /* 高級灰 */
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- 2. 現代化按鈕 (高光漸層、懸浮質感) --- */
+.sys-ann-cta {
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, #0d9488, #0f766e); /* 沉穩精緻的祖母綠 */
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25), inset 0 1px 1px rgba(255,255,255,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sys-ann-cta:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 12px 24px rgba(13, 148, 136, 0.35), inset 0 1px 1px rgba(255,255,255,0.5); 
+}
+.sys-ann-cta:active { transform: translateY(1px) scale(0.98); }
+.sys-ann-cta .cta-icon { color: #ccfbf1; font-size: 16px; margin-right: 2px; }
+.sys-ann-cta .cta-text { color: #ffffff; letter-spacing: 0.5px; }
+
+/* --- 3. 跑馬燈軌道 (Body) --- */
+#promoMarqueeSlot {
+  position: relative;
+  margin: 0 12px 24px 12px;
+  padding: 16px 0 24px 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid #ffffff;
+  border-top: none; /* 與 Header 無縫接軌 */
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 16px 32px rgba(0, 40, 30, 0.05);
+  overflow: hidden;
+}
+
+#promoMarqueeSlot::before, #promoMarqueeSlot::after { display: none; }
+#promoMarqueeSlot .pm-head { display: none; }
+
+.pm-shell { position: relative; z-index: 1; }
+
+.pm-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0;
+  /* 兩側優雅淡出遮罩 */
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.pm-viewport::-webkit-scrollbar { display: none; }
+
+.pm-track {
+  display: flex;
+  gap: 16px; /* 增加呼吸感 */
+  padding: 0 20px;
+}
+
+/* --- 4. 俐落商品卡片 (Bento Cards) --- */
+.pm-card {
+  flex: 0 0 156px;
+  min-height: 104px;
+  border-radius: 20px;
+  padding: 16px;
+  background: #f8fafc; /* 極淺灰底，襯托外部的白 */
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+.pm-card::before, .pm-card::after { display: none; }
+
+.pm-card:hover, .pm-card.is-focus {
+  background: #ffffff;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(13, 148, 136, 0.08);
+}
+.pm-card:active { transform: translateY(0) scale(0.98); }
+
+/* 質感微圓角標籤 */
+.pm-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px; 
+  background: #ffffff;
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: 0;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  border: 1px solid rgba(13, 148, 136, 0.1);
+  align-self: flex-start;
+}
+
+.pm-name {
+  font-weight: 800;
+  color: #1f2937;
+  font-size: 15px;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  margin-left: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 強調亮點的提示底色 */
+.pm-hint {
+  font-size: 12px;
+  font-weight: 800;
+  color: #059669; 
+  background: #d1fae5; /* 明亮跳脫的螢光綠底 */
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: 0;
+  margin-top: 0;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.pm-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+.pm-nav .material-icons-round { color: #0d9488; font-size: 20px; }
+
+
+
+/* ==========================================================
+   V7.12 微調：分類卡去除小標籤、商品籃圖片、5字換行、分類貼紙配色
+   ========================================================== */
+#promoMarqueeSlot .pm-head { display: none !important; }
+.pm-card {
+  flex: 0 0 164px !important;
+  min-height: 138px !important;
+  padding: 14px 14px 13px !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+}
+.pm-chip { display: none !important; }
+.pm-basket {
+  position: relative;
+  height: 46px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  margin: 0 0 10px 0;
+  isolation: isolate;
+}
+.pm-basket::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 9px;
+  height: 22px;
+  border-radius: 9px 9px 14px 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.56));
+  border: 1px solid color-mix(in srgb, var(--pm-rail, #0d9488) 24%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 6px 14px rgba(15,118,110,0.06);
+  z-index: 0;
+}
+.pm-basket-base {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pm-rail, #0d9488) 45%, #ffffff);
+  opacity: .72;
+  z-index: 1;
+}
+.pm-basket-img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  border-radius: 11px;
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(255,255,255,0.82);
+  box-shadow: 0 7px 14px rgba(17,24,39,0.08);
+  padding: 3px;
+  position: relative;
+  z-index: 2;
+}
+.pm-basket-img + .pm-basket-img { margin-left: -8px; }
+.pm-basket-img-1 { transform: rotate(-6deg) translateY(1px); }
+.pm-basket-img-2 { transform: translateY(-4px); z-index: 3; }
+.pm-basket-img-3 { transform: rotate(6deg) translateY(1px); }
+.pm-basket-empty {
+  align-items: center;
+  color: color-mix(in srgb, var(--pm-rail, #0d9488) 70%, #ffffff);
+  background: var(--pm-wash, rgba(13,148,136,0.12));
+  border-radius: 16px;
+  border: 1px solid rgba(13,148,136,0.08);
+}
+.pm-basket-empty .material-icons-round { font-size: 28px; }
+.pm-name {
+  min-height: 43px !important;
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+  text-align: center;
+  margin: 0 0 9px 0 !important;
+  -webkit-line-clamp: initial !important;
+  display: block !important;
+  overflow: hidden !important;
+  color: #172033 !important;
+  letter-spacing: .02em;
+}
+.pm-name-rest {
+  display: inline-block;
+  font-size: .94em;
+  font-weight: 800;
+}
+.pm-hint {
+  align-self: center;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  line-height: 1.15;
+  letter-spacing: .01em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.62);
+  border: 1px solid transparent;
+}
+.pm-theme-drink .pm-hint {
+  background: rgba(255,243,224,0.92) !important;
+  color: #b45f00 !important;
+  border-color: rgba(230,162,69,0.22) !important;
+}
+.pm-theme-health .pm-hint {
+  background: rgba(227,242,253,0.92) !important;
+  color: #1565c0 !important;
+  border-color: rgba(63,155,208,0.22) !important;
+}
+.pm-theme-beauty .pm-hint {
+  background: rgba(252,228,236,0.92) !important;
+  color: #ad1457 !important;
+  border-color: rgba(217,109,153,0.22) !important;
+}
+.pm-theme-clean .pm-hint {
+  background: rgba(232,245,233,0.94) !important;
+  color: #2e7d32 !important;
+  border-color: rgba(94,179,106,0.22) !important;
+}
+.pm-theme-default .pm-hint {
+  background: rgba(236,239,241,0.92) !important;
+  color: #546e7a !important;
+  border-color: rgba(144,164,174,0.22) !important;
+}
+@media (max-width: 430px){
+  .pm-card { flex-basis: 154px !important; min-height: 134px !important; padding: 13px 12px 12px !important; }
+  .pm-basket-img { width: 33px; height: 33px; }
+  .pm-name { font-size: 15px !important; }
+}
+
+
+/* ==========================================================
+   V7.13 修正：商品籃放大、圖片補抓、主打星入口恢復
+   ========================================================== */
+.sys-ann .star-dock-btn{
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  margin-right: 0;
+  flex: 0 0 46px;
+  background: linear-gradient(135deg, #fff7ed, #ffffff);
+  border: 1px solid rgba(245,158,11,0.22);
+  color: #f59e0b;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.92), 0 8px 18px rgba(245,158,11,0.12);
+}
+.sys-ann .star-dock-btn.hidden{ display:none; }
+.sys-ann .star-dock-btn:not(.hidden){ display:inline-flex; }
+.sys-ann .star-dock-btn .material-icons-round{ font-size: 24px; }
+
+.pm-card{
+  flex: 0 0 176px !important;
+  min-height: 172px !important;
+  padding: 15px 14px 14px !important;
+}
+.pm-basket{
+  height: 70px !important;
+  margin: 0 0 11px 0 !important;
+}
+.pm-basket::before{
+  left: 14px !important;
+  right: 14px !important;
+  bottom: 12px !important;
+  height: 31px !important;
+  border-radius: 13px 13px 18px 18px !important;
+}
+.pm-basket-base{
+  left: 23px !important;
+  right: 23px !important;
+  bottom: 8px !important;
+  height: 4px !important;
+}
+.pm-basket-img{
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 15px !important;
+  padding: 4px !important;
+  box-shadow: 0 10px 18px rgba(17,24,39,0.10) !important;
+}
+.pm-basket-img + .pm-basket-img{ margin-left: -13px !important; }
+.pm-basket-img-1{ transform: rotate(-7deg) translateY(2px) !important; }
+.pm-basket-img-2{ transform: translateY(-6px) !important; z-index:3; }
+.pm-basket-img-3{ transform: rotate(7deg) translateY(2px) !important; }
+.pm-basket-empty{
+  height: 62px !important;
+  margin-bottom: 12px !important;
+}
+.pm-basket-empty .material-icons-round{ font-size: 34px !important; }
+.pm-name{
+  min-height: 44px !important;
+  margin-bottom: 10px !important;
+}
+@media (max-width: 430px){
+  .sys-ann .star-dock-btn{ width: 42px; height: 42px; flex-basis:42px; }
+  .sys-ann .star-dock-btn .material-icons-round{ font-size:22px; }
+  .pm-card{ flex-basis: 166px !important; min-height: 166px !important; }
+  .pm-basket{ height: 66px !important; }
+  .pm-basket-img{ width: 50px !important; height: 50px !important; }
+}
+
+
+/* ==========================================================
+   V7.14 修正：分類商品籃只顯示該分類商品、公告 ICON 改回主打星入口
+   ========================================================== */
+.sys-ann-main .star-dock-btn.sys-ann-icon{
+  width: 46px !important;
+  height: 46px !important;
+  flex: 0 0 46px !important;
+  margin-right: 0 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #fff7ed, #ffffff) !important;
+  border: 1px solid rgba(245,158,11,0.24) !important;
+  color: #f59e0b !important;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.92), 0 8px 18px rgba(245,158,11,0.14) !important;
+}
+.sys-ann-main .star-dock-btn.sys-ann-icon.hidden{ display:none !important; }
+.sys-ann-main .star-dock-btn.sys-ann-icon:not(.hidden){ display:inline-flex !important; }
+.pm-basket-img:only-of-type{
+  transform: translateY(-6px) !important;
+  z-index: 3 !important;
+}
+@media (max-width: 430px){
+  .sys-ann-main .star-dock-btn.sys-ann-icon{ width:42px !important; height:42px !important; flex-basis:42px !important; }
+}
+
+
+/* ==========================================================
+   V7.15 修正：單張商品籃放大、主打星核心補回
+   ========================================================== */
+.pm-basket.pm-basket-single{
+  height: 90px !important;
+  margin-bottom: 8px !important;
+}
+.pm-basket.pm-basket-single::before{
+  left: 36px !important;
+  right: 36px !important;
+  bottom: 13px !important;
+  height: 34px !important;
+  border-radius: 15px 15px 20px 20px !important;
+}
+.pm-basket.pm-basket-single .pm-basket-base{
+  left: 46px !important;
+  right: 46px !important;
+  bottom: 8px !important;
+}
+.pm-basket.pm-basket-single .pm-basket-img{
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 18px !important;
+  padding: 5px !important;
+  transform: translateY(-10px) !important;
+  z-index: 3 !important;
+}
+.pm-card:has(.pm-basket-single){
+  min-height: 190px !important;
+}
+@media (max-width: 430px){
+  .pm-basket.pm-basket-single{ height: 84px !important; }
+  .pm-basket.pm-basket-single .pm-basket-img{ width: 75px !important; height: 75px !important; }
+  .pm-card:has(.pm-basket-single){ min-height: 184px !important; }
+}
+
 </style>
 </head>
 <body>
@@ -2414,7 +3373,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_6_ranking_setbadge";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_9_premium_nav_notice";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -3903,6 +4862,18 @@ function pmThemeFromTitle(title){
   return 'default';
 }
 
+function pmGuideKicker(title){
+  const t = String(title||'');
+  if(t.includes('超值組')) return '精選套組';
+  if(t.includes('買一送一') || t.includes('任選')) return '優惠組合';
+  if(t.includes('保健')) return '保健精選';
+  if(t.includes('美容')) return '美妍精選';
+  if(t.includes('清潔')) return '潔淨精選';
+  if(t.includes('飲')) return '飲品精選';
+  return '活動品類';
+}
+
+
 /* Promo Marquee copy overrides (manual)
    - 你可以在這裡自行 key 文案： { '分類標題': '顯示短文案' }
    - 若留空，系統會走自動摘要（最低XX元起 / XX折起 / 買X送Y / 滿額贈…）
@@ -4246,6 +5217,121 @@ function initPromoMarqueeAutoScroll(){
 }
 
 
+
+function pmTitleFirstLine5Html(title){
+  const chars = Array.from(String(title||'').trim());
+  const first = chars.slice(0,5).join('');
+  const rest = chars.slice(5).join('');
+  const f = escapeHtml(first || '品類');
+  const r = escapeHtml(rest || '');
+  return r ? `${f}<br><span class="pm-name-rest">${r}</span>` : f;
+}
+
+function pmCollectBasketImages(sec, title){
+  try{
+    const imgs = [];
+    const seen = new Set();
+    const pushSrc = (src)=>{
+      src = String(src || '').trim();
+      if(!src || src.indexOf('data:image') === 0) return false;
+      if(seen.has(src)) return false;
+      seen.add(src);
+      imgs.push(src);
+      return imgs.length >= 3;
+    };
+    const normalizeTitle = (v)=> String(v || '').trim().replace(/[＊*]/g,'').replace(/\s+/g,'');
+    const sectionCat = (()=>{
+      try{
+        const gridEl = sec && sec.querySelector ? sec.querySelector('[data-vcat]') : null;
+        const vcat = gridEl && gridEl.dataset ? String(gridEl.dataset.vcat || '').trim() : '';
+        if(vcat) return vcat;
+      }catch(e){}
+      return String(title || '').trim();
+    })();
+    const rawCat = String(sectionCat || title || '').trim();
+    const rawClean = normalizeTitle(rawCat);
+
+    const productMatchesExactCategory = (p)=>{
+      if(!p || p.is_hidden) return false;
+      const cat = String(p.category || '').trim();
+      const name = String(p.name || '').trim();
+      const catClean = normalizeTitle(cat);
+      const nameClean = normalizeTitle(name);
+      if(!rawClean) return false;
+      if(rawClean.includes('清潔-')){
+        if(!catClean.includes('清潔')) return false;
+        if(rawClean === '清潔-洗潔') return nameClean.includes('洗潔');
+        if(rawClean === '清潔-洗衣') return nameClean.includes('洗衣');
+        if(rawClean === '清潔-皂') return nameClean.includes('皂');
+        return true;
+      }
+      return catClean.includes(rawClean) || nameClean.includes(rawClean);
+    };
+
+    // 1) 以該分類原始資料為準，只拿該分類自己的商品；若只有 1 個商品，就只顯示 1 張圖，不再補抓同色系商品。
+    let exactProducts = [];
+    try{
+      const registry = window.__VLIST_CAT__ || {};
+      if(rawCat && registry[rawCat] && Array.isArray(registry[rawCat].items)){
+        exactProducts = registry[rawCat].items.filter(p => p && !p.is_hidden);
+      }
+    }catch(e){}
+    if(exactProducts.length === 0 && Array.isArray(PRODUCTS)){
+      exactProducts = PRODUCTS.filter(productMatchesExactCategory);
+    }
+    if(exactProducts.length > 0){
+      for(const p of exactProducts){
+        if(pushSrc(p && p.photo)) break;
+      }
+      return imgs;
+    }
+
+    // 2) 若資料層沒有對到，再抓該分類區塊目前 DOM 已渲染的商品圖。
+    const nodes = Array.from((sec || document).querySelectorAll('.p-img-box img.p-img, img.p-img'));
+    for(const img of nodes){
+      if(pushSrc(img.getAttribute('src') || img.currentSrc || img.src)) return imgs;
+    }
+    if(imgs.length > 0) return imgs;
+
+    // 3) 最後才做極低風險 fallback，避免分類完全沒有圖片。
+    const t = String(title || '').trim();
+    const pickFrom = (arr)=>{
+      for(const p of arr || []){
+        if(pushSrc(p && p.photo)) return true;
+      }
+      return false;
+    };
+    if(Array.isArray(PRODUCTS)){
+      const theme = pmThemeFromTitle(t);
+      const fallback = PRODUCTS.filter(p=>{
+        if(!p || p.is_hidden) return false;
+        const cat = String(p.category||'');
+        const name = String(p.name||'');
+        if(theme === 'health') return cat.includes('保健') || name.includes('保健');
+        if(theme === 'beauty') return cat.includes('美容') || name.includes('面膜') || name.includes('精華') || name.includes('乳');
+        if(theme === 'clean') return cat.includes('清潔') || name.includes('洗') || name.includes('皂');
+        if(theme === 'drink') return cat.includes('飲') || name.includes('飲');
+        return false;
+      });
+      pickFrom(fallback);
+      if(imgs.length === 0) pickFrom(PRODUCTS.filter(p=>p && !p.is_hidden && p.photo));
+    }
+    return imgs;
+  }catch(e){ return []; }
+}
+
+function pmBasketHtml(imgs){
+  try{
+    const arr = Array.isArray(imgs) ? imgs.filter(Boolean).slice(0,3) : [];
+    if(arr.length === 0){
+      return `<div class="pm-basket pm-basket-empty"><span class="material-icons-round">shopping_basket</span></div>`;
+    }
+    const imgsHtml = arr.map((src, i)=>`<img class="pm-basket-img pm-basket-img-${i+1}" src="${String(src).replace(/"/g,'&quot;')}" loading="lazy" decoding="async" onerror="this.style.display='none'">`).join('');
+    const cls = arr.length === 1 ? 'pm-basket pm-basket-single' : 'pm-basket';
+    return `<div class="${cls}">${imgsHtml}<div class="pm-basket-base"></div></div>`;
+  }catch(e){ return `<div class="pm-basket pm-basket-empty"><span class="material-icons-round">shopping_basket</span></div>`; }
+}
+
 function renderPromoMarquee(){
   try{
     const slot = document.getElementById("promoMarqueeSlot");
@@ -4259,7 +5345,8 @@ function renderPromoMarquee(){
       if(!title) continue;
       const theme = pmThemeFromTitle(title);
       const summary = buildPromoMarqueeSummary(title);
-      items.push({ title, theme, summary });
+      const basketImages = pmCollectBasketImages(sec, title);
+      items.push({ title, theme, summary, basketImages });
     }
 
     if(items.length === 0){
@@ -4269,7 +5356,11 @@ function renderPromoMarquee(){
 
     slot.innerHTML = `
       <div class="pm-head">
-        <div class="pm-title"><span class="material-icons-round">map</span> 優惠導覽</div>
+        <div class="pm-head-main">
+          <div class="pm-eyebrow">BIO-TECH OFFER GUIDE</div>
+          <div class="pm-title"><span class="material-icons-round">travel_explore</span> 生技展優惠導覽</div>
+          <div class="pm-subtitle">快速切換品類，探索本次活動商品與優惠組合。</div>
+        </div>
         <div id="promoMarqueeCtaHost"></div>
       </div>
       <div class="pm-shell">
@@ -4288,9 +5379,11 @@ function renderPromoMarquee(){
           const card = document.createElement("div");
           const theme = it.theme || "default";
           card.className = `pm-card pm-theme-${theme}`;
-          const t = escapeHtml(it.title);
+          const t = pmTitleFirstLine5Html(it.title);
           const s = escapeHtml(it.summary || "多重優惠");
+          const basket = pmBasketHtml(it.basketImages || []);
           card.innerHTML = `
+            ${basket}
             <div class="pm-name">${t}</div>
             <div class="pm-hint">${s}</div>
           `;
@@ -4324,9 +5417,11 @@ function renderPromoMarquee(){
       }
 
     try{
+      // V7.10 Bio-Fluid Hub: keep promo map CTA in the announcement nucleus.
+      // The marquee head is hidden by design, so moving the CTA into it would hide the button.
       const btn = document.getElementById("promoMapCtaBtn");
       const host = document.getElementById("promoMarqueeCtaHost");
-      if(btn && host) host.appendChild(btn);
+      if(btn && host){ /* keep CTA in #systemAnnouncementSlot */ }
     }catch(e){}
 
     slot.style.display = "block";
@@ -4709,16 +5804,23 @@ function renderSystemAnnouncement(){
     const notes = (RULES && RULES.uiNotes) ? RULES.uiNotes : {};
     const raw = (notes && notes['announce_between_rank_and_categories']) ? String(notes['announce_between_rank_and_categories']) : '';
     const msg = String(raw||'').trim();
-    const safe = msg ? msg.split('\n').map(s => s.replace(/[<>]/g,'')).join('<br>') : '';
+    const cleanLines = msg ? msg.split('\n').map(s => String(s||'').replace(/[<>]/g,'').trim()).filter(Boolean) : [];
+    const titleLine = cleanLines.length ? cleanLines[0] : '訂購小提醒';
+    const bodyLines = cleanLines.length > 1 ? cleanLines.slice(1) : ['優惠、贈品與免運條件將由系統自動計算。', '完成訂購後請自行截圖或儲存憑證，加速付款／取貨流程。'];
+    const descText = bodyLines.length ? bodyLines.join(' ｜ ') : '請留意活動優惠、贈品與取貨相關資訊。';
     const seen = (function(){ try{ return localStorage.getItem('ttl_promo_map_seen')==='1'; }catch(e){ return false; } })();
     const attnCls = seen ? '' : ' pm-attn';
 
-    // show slot if has message OR we still want CTA entry
     slot.style.display='block';
     slot.innerHTML = `
       <div class="sys-ann sys-ann--row">
-        <button type="button" id="starDockBtn" class="star-dock-btn hidden" title="主打星"><span class="material-icons-round">star</span><span class="star-dock-badge" id="starDockBadge" style="display:none">0</span></button>
-        ${safe ? `<div class="sys-ann-main">${safe}</div>` : `<div class="sys-ann-main"></div>`}
+        <div class="sys-ann-main">
+          <button type="button" id="starDockBtn" class="sys-ann-icon star-dock-btn hidden" title="主打星"><span class="material-icons-round">star</span><span class="star-dock-badge" id="starDockBadge" style="display:none">0</span></button>
+          <div class="sys-ann-body">
+            <div class="title">${titleLine}</div>
+            <div class="desc">${descText}</div>
+          </div>
+        </div>
         <button type="button" id="promoMapCtaBtn" class="sys-ann-cta${attnCls}"><span class="cta-icon">👉</span><span class="cta-text">查看優惠地圖 ›</span></button>
       </div>
     `;
@@ -4729,7 +5831,7 @@ try{
   const iconEl = btn.querySelector('.cta-icon');
   const textEl = btn.querySelector('.cta-text');
   const iconTxt = uiGet('ui|promo_map_cta_icon', uiGet('promo_map_cta_icon','👉')) || '👉';
-  const labelTxt = uiGet('ui|promo_map_cta_text', uiGet('promo_map_cta_text','查看優惠地圖 ›')) || '查看優惠地圖 ›';
+  const labelTxt = uiGet('ui|promo_map_cta_text', uiGet('promo_map_cta_text','完整優惠地圖')) || '完整優惠地圖';
   if(iconEl) iconEl.textContent = iconTxt;
   if(textEl) textEl.textContent = labelTxt;
 }catch(e){}
@@ -4744,9 +5846,7 @@ try{
   }catch(e){}
 }
 
-
-
-/* --- V2.9.2: Star Hero (主打星) behavior --- */
+/* --- V7.15: Star Hero core restored from stable V7.6 --- */
 let __STAR_AUTO_PENDING__ = false;
 let __STAR_OPEN__ = false;
 let __STAR_CLOSING__ = false;
@@ -4757,10 +5857,10 @@ let __STAR_SCROLL_TIMER__ = null;
 let __STAR_ITEMS__ = [];
 let __STAR_ACTIVE_IDX__ = 0;
 let __STAR_SUBTITLE_TPL__ = '';
-
-
-// --- Star Hero DOM template reset (hard fix for "blur only" reopen) ---
 let __STAR_TEMPLATE_HTML__ = null;
+let __STAR_CLOSE_WATCHDOG__ = null;
+let __STAR_REOPEN_PENDING__ = false;
+
 function __starCaptureTemplate(){
   try{
     const ov = document.getElementById('starHeroOverlay');
@@ -4776,16 +5876,10 @@ function __starRebuildDOM(){
     if(!ov) return;
     __starCaptureTemplate();
     if(__STAR_TEMPLATE_HTML__ != null){
-      // Rebuild inner DOM to purge any lingering WAAPI fill-forwards / computed opacity issues
       ov.innerHTML = __STAR_TEMPLATE_HTML__;
     }
   }catch(e){}
 }
-
-
-
-let __STAR_CLOSE_WATCHDOG__ = null;
-let __STAR_REOPEN_PENDING__ = false;
 function starIsDismissed(){
   try{ return localStorage.getItem('ttl_star_hero_dismissed') === '1'; }catch(e){ return false; }
 }
@@ -4795,10 +5889,10 @@ function setStarDismissed(){
 function getStarProducts(){
   try{
     const list = Array.isArray(PRODUCTS) ? PRODUCTS.slice() : [];
-    const vis = list.filter(p => p && !p.isGift && !p.isHidden && String(p.photo||'').trim() !== '');
+    const vis = list.filter(p => p && !p.isGift && !p.isHidden && !p.is_hidden && String(p.photo||'').trim() !== '');
 
     const pickNew = ()=>{
-      const news = vis.filter(p => p.isNew);
+      const news = vis.filter(p => p.isNew || p.is_new || String(p.badge||'').includes('主打') || String(p.tags||'').includes('主打'));
       const base = (news.length ? news : vis).slice();
       base.sort((a,b)=>{
         const aa = String(a.category||'').includes('加價購') ? 1 : 0;
@@ -4826,7 +5920,6 @@ function getStarProducts(){
     return [];
   }
 }
-
 
 function getStarHeroCopy(){
   try{
@@ -5433,6 +6526,8 @@ function showStarDock(show){
 
     if(show){
       btn.classList.remove('hidden');
+      btn.setAttribute('title','主打星');
+      btn.setAttribute('aria-label','主打星入口');
       // Fix: button could be left at opacity:0 (clickable but invisible)
       btn.style.opacity = '1';
       btn.style.visibility = 'visible';
@@ -5483,11 +6578,12 @@ function refreshStarDockBadge(){
 
 function initStarHero(){
   try{
-    if(starIsDismissed()){
-      showStarDock(true);
+    const hasStar = (typeof getStarProducts === 'function') ? ((getStarProducts() || []).length > 0) : false;
+    // V7.13: 主打星入口固定恢復顯示，只要有主打星商品即可開啟，不再等到主打星彈窗關閉後才出現。
+    showStarDock(!!hasStar);
+    if(hasStar){
       try{ refreshStarDockBadge(); }catch(e){}
     }else{
-      showStarDock(false);
       try{ updateStarDockBadge(0); }catch(e){}
     }
 
