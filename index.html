@@ -3037,6 +3037,229 @@ body.cfg-error .btn-bundle{
   .pm-card:has(.pm-basket-single){ min-height: 184px !important; }
 }
 
+
+/* ==========================================================
+   V7.16 手機版公告／跑馬燈密度優化
+   - 優惠地圖入口移至跑馬燈右下角
+   - 公告次要訊息改回直向
+   - 主打星搖晃不被公告卡裁切
+   - 跑馬燈卡片降低留白、縮小商品背板重疊感
+   ========================================================== */
+#systemAnnouncementSlot,
+#systemAnnouncementSlot .sys-ann,
+#systemAnnouncementSlot .sys-ann-main{
+  overflow: visible !important;
+}
+#systemAnnouncementSlot .sys-ann{
+  z-index: 6;
+}
+#systemAnnouncementSlot .star-dock-btn{
+  position: relative;
+  z-index: 8;
+  transform-origin: center center;
+}
+.sys-ann-lines{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.35 !important;
+}
+.sys-ann-line{
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+}
+.sys-ann-line::before{
+  content: '・';
+  color: #0d9488;
+  font-weight: 900;
+  margin-right: 2px;
+}
+#promoMarqueeSlot{
+  overflow: visible !important;
+}
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating{
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  z-index: 20;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(13,148,136,0.22), inset 0 1px 1px rgba(255,255,255,0.36);
+  max-width: calc(100% - 24px);
+}
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating .cta-icon{
+  font-size: 13px;
+  margin-right: 3px;
+}
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating .cta-text{
+  max-width: 8.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px){
+  #systemAnnouncementSlot{
+    padding: 0 10px !important;
+    margin-top: 12px !important;
+  }
+  #systemAnnouncementSlot .sys-ann{
+    padding: 14px 13px 12px !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+    border-radius: 24px 24px 0 0 !important;
+  }
+  #systemAnnouncementSlot .sys-ann-main{
+    gap: 10px !important;
+    align-items: flex-start !important;
+    min-width: 0;
+  }
+  #systemAnnouncementSlot .sys-ann-body{
+    gap: 4px !important;
+    min-width: 0;
+    padding-top: 1px;
+  }
+  #systemAnnouncementSlot .sys-ann-main .title{
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+  #systemAnnouncementSlot .sys-ann-main .desc,
+  #systemAnnouncementSlot .sys-ann-lines{
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    color: #6b7280 !important;
+  }
+  #systemAnnouncementSlot .star-dock-btn.attn,
+  #systemAnnouncementSlot .star-dock-btn{
+    margin: -2px 0 -2px -1px !important;
+  }
+
+  #promoMarqueeSlot{
+    margin: 0 10px 18px !important;
+    padding: 10px 0 30px !important;
+    border-radius: 0 0 24px 24px !important;
+  }
+  #promoMarqueeSlot .pm-viewport{
+    padding: 2px 0 7px !important;
+    mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%) !important;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%) !important;
+  }
+  #promoMarqueeSlot .pm-track{
+    gap: 10px !important;
+    padding: 0 15px !important;
+  }
+  #promoMarqueeSlot .pm-card{
+    flex: 0 0 158px !important;
+    min-height: 154px !important;
+    padding: 9px 9px 10px !important;
+    border-radius: 17px !important;
+  }
+  #promoMarqueeSlot .pm-basket{
+    height: 60px !important;
+    margin: 0 0 6px 0 !important;
+  }
+  #promoMarqueeSlot .pm-basket::before{
+    left: 22px !important;
+    right: 22px !important;
+    bottom: 10px !important;
+    height: 22px !important;
+    border-radius: 11px 11px 15px 15px !important;
+    background: rgba(255,255,255,0.46) !important;
+    border-color: rgba(255,255,255,0.50) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 4px 10px rgba(15,118,110,0.035) !important;
+  }
+  #promoMarqueeSlot .pm-basket-base{
+    left: 30px !important;
+    right: 30px !important;
+    bottom: 7px !important;
+    height: 3px !important;
+    opacity: .52 !important;
+  }
+  #promoMarqueeSlot .pm-basket-img{
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 14px !important;
+    padding: 3px !important;
+    background: rgba(255,255,255,0.70) !important;
+    border-color: rgba(255,255,255,0.58) !important;
+    box-shadow: 0 7px 14px rgba(17,24,39,0.075) !important;
+  }
+  #promoMarqueeSlot .pm-basket-img + .pm-basket-img{
+    margin-left: -6px !important;
+  }
+  #promoMarqueeSlot .pm-basket-img-1{ transform: rotate(-6deg) translateY(2px) !important; }
+  #promoMarqueeSlot .pm-basket-img-2{ transform: translateY(-5px) !important; z-index: 3; }
+  #promoMarqueeSlot .pm-basket-img-3{ transform: rotate(6deg) translateY(2px) !important; }
+  #promoMarqueeSlot .pm-basket.pm-basket-single{
+    height: 78px !important;
+    margin-bottom: 5px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single::before{
+    left: 34px !important;
+    right: 34px !important;
+    bottom: 11px !important;
+    height: 27px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single .pm-basket-base{
+    left: 43px !important;
+    right: 43px !important;
+    bottom: 6px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single .pm-basket-img{
+    width: 75px !important;
+    height: 75px !important;
+    transform: translateY(-8px) !important;
+  }
+  #promoMarqueeSlot .pm-card:has(.pm-basket-single){
+    min-height: 170px !important;
+  }
+  #promoMarqueeSlot .pm-name{
+    min-height: 38px !important;
+    margin-bottom: 7px !important;
+    font-size: 15px !important;
+    line-height: 1.22 !important;
+  }
+  #promoMarqueeSlot .pm-hint{
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+  }
+  #promoMarqueeSlot .pm-nav{
+    width: 31px !important;
+    height: 31px !important;
+  }
+  #promoMarqueeSlot #promoMapCtaBtn.pm-map-floating{
+    right: 10px;
+    bottom: 7px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 380px){
+  #promoMarqueeSlot .pm-card{
+    flex-basis: 150px !important;
+    min-height: 150px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  #promoMarqueeSlot .pm-basket-img{
+    width: 48px !important;
+    height: 48px !important;
+  }
+  #promoMarqueeSlot .pm-basket.pm-basket-single .pm-basket-img{
+    width: 72px !important;
+    height: 72px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3373,7 +3596,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_9_premium_nav_notice";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_16_marquee_notice_mobile";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5354,6 +5577,11 @@ function renderPromoMarquee(){
       return;
     }
 
+    const seen = (function(){ try{ return localStorage.getItem('ttl_promo_map_seen')==='1'; }catch(e){ return false; } })();
+    const attnCls = seen ? '' : ' pm-attn';
+    const ctaIcon = String(uiGet('ui|promo_map_cta_icon', uiGet('promo_map_cta_icon','👉')) || '👉').replace(/[<>]/g,'');
+    const ctaText = String(uiGet('ui|promo_map_cta_text', uiGet('promo_map_cta_text','完整優惠地圖')) || '完整優惠地圖').replace(/[<>]/g,'');
+
     slot.innerHTML = `
       <div class="pm-head">
         <div class="pm-head-main">
@@ -5368,7 +5596,17 @@ function renderPromoMarquee(){
         <div class="pm-viewport" id="promoMarqueeViewport"><div class="pm-track" id="promoMarqueeTrack"></div></div>
         <button type="button" class="pm-nav right" id="pmNavRight" aria-label="下一個"><span class="material-icons-round">chevron_right</span></button>
       </div>
+      <button type="button" id="promoMapCtaBtn" class="pm-map-floating sys-ann-cta${attnCls}"><span class="cta-icon">${ctaIcon}</span><span class="cta-text">${ctaText}</span></button>
     `;
+
+    const promoBtn = slot.querySelector('#promoMapCtaBtn');
+    if(promoBtn){
+      promoBtn.onclick = (ev) => {
+        try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+        try{ setPromoMapSeen(); }catch(e){}
+        try{ openPromoMap(); }catch(e){}
+      };
+    }
 
     const track = slot.querySelector("#promoMarqueeTrack");
     if(track){
@@ -5415,14 +5653,6 @@ function renderPromoMarquee(){
           }catch(e){}
         }, {passive:true});
       }
-
-    try{
-      // V7.10 Bio-Fluid Hub: keep promo map CTA in the announcement nucleus.
-      // The marquee head is hidden by design, so moving the CTA into it would hide the button.
-      const btn = document.getElementById("promoMapCtaBtn");
-      const host = document.getElementById("promoMarqueeCtaHost");
-      if(btn && host){ /* keep CTA in #systemAnnouncementSlot */ }
-    }catch(e){}
 
     slot.style.display = "block";
     try{
@@ -5807,7 +6037,7 @@ function renderSystemAnnouncement(){
     const cleanLines = msg ? msg.split('\n').map(s => String(s||'').replace(/[<>]/g,'').trim()).filter(Boolean) : [];
     const titleLine = cleanLines.length ? cleanLines[0] : '訂購小提醒';
     const bodyLines = cleanLines.length > 1 ? cleanLines.slice(1) : ['優惠、贈品與免運條件將由系統自動計算。', '完成訂購後請自行截圖或儲存憑證，加速付款／取貨流程。'];
-    const descText = bodyLines.length ? bodyLines.join(' ｜ ') : '請留意活動優惠、贈品與取貨相關資訊。';
+    const descHtml = (bodyLines.length ? bodyLines : ['請留意活動優惠、贈品與取貨相關資訊。']).map(line => `<span class="sys-ann-line">${String(line||'').replace(/[<>]/g,'').trim()}</span>`).join('');
     const seen = (function(){ try{ return localStorage.getItem('ttl_promo_map_seen')==='1'; }catch(e){ return false; } })();
     const attnCls = seen ? '' : ' pm-attn';
 
@@ -5818,31 +6048,12 @@ function renderSystemAnnouncement(){
           <button type="button" id="starDockBtn" class="sys-ann-icon star-dock-btn hidden" title="主打星"><span class="material-icons-round">star</span><span class="star-dock-badge" id="starDockBadge" style="display:none">0</span></button>
           <div class="sys-ann-body">
             <div class="title">${titleLine}</div>
-            <div class="desc">${descText}</div>
+            <div class="desc sys-ann-lines">${descHtml}</div>
           </div>
         </div>
-        <button type="button" id="promoMapCtaBtn" class="sys-ann-cta${attnCls}"><span class="cta-icon">👉</span><span class="cta-text">查看優惠地圖 ›</span></button>
       </div>
     `;
 
-    const btn = document.getElementById('promoMapCtaBtn');
-    if(btn){
-try{
-  const iconEl = btn.querySelector('.cta-icon');
-  const textEl = btn.querySelector('.cta-text');
-  const iconTxt = uiGet('ui|promo_map_cta_icon', uiGet('promo_map_cta_icon','👉')) || '👉';
-  const labelTxt = uiGet('ui|promo_map_cta_text', uiGet('promo_map_cta_text','完整優惠地圖')) || '完整優惠地圖';
-  if(iconEl) iconEl.textContent = iconTxt;
-  if(textEl) textEl.textContent = labelTxt;
-}catch(e){}
-
-      btn.onclick = (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        try{ setPromoMapSeen(); }catch(e){}
-        try{ openPromoMap(); }catch(e){}
-      };
-    }
   }catch(e){}
 }
 
