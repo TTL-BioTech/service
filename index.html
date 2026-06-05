@@ -4126,7 +4126,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_25_guided_return_history_fix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_26_guided_return_topfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6746,6 +6746,34 @@ function beginGuidedNavigation(source, extra){
 }
 let __GUIDED_RESTORED_LAYER__ = null;
 let __GUIDED_RESTORE_ARMED_UNTIL__ = 0;
+let __GUIDED_RETURN_TOP_UNTIL__ = 0;
+
+function __guidedForceTopNow(){
+  try{ window.scrollTo({top:0, left:0, behavior:'auto'}); }catch(e){ try{ window.scrollTo(0,0); }catch(ex){} }
+  try{ document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }catch(e){}
+}
+
+function __armGuidedReturnTop(){
+  try{
+    __GUIDED_RETURN_TOP_UNTIL__ = Date.now() + 2600;
+    __guidedForceTopNow();
+    setTimeout(__guidedForceTopNow, 60);
+    setTimeout(__guidedForceTopNow, 180);
+    setTimeout(__guidedForceTopNow, 360);
+  }catch(e){}
+}
+
+function __maybeGuidedReturnTop(){
+  try{
+    if(Date.now() < (__GUIDED_RETURN_TOP_UNTIL__ || 0)){
+      __guidedForceTopNow();
+      setTimeout(__guidedForceTopNow, 80);
+      setTimeout(__guidedForceTopNow, 220);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
 
 function __markGuidedRestoredLayer(kind){
   try{
@@ -6829,16 +6857,23 @@ function tryRestoreGuidedReturn(){
     if(!st) return false;
     __GUIDED_RETURN_STATE__ = null;
 
-    const y = Math.max(0, Number(st.pageY || 0));
-    try{ window.scrollTo({top:y, behavior:'smooth'}); }catch(e){ window.scrollTo(0,y); }
-    setTimeout(()=>{ try{ __restoreRankListLeft(st); __restorePromoMarqueeX(st); }catch(e){} }, 80);
+    const forceTopReturn = (st.source === 'promoMap' || st.promoMapWasOpen || st.source === 'star');
+    const y = forceTopReturn ? 0 : Math.max(0, Number(st.pageY || 0));
+    if(forceTopReturn){
+      try{ __armGuidedReturnTop(); }catch(e){}
+    }else{
+      try{ window.scrollTo({top:y, behavior:'smooth'}); }catch(e){ window.scrollTo(0,y); }
+    }
+    setTimeout(()=>{ try{ __restoreRankListLeft(st); __restorePromoMarqueeX(st); if(forceTopReturn) __guidedForceTopNow(); }catch(e){} }, 80);
 
     if(st.source === 'promoMap' || st.promoMapWasOpen){
       setTimeout(()=>{
         try{
           try{ __markGuidedRestoredLayer('promoMap'); }catch(e){}
           openPromoMap({skipHistory:true});
+          try{ __armGuidedReturnTop(); }catch(e){}
           setTimeout(()=>{
+            try{ __guidedForceTopNow(); }catch(e){}
             try{ if(st.promoTab) setPromoMapTab(st.promoTab, {skipSave:true}); }catch(e){}
             try{ if(st.promoScope) setPromoGiftScope(st.promoScope, {skipSave:true}); }catch(e){}
             try{
@@ -6853,7 +6888,9 @@ function tryRestoreGuidedReturn(){
         try{
           try{ __markGuidedRestoredLayer('star'); }catch(e){}
           openStarHeroOverlay(false, {skipHistory:true});
+          try{ __armGuidedReturnTop(); }catch(e){}
           setTimeout(()=>{
+            try{ __guidedForceTopNow(); }catch(e){}
             try{
               const sh = document.getElementById('starHeroCarousel');
               if(sh && isFinite(Number(st.starLeft))) sh.scrollLeft = Number(st.starLeft);
@@ -9852,7 +9889,7 @@ window.onpopstate = (e) => {
     // Handle Star Hero overlay
     try{
       const so = document.getElementById('starHeroOverlay');
-      if(so && so.classList.contains('show')){ __consumeGuidedRestoredLayer('star'); dismissStarHero('popstate'); armBackGuard(); return; }
+      if(so && so.classList.contains('show')){ __consumeGuidedRestoredLayer('star'); dismissStarHero('popstate'); __maybeGuidedReturnTop(); armBackGuard(); return; }
     }catch(ex){}
     // Handle Gift image preview first so underlying modals/drawers stay open
     try{
@@ -9871,6 +9908,7 @@ window.onpopstate = (e) => {
     if(isPromoMapOpen()){
         __consumeGuidedRestoredLayer('promoMap');
         closePromoMap({skipHistory:true});
+        __maybeGuidedReturnTop();
         const pending = __PM_PENDING_SCROLL_ID__;
         __PM_PENDING_SCROLL_ID__ = null;
         // keep guard so user doesn't leave app accidentally
