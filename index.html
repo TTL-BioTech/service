@@ -3507,6 +3507,114 @@ body.cfg-error .btn-bundle{
   display: none !important;
 }
 
+
+
+/* ==========================================================
+   V7.20 滿額里程碑 NEW 提示 + BAR 禮物反白微調
+   ========================================================== */
+.ms-summary-row{
+  align-items: center !important;
+}
+#ms-val-all, #ms-val-beauty{
+  font-size: 16.1px !important; /* 原 14px +15% */
+  line-height: 1.15 !important;
+  padding-top: 0 !important;
+  align-self: center !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 34px;
+}
+#gift-fab.fb-gift-btn,
+.fb-gift-btn{
+  margin: 0 9px 0 0 !important;
+  position: relative;
+}
+#gift-fab.fb-gift-btn.attn,
+.fb-gift-btn.attn{
+  animation: giftShake 2.6s ease-in-out infinite !important;
+}
+#gift-fab.fb-gift-btn.attn .material-icons-round,
+.fb-gift-btn.attn .material-icons-round{
+  animation: fbGiftSoftGlow 2.6s ease-in-out infinite !important;
+}
+@keyframes fbGiftSoftGlow{
+  0%,65%,100%{
+    color: rgba(255,255,255,0.82);
+    -webkit-text-fill-color: rgba(255,255,255,0.82);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+    text-shadow: 0 0 0 rgba(255,255,255,0);
+  }
+  6%,18%,30%{
+    color: rgba(255,255,255,0.98);
+    -webkit-text-fill-color: rgba(255,255,255,0.98);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 7px rgba(255,255,255,0.42));
+    text-shadow: 0 0 10px rgba(255,255,255,0.48);
+  }
+  12%,24%,36%{
+    color: rgba(255,255,255,0.94);
+    -webkit-text-fill-color: rgba(255,255,255,0.94);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18)) drop-shadow(0 0 5px rgba(255,255,255,0.34));
+    text-shadow: 0 0 8px rgba(255,255,255,0.36);
+  }
+}
+.ms-dual-item.ms-new-unlock{
+  opacity: 1 !important;
+  border-color: rgba(255,193,7,0.72) !important;
+  box-shadow: 0 0 0 2px rgba(255,236,179,0.88), 0 12px 28px rgba(255,143,0,0.14) !important;
+  background: linear-gradient(180deg, rgba(255,253,245,0.98), rgba(255,255,255,0.98)) !important;
+  padding-bottom: 20px !important;
+}
+.ms-track-col.beauty .ms-dual-item.ms-new-unlock{
+  border-color: rgba(216,27,96,0.42) !important;
+  box-shadow: 0 0 0 2px rgba(252,228,236,0.92), 0 12px 28px rgba(216,27,96,0.12) !important;
+  background: linear-gradient(180deg, rgba(255,249,252,0.98), rgba(255,255,255,0.98)) !important;
+}
+.ms-new-badge{
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: .05em;
+  color: #9a4f00;
+  background: rgba(255,243,224,0.96);
+  border: 1px solid rgba(255,167,38,0.35);
+  box-shadow: 0 5px 12px rgba(255,143,0,0.14);
+  pointer-events: none;
+}
+.ms-track-col.beauty .ms-new-badge{
+  color: #ad1457;
+  background: rgba(252,228,236,0.96);
+  border-color: rgba(216,27,96,0.24);
+  box-shadow: 0 5px 12px rgba(216,27,96,0.10);
+}
+@media (max-width: 520px){
+  #gift-fab.fb-gift-btn,
+  .fb-gift-btn{
+    margin-right: 7px !important;
+  }
+  #ms-val-all, #ms-val-beauty{
+    font-size: 15.8px !important;
+    min-height: 33px;
+  }
+}
+@media (max-width: 380px){
+  #gift-fab.fb-gift-btn,
+  .fb-gift-btn{
+    margin-right: 5px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -3843,7 +3951,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_19_ios_rank_return_marquee_linefix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_20_milestone_new_gift_hint";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4386,6 +4494,26 @@ window.openCartFromShipBadge = function(ev){
 };
 
 let __NEW_GIFT_UNVIEWED__ = false;
+let __LAST_UNLOCKED_GIFT_NAMES__ = [];
+let __MS_SHOW_NEW_UNLOCKS__ = false;
+function normalizeGiftNameKey(name){
+  return String(name || '').trim().replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '');
+}
+function setLatestUnlockedGifts(names){
+  try{
+    const arr = (Array.isArray(names) ? names : [names])
+      .map(normalizeGiftNameKey)
+      .filter(Boolean);
+    __LAST_UNLOCKED_GIFT_NAMES__ = Array.from(new Set(arr));
+  }catch(e){ __LAST_UNLOCKED_GIFT_NAMES__ = []; }
+}
+function isLatestUnlockedGiftName(name){
+  try{
+    if(!__MS_SHOW_NEW_UNLOCKS__) return false;
+    const key = normalizeGiftNameKey(name);
+    return !!key && (__LAST_UNLOCKED_GIFT_NAMES__ || []).includes(key);
+  }catch(e){ return false; }
+}
 function setGiftUnviewed(flag){
   __NEW_GIFT_UNVIEWED__ = !!flag;
   try{
@@ -4393,8 +4521,22 @@ function setGiftUnviewed(flag){
     if(fab) fab.classList.toggle('attn', __NEW_GIFT_UNVIEWED__);
   }catch(e){}
 }
-function markNewGiftUnviewed(){ setGiftUnviewed(true); }
+function markNewGiftUnviewed(names){
+  try{ if(names) setLatestUnlockedGifts(names); }catch(e){}
+  setGiftUnviewed(true);
+}
 function clearNewGiftUnviewed(){ setGiftUnviewed(false); }
+function scrollToLatestUnlockedMilestone(){
+  try{
+    const nodes = Array.from(document.querySelectorAll('#msNodes .ms-dual-item.ms-new-unlock'));
+    if(!nodes.length) return;
+    nodes.sort((a,b)=> (Number(b.dataset.msAmt)||0) - (Number(a.dataset.msAmt)||0));
+    const target = nodes[0];
+    setTimeout(()=>{
+      try{ target.scrollIntoView({behavior:'smooth', block:'center', inline:'nearest'}); }catch(e){ target.scrollIntoView(false); }
+    }, 180);
+  }catch(e){}
+}
 
 
 /* --- V2.9.3: Two-stage checkout (二階結帳 + 收合) --- */
@@ -4778,20 +4920,25 @@ window.updateQty = function(btnEl, pid, delta) {
 
 window.showMilestoneCard = function() {
     try{ localStorage.setItem('ttl_ms_opened_once','1'); }catch(e){}
-    try{ clearNewGiftUnviewed(); }catch(e){}
+    const shouldFocusLatest = !!(__NEW_GIFT_UNVIEWED__ && Array.isArray(__LAST_UNLOCKED_GIFT_NAMES__) && __LAST_UNLOCKED_GIFT_NAMES__.length);
+    __MS_SHOW_NEW_UNLOCKS__ = shouldFocusLatest;
     renderMilestoneContent();
     document.getElementById('milestone-overlay').classList.add('open');
     document.getElementById('msCard').classList.remove('shrinking');
     document.body.classList.add('modal-open');
+    try{ clearNewGiftUnviewed(); }catch(e){}
+    if(shouldFocusLatest) scrollToLatestUnlockedMilestone();
     history.pushState({modal: 'milestone'}, null, "");
 };
 
 window.closeMilestoneCard = function() {
+    __MS_SHOW_NEW_UNLOCKS__ = false;
     document.getElementById('milestone-overlay').classList.remove('open');
     if(history.state && history.state.modal === 'milestone') history.back();
 };
 
 window.minimizeMilestoneCard = function() {
+    __MS_SHOW_NEW_UNLOCKS__ = false;
     const card = document.getElementById('msCard');
     card.classList.add('shrinking');
     setTimeout(() => {
@@ -4893,8 +5040,11 @@ function createDualItem(g, isReached, opts) {
 
     const tagHtml = (tagText && isNext) ? `<div class="${tagClass}">${String(tagText).replace(/[<>]/g,'')}</div>` : ``;
 
+    const isNewUnlock = isLatestUnlockedGiftName(gName);
     const item = document.createElement('div');
-    item.className = `ms-dual-item ${isReached ? 'active' : ''} ${isNext ? 'next' : ''}`;
+    item.className = `ms-dual-item ${isReached ? 'active' : ''} ${isNext ? 'next' : ''} ${isNewUnlock ? 'ms-new-unlock' : ''}`.trim();
+    item.dataset.msGiftName = normalizeGiftNameKey(gName);
+    item.dataset.msAmt = String(Number(g.amt)||0);
     item.innerHTML = `
       <div class="ms-d-head">
         <div class="ms-d-th">滿 $${(Number(g.amt)||0).toLocaleString()}</div>
@@ -4906,6 +5056,7 @@ function createDualItem(g, isReached, opts) {
           <div class="ms-d-name">${String(gName||'').replace(/[<>]/g,'')}</div>
         </div>
       </div>
+      ${isNewUnlock ? '<div class="ms-new-badge">NEW</div>' : ''}
     `;
     return item;
 }
@@ -4945,7 +5096,7 @@ function checkNewGifts(currentGifts) {
     const newUnlocks = currentNames.filter(n => !achievedGifts.includes(n));
     
     if(newUnlocks.length > 0) {
-        try{ markNewGiftUnviewed(); }catch(e){}
+        try{ markNewGiftUnviewed(newUnlocks); }catch(e){}
         showGiftUnlockNotify(newUnlocks, 4000);
     }
     achievedGifts = currentNames;
@@ -9109,8 +9260,8 @@ window.updateCartItem = function(index, delta) {
         msg.classList.add('success'); 
         
         // Also show clickable top notification and keep BAR gift icon gently shaking until viewed
-        try{ markNewGiftUnviewed(); }catch(e){}
-        showGiftUnlockNotify([newUnlocks[newUnlocks.length-1]], 3000);
+        try{ markNewGiftUnviewed(newUnlocks); }catch(e){}
+        showGiftUnlockNotify(newUnlocks, 3000);
 
         setTimeout(() => {
             msg.innerText = originalMsg; 
@@ -9418,6 +9569,7 @@ window.onpopstate = (e) => {
     // V25 FIX 1: Handle Milestone using DOM state
     const msOverlay = document.getElementById('milestone-overlay');
     if(msOverlay.classList.contains('open')) {
+        __MS_SHOW_NEW_UNLOCKS__ = false;
         msOverlay.classList.remove('open');
         document.getElementById('gift-fab').style.display = 'flex'; // Ensure FAB returns
         if(!isCartOpen) cleanupUI();
