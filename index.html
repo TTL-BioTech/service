@@ -3483,6 +3483,30 @@ body.cfg-error .btn-bundle{
   .fb-gift-btn .material-icons-round{ font-size: 23px; }
 }
 
+
+/* ==========================================================
+   V7.19 iOS 排行榜滑動修正 + 跑馬燈底線移除 + 導頁返回原畫面
+   ========================================================== */
+.rank-list{
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.r-card, .r-img-wrap{
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.r-img{
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+#promoMarqueeSlot .pm-basket-base{
+  display: none !important;
+}
+
 </style>
 </head>
 <body>
@@ -3819,7 +3843,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_18_marquee_smooth_giftbar";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_19_ios_rank_return_marquee_linefix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5292,6 +5316,7 @@ try{
         const id = item.getAttribute('data-target');
         // Set pending target and close via history (so onpopstate can close drawer without triggering root-back logic)
         __PM_PENDING_SCROLL_ID__ = id || null;
+        try{ __PM_PENDING_GUIDED_RETURN__ = createGuidedReturnSnapshot('promoMap', {targetId:id||''}); }catch(e){}
         try{ closePromoMap(); }catch(e){}
       };
       listEl.appendChild(item);
@@ -6256,11 +6281,154 @@ function closePromoMap(opts){
     const pending = __PM_PENDING_SCROLL_ID__;
     __PM_PENDING_SCROLL_ID__ = null;
     if(pending){
-      pmDeferredScroll(pending);
+      pmDeferredScrollAndGuided(pending);
     }
   }catch(e){}
 }
 
+
+
+/* --- V7.19: Guided navigation return state (導頁後返回原畫面) --- */
+let __GUIDED_RETURN_STATE__ = null;
+let __GUIDED_PENDING_SNAPSHOT__ = null;
+let __PM_PENDING_GUIDED_RETURN__ = null;
+
+function __getActivePromoMapTab(){
+  try{
+    const nav = document.getElementById('pmTabNav');
+    const gifts = document.getElementById('pmTabGifts');
+    if(gifts && gifts.classList.contains('active')) return 'gifts';
+    if(nav && nav.classList.contains('active')) return 'nav';
+  }catch(e){}
+  return 'nav';
+}
+
+function __getActivePromoGiftScope(){
+  try{
+    const btn = document.querySelector('#promoMapPaneGifts .pm-scope-btn.active');
+    const v = btn ? String(btn.getAttribute('data-scope')||'').trim() : '';
+    if(v) return v;
+  }catch(e){}
+  return 'zone_prefix';
+}
+
+function createGuidedReturnSnapshot(source, extra){
+  const st = Object.assign({}, extra || {});
+  try{ st.source = String(source || 'nav'); }catch(e){ st.source = 'nav'; }
+  try{ st.pageY = window.pageYOffset || window.scrollY || 0; }catch(e){ st.pageY = 0; }
+  try{
+    const rank = document.getElementById('rankList');
+    st.rankLeft = rank ? (rank.scrollLeft || 0) : 0;
+  }catch(e){ st.rankLeft = 0; }
+  try{
+    const pmv = document.getElementById('promoMarqueeViewport');
+    st.marqueeLeft = pmv ? (pmv.scrollLeft || 0) : 0;
+    st.marqueeX = (__PM_MARQ_CTRL__ && isFinite(__PM_MARQ_CTRL__.x)) ? __PM_MARQ_CTRL__.x : null;
+  }catch(e){}
+  try{
+    st.promoMapWasOpen = (typeof isPromoMapOpen === 'function') ? isPromoMapOpen() : false;
+    st.promoTab = __getActivePromoMapTab();
+    st.promoScope = __getActivePromoGiftScope();
+    const body = document.querySelector('#promoMapDrawer .pm-body');
+    st.promoBodyTop = body ? (body.scrollTop || 0) : 0;
+  }catch(e){}
+  try{
+    const sh = document.getElementById('starHeroCarousel');
+    st.starLeft = sh ? (sh.scrollLeft || 0) : 0;
+  }catch(e){}
+  st.ts = Date.now();
+  return st;
+}
+
+function activateGuidedReturn(snapshot){
+  try{
+    const st = snapshot || __GUIDED_PENDING_SNAPSHOT__ || null;
+    if(!st) return false;
+    __GUIDED_PENDING_SNAPSHOT__ = null;
+    __GUIDED_RETURN_STATE__ = st;
+    const cur = history.state || null;
+    if(!(cur && cur.page === 'guidedNav')){
+      history.pushState({page:'guidedNav', source:st.source || 'nav'}, null, '');
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+function beginGuidedNavigation(source, extra){
+  try{ return activateGuidedReturn(createGuidedReturnSnapshot(source, extra)); }catch(e){ return false; }
+}
+
+function __restoreRankListLeft(st){
+  try{
+    const rank = document.getElementById('rankList');
+    if(rank && isFinite(Number(st.rankLeft))) rank.scrollLeft = Number(st.rankLeft);
+  }catch(e){}
+}
+
+function __restorePromoMarqueeX(st){
+  try{
+    if(__PM_MARQ_CTRL__ && st.marqueeX !== null && st.marqueeX !== undefined && isFinite(Number(st.marqueeX))){
+      const c = __PM_MARQ_CTRL__;
+      c.x = Math.max(0, Number(st.marqueeX) || 0);
+      if(c.ow) c.x = c.x % c.ow;
+      c.track.style.transform = `translate3d(${-c.x}px,0,0)`;
+      c.paused = true;
+      c.resumeAt = performance.now() + 1000;
+    }
+  }catch(e){}
+}
+
+function tryRestoreGuidedReturn(){
+  try{
+    const st = __GUIDED_RETURN_STATE__;
+    if(!st) return false;
+    __GUIDED_RETURN_STATE__ = null;
+
+    const y = Math.max(0, Number(st.pageY || 0));
+    try{ window.scrollTo({top:y, behavior:'smooth'}); }catch(e){ window.scrollTo(0,y); }
+    setTimeout(()=>{ try{ __restoreRankListLeft(st); __restorePromoMarqueeX(st); }catch(e){} }, 80);
+
+    if(st.source === 'promoMap' || st.promoMapWasOpen){
+      setTimeout(()=>{
+        try{
+          openPromoMap();
+          setTimeout(()=>{
+            try{ if(st.promoTab) setPromoMapTab(st.promoTab, {skipSave:true}); }catch(e){}
+            try{ if(st.promoScope) setPromoGiftScope(st.promoScope, {skipSave:true}); }catch(e){}
+            try{
+              const body = document.querySelector('#promoMapDrawer .pm-body');
+              if(body && isFinite(Number(st.promoBodyTop))) body.scrollTop = Number(st.promoBodyTop);
+            }catch(e){}
+          }, 120);
+        }catch(e){}
+      }, 180);
+    }else if(st.source === 'star'){
+      setTimeout(()=>{
+        try{
+          openStarHeroOverlay(false);
+          setTimeout(()=>{
+            try{
+              const sh = document.getElementById('starHeroCarousel');
+              if(sh && isFinite(Number(st.starLeft))) sh.scrollLeft = Number(st.starLeft);
+            }catch(e){}
+          }, 180);
+        }catch(e){}
+      }, 180);
+    }
+    return true;
+  }catch(e){ return false; }
+}
+
+function pmDeferredScrollAndGuided(id, snapshot){
+  try{ pmDeferredScroll(id); }catch(e){}
+  try{
+    const snap = snapshot || __PM_PENDING_GUIDED_RETURN__ || null;
+    __PM_PENDING_GUIDED_RETURN__ = null;
+    if(snap){
+      setTimeout(()=>{ try{ activateGuidedReturn(snap); }catch(e){} }, 280);
+    }
+  }catch(e){}
+}
 
 // --- Promo Map + Back Guard helpers ---
 let BACK_EXIT_ARMED_UNTIL = 0;
@@ -6630,6 +6798,7 @@ function buildStarHeroCarousel(){
       try{
         div.animate([{transform:'scale(1)'},{transform:'scale(0.975)'},{transform:'scale(1)'}], {duration: 190, easing:'cubic-bezier(.2,.85,.2,1)'});
       }catch(e){}
+      try{ __GUIDED_PENDING_SNAPSHOT__ = createGuidedReturnSnapshot('star'); }catch(e){}
       __STAR_PENDING_NAV__ = String(p.code||'').trim();
       dismissStarHero('nav');
     };
@@ -7148,6 +7317,8 @@ function jumpToProductByCode(code){
     if(!c) return;
     const p = (Array.isArray(PRODUCTS) ? PRODUCTS.find(x => x && String(x.code||'').trim()===c) : null);
     if(!p) return;
+    // V7.19: enable browser back to return to source screen
+    try{ if(__GUIDED_PENDING_SNAPSHOT__) activateGuidedReturn(__GUIDED_PENDING_SNAPSHOT__); else beginGuidedNavigation('star'); }catch(e){}
     // V42: VList-aware navigation (do not depend on DOM presence)
     const ok = (typeof vlistScrollToProduct === 'function') ? vlistScrollToProduct(p._id, 'star') : false;
     if(ok){
@@ -7268,6 +7439,7 @@ function animateGiftFly(giftName) {
 }
 
 function jumpToProduct(pid, source){
+  try{ if(source === 'rank') beginGuidedNavigation('rank'); }catch(e){}
   const searchInp = document.getElementById("searchInp");
   if(searchInp.value) {
     searchInp.value = "";
@@ -7903,7 +8075,7 @@ function renderRanking(type) {
     card.dataset.rank = idx + 1; 
     card.onclick = () => handleRankingClick(p);
     let imgHtml = `<div class="p-no-img" style="height:100%;justify-content:center;font-size:10px">無圖</div>`;
-    if(p.photo && p.photo.length > 5) imgHtml = `<img src="${p.photo}" class="r-img" loading="lazy">`;
+    if(p.photo && p.photo.length > 5) imgHtml = `<img src="${p.photo}" class="r-img" loading="lazy" decoding="async" draggable="false">`;
     card.innerHTML = `<div class="r-img-wrap"><div class="r-badge">${idx + 1}</div><div class="r-sold-tag">售${p.sold.toLocaleString()}件</div>${imgHtml}</div><div class="r-name">${p.name}</div>`;
     list.appendChild(card);
   });
@@ -9238,7 +9410,7 @@ window.onpopstate = (e) => {
         // keep guard so user doesn't leave app accidentally
         armBackGuard();
         if(pending){
-          pmDeferredScroll(pending);
+          pmDeferredScrollAndGuided(pending);
         }
         return;
     }
@@ -9277,6 +9449,9 @@ window.onpopstate = (e) => {
         isCartOpen = false; 
         return;
     } 
+
+    // Guided navigation return: restore source screen instead of treating as root back
+    if(tryRestoreGuidedReturn()) return;
 
     // Root-level back behavior (主商品頁：先置頂→再提示→再離開)
     const st = history.state || null;
