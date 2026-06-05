@@ -4126,7 +4126,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_24_guided_return_mapbtn";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_25_guided_return_history_fix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6616,8 +6616,10 @@ function initPromoMapTabsOnce(){
   }catch(e){}
 }
 
-function openPromoMap(){
+function openPromoMap(opts){
   try{
+    const __pmOpts = opts || {};
+    const __pmSkipHistory = !!__pmOpts.skipHistory;
     if(!ensurePromoMapDom()) return;
     initPromoMapTabsOnce();
     const prefTab = (__PM_OPEN_FROM_MARQUEE__ ? 'nav' : pmLsGet('ttl_pm_tab','nav'));
@@ -6630,7 +6632,7 @@ function openPromoMap(){
     drawer.classList.add('open');
 
 
-    try{ history.pushState({modal:'promoMap'}, null, ""); }catch(e){}
+    try{ if(!__pmSkipHistory) history.pushState({modal:'promoMap'}, null, ""); }catch(e){}
 overlay.onclick = () => closePromoMap();
     const closeBtn = document.getElementById('promoMapCloseBtn');
     if(closeBtn) closeBtn.onclick = () => closePromoMap();
@@ -6742,18 +6744,62 @@ function activateGuidedReturn(snapshot){
 function beginGuidedNavigation(source, extra){
   try{ return activateGuidedReturn(createGuidedReturnSnapshot(source, extra)); }catch(e){ return false; }
 }
-function __ensureGuidedRestoredModalHistory(kind){
+let __GUIDED_RESTORED_LAYER__ = null;
+let __GUIDED_RESTORE_ARMED_UNTIL__ = 0;
+
+function __markGuidedRestoredLayer(kind){
   try{
     const k = String(kind || '').trim();
     if(!k) return;
-    const cur = history.state || null;
-    if(!(cur && cur.modal === k)){
-      history.pushState({modal:k, restoredFromGuided:true}, null, '');
-    }
+    __GUIDED_RESTORED_LAYER__ = k;
+    __GUIDED_RESTORE_ARMED_UNTIL__ = Date.now() + 2200;
+    // Important: when guidedNav is popped, the current entry is usually the root guard.
+    // Re-label that current entry as the restored drawer/overlay entry instead of pushing
+    // a new entry. This makes the next Back close the restored UI layer first.
+    history.replaceState({modal:k, restoredFromGuided:true}, null, '');
     if(k === 'star'){
       try{ window.__STAR_HISTORY_ACTIVE__ = true; }catch(e){}
     }
   }catch(e){}
+}
+
+function __consumeGuidedRestoredLayer(kind){
+  try{
+    const k = String(kind || '').trim();
+    if(!k || __GUIDED_RESTORED_LAYER__ !== k) return;
+    __GUIDED_RESTORED_LAYER__ = null;
+    __GUIDED_RESTORE_ARMED_UNTIL__ = 0;
+  }catch(e){}
+}
+
+function __handleGuidedRestoreBackFallback(){
+  try{
+    const k = __GUIDED_RESTORED_LAYER__;
+    if(!k) return false;
+    const armed = Date.now() < (__GUIDED_RESTORE_ARMED_UNTIL__ || 0);
+    if(k === 'promoMap' && isPromoMapOpen()){
+      __consumeGuidedRestoredLayer('promoMap');
+      closePromoMap({skipHistory:true});
+      armBackGuard();
+      return true;
+    }
+    if(k === 'star'){
+      const so = document.getElementById('starHeroOverlay');
+      if(so && so.classList.contains('show')){
+        __consumeGuidedRestoredLayer('star');
+        dismissStarHero('popstate');
+        armBackGuard();
+        return true;
+      }
+    }
+    if(armed){
+      __GUIDED_RESTORED_LAYER__ = null;
+      __GUIDED_RESTORE_ARMED_UNTIL__ = 0;
+      armBackGuard();
+      return true;
+    }
+  }catch(e){}
+  return false;
 }
 
 
@@ -6790,8 +6836,8 @@ function tryRestoreGuidedReturn(){
     if(st.source === 'promoMap' || st.promoMapWasOpen){
       setTimeout(()=>{
         try{
-          openPromoMap();
-          try{ __ensureGuidedRestoredModalHistory('promoMap'); }catch(e){}
+          try{ __markGuidedRestoredLayer('promoMap'); }catch(e){}
+          openPromoMap({skipHistory:true});
           setTimeout(()=>{
             try{ if(st.promoTab) setPromoMapTab(st.promoTab, {skipSave:true}); }catch(e){}
             try{ if(st.promoScope) setPromoGiftScope(st.promoScope, {skipSave:true}); }catch(e){}
@@ -6805,8 +6851,8 @@ function tryRestoreGuidedReturn(){
     }else if(st.source === 'star'){
       setTimeout(()=>{
         try{
-          openStarHeroOverlay(false);
-          try{ __ensureGuidedRestoredModalHistory('star'); }catch(e){}
+          try{ __markGuidedRestoredLayer('star'); }catch(e){}
+          openStarHeroOverlay(false, {skipHistory:true});
           setTimeout(()=>{
             try{
               const sh = document.getElementById('starHeroCarousel');
@@ -7268,8 +7314,10 @@ function buildStarHeroCarousel(){
 }
 
 
-function openStarHeroOverlay(isAuto=false){
+function openStarHeroOverlay(isAuto=false, opts){
   try{
+    const __starOpts = opts || {};
+    const __starSkipHistory = !!__starOpts.skipHistory;
     if(__STAR_CLOSING__) return;
     if(isAuto && starIsDismissed()) return;
     if(!Array.isArray(PRODUCTS) || PRODUCTS.length===0){
@@ -7296,7 +7344,14 @@ function openStarHeroOverlay(isAuto=false){
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden','false');
     __STAR_OPEN__ = true;
-    try{ if(!window.__STAR_HISTORY_ACTIVE__){ history.pushState({modal:'star'}, null, ''); window.__STAR_HISTORY_ACTIVE__=true; } }catch(e){}
+    try{
+      if(__starSkipHistory){
+        window.__STAR_HISTORY_ACTIVE__ = true;
+      }else if(!window.__STAR_HISTORY_ACTIVE__){
+        history.pushState({modal:'star'}, null, '');
+        window.__STAR_HISTORY_ACTIVE__=true;
+      }
+    }catch(e){}
     try{ const xbtn=document.getElementById('starHeroCloseBtn'); if(xbtn){ xbtn.onclick = ()=>{ try{ dismissStarHero('x'); }catch(e){} }; } }catch(e){}
 
     overlay.classList.remove('entering');
@@ -9797,7 +9852,7 @@ window.onpopstate = (e) => {
     // Handle Star Hero overlay
     try{
       const so = document.getElementById('starHeroOverlay');
-      if(so && so.classList.contains('show')){ dismissStarHero('popstate'); return; }
+      if(so && so.classList.contains('show')){ __consumeGuidedRestoredLayer('star'); dismissStarHero('popstate'); armBackGuard(); return; }
     }catch(ex){}
     // Handle Gift image preview first so underlying modals/drawers stay open
     try{
@@ -9814,6 +9869,7 @@ window.onpopstate = (e) => {
 
     // Handle Promo Map Drawer (優惠地圖)
     if(isPromoMapOpen()){
+        __consumeGuidedRestoredLayer('promoMap');
         closePromoMap({skipHistory:true});
         const pending = __PM_PENDING_SCROLL_ID__;
         __PM_PENDING_SCROLL_ID__ = null;
@@ -9863,6 +9919,10 @@ window.onpopstate = (e) => {
 
     // Guided navigation return: restore source screen instead of treating as root back
     if(tryRestoreGuidedReturn()) return;
+
+    // If a restored drawer/overlay did not get a clean modal entry on this browser,
+    // swallow this back once and rebuild the root guard instead of showing the exit hint.
+    if(__handleGuidedRestoreBackFallback()) return;
 
     // Root-level back behavior (主商品頁：先置頂→再提示→再離開)
     const st = history.state || null;
