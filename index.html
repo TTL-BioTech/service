@@ -1628,7 +1628,7 @@ body.drawer-open { overflow:hidden; }
 }
 .pm-scope-btn:active{ transform: translateY(1px); }
 
-/* 贈品門檻（全區/美容）視覺區隔：徽章 + 摘要 */
+/* 贈品門檻（全站/美容）視覺區隔：徽章 + 摘要 */
 .pm-gift-header{
   border: 1px solid rgba(0,0,0,0.06);
   border-radius: 16px;
@@ -3731,6 +3731,64 @@ body.cfg-error .btn-bundle{
   .gps-value{ font-size:16.5px; }
 }
 
+
+/* ==========================================================
+   V7.23 文案一致 + 雙色進度條 + 下一門檻若隱若現
+   ========================================================== */
+#gameMsg{
+  cursor:pointer;
+  border-radius:10px;
+  padding: 2px 0;
+  -webkit-tap-highlight-color: rgba(216,27,96,0.10);
+}
+#gameMsg:active{ opacity:.72; }
+.progress-wrap{
+  position:relative;
+  cursor:pointer;
+  -webkit-tap-highlight-color: rgba(216,27,96,0.10);
+}
+.progress-wrap:active{ transform: translateY(1px); }
+.progress-beauty{
+  position:absolute;
+  left:0;
+  top:50%;
+  height:3px;
+  width:0%;
+  transform: translateY(-50%);
+  border-radius:999px;
+  background: linear-gradient(90deg, rgba(244,143,177,0.96), rgba(216,27,96,0.96));
+  box-shadow: 0 0 8px rgba(216,27,96,0.24);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events:none;
+  z-index:2;
+}
+.progress-beauty.full{
+  background: linear-gradient(90deg, rgba(240,98,146,0.95), rgba(194,24,91,0.96));
+  box-shadow: 0 0 9px rgba(216,27,96,0.30);
+}
+.ms-dual-item.next:not(.active){
+  opacity:.76 !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,248,225,0.42));
+  border-color: rgba(230,81,0,0.22);
+  box-shadow: 0 8px 18px rgba(230,81,0,0.075);
+}
+.ms-track-col.beauty .ms-dual-item.next:not(.active){
+  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(252,228,236,0.50));
+  border-color: rgba(216,27,96,0.20);
+  box-shadow: 0 8px 18px rgba(216,27,96,0.07);
+}
+.ms-dual-item.next:not(.active) .ms-d-media{
+  opacity:.84;
+  filter: saturate(.92) contrast(.96);
+}
+.ms-dual-item.next:not(.active) .ms-d-name,
+.ms-dual-item.next:not(.active) .ms-d-th{
+  opacity:.92;
+}
+.ms-dual-item.next:not(.active) .ms-tag{
+  opacity:.96;
+}
+
 </style>
 </head>
 <body>
@@ -3887,14 +3945,15 @@ body.cfg-error .btn-bundle{
     
     <div class="gamification-box">
       <div class="game-txt" id="gameMsgContainer">
-        <span id="gameMsg">加油！再 $500 送贈品</span>
+        <span id="gameMsg" onclick="openGiftList()" role="button" aria-label="開啟贈品進度">加油！再 $500 送贈品</span>
         <div class="game-icon-wrap" onclick="openGiftList()">
           <span class="game-icon">🎁</span>
           <span class="game-hint">贈品進度</span>
         </div>
       </div>
-      <div class="progress-wrap">
+      <div class="progress-wrap" onclick="openGiftList()" role="button" aria-label="開啟贈品進度">
         <div class="progress-bar" id="gameBar"></div>
+        <div class="progress-beauty" id="gameBeautyBar"></div>
       </div>
     </div>
 
@@ -4067,7 +4126,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_22_cart_gift_progress_microcopy";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_23_copy_progress_soft_milestone";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4788,7 +4847,7 @@ window.openGiftList = function() {
 
     // 1. Total Spend Section
     if (giftsAll.length > 0) {
-        grid.innerHTML += `<div class="g-section-title"><span>全館滿額贈</span><span class="g-section-amt">目前：$${Math.round(currentTotal).toLocaleString()}</span></div>`;
+        grid.innerHTML += `<div class="g-section-title"><span>全站滿額贈</span><span class="g-section-amt">目前：$${Math.round(currentTotal).toLocaleString()}</span></div>`;
         giftsAll.forEach(g => {
             const reached = currentTotal >= g.amt;
             grid.appendChild(createGiftItem(g, reached));
@@ -6477,7 +6536,7 @@ function updatePromoGiftHeader(sc){
         badge.classList.add('pm-badge-all');
         badge.textContent = 'ALL';
       }
-      if(title) title.textContent = '全區滿額贈';
+      if(title) title.textContent = '全站滿額贈';
       if(sub) sub.textContent = '全站商品合併計算';
     }
   }catch(e){}
@@ -9683,14 +9742,22 @@ function refreshCart() {
   const msgEl = document.getElementById("gameMsg");
   if(msgEl) msgEl.innerHTML = renderGiftProgressMessage(giftProgress);
   const barEl = document.getElementById("gameBar");
+  const beautyBarEl = document.getElementById("gameBeautyBar");
   if(barEl) {
     const progressCandidates = [];
     if(giftProgress.nextAll) progressCandidates.push({ diff: giftProgress.diffAll, pct: giftProgress.allProgress });
     if(giftProgress.nextBeauty) progressCandidates.push({ diff: giftProgress.diffBeauty, pct: giftProgress.beautyProgress });
     progressCandidates.sort((a,b)=> (Number(a.diff)||0) - (Number(b.diff)||0));
-    const pct = progressCandidates.length ? progressCandidates[0].pct : 100;
+    const pct = giftProgress.nextAll ? giftProgress.allProgress : (giftProgress.giftsAll && giftProgress.giftsAll.length ? 100 : (progressCandidates.length ? progressCandidates[0].pct : 100));
     barEl.style.width = pct + "%";
-    barEl.classList.toggle("full", !progressCandidates.length);
+    barEl.classList.toggle("full", !(giftProgress.nextAll || giftProgress.nextBeauty));
+  }
+  if(beautyBarEl) {
+    const hasBeauty = !!(giftProgress.giftsBeauty && giftProgress.giftsBeauty.length);
+    const beautyPct = hasBeauty ? (giftProgress.nextBeauty ? giftProgress.beautyProgress : 100) : 0;
+    beautyBarEl.style.width = beautyPct + "%";
+    beautyBarEl.style.display = hasBeauty ? "block" : "none";
+    beautyBarEl.classList.toggle("full", hasBeauty && !giftProgress.nextBeauty);
   }
   
   const finalList = document.getElementById("finalList");
@@ -10510,13 +10577,13 @@ return showPromoHint('本分類目前無優惠訊息');
         <div class="pm-gh-top">
           <span class="pm-badge pm-badge-all">ALL</span>
           <div class="pm-gh-text">
-            <div class="pm-gh-title">全區滿額贈</div>
+            <div class="pm-gh-title">全站滿額贈</div>
             <div class="pm-gh-sub">全站商品合併計算</div>
           </div>
         </div>
       </div>
       <div class="pm-scope" role="tablist" aria-label="贈品範圍">
-        <button type="button" class="pm-scope-btn active" data-scope="all" role="tab" aria-selected="true">全區</button>
+        <button type="button" class="pm-scope-btn active" data-scope="all" role="tab" aria-selected="true">全站</button>
         <button type="button" class="pm-scope-btn" data-scope="zone_prefix" role="tab" aria-selected="false">美容</button>
         <button type="button" class="pm-scope-btn" data-scope="series" role="tab" aria-selected="false">系列</button>
       </div>
