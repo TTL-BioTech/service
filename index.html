@@ -3615,6 +3615,112 @@ body.cfg-error .btn-bundle{
   }
 }
 
+
+/* ==========================================================
+   V7.21 購物車贈品進度雙軌提示 + 好禮清單 Sticky Summary
+   ========================================================== */
+#gameMsg{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+  flex-wrap:wrap;
+  line-height:1.28;
+}
+.gm-main{ color:#37474f; font-weight:900; }
+.gm-all{ color:#e65100; font-weight:950; white-space:nowrap; }
+.gm-sep{ color:#b0bec5; font-weight:900; }
+.gm-beauty{ color:var(--beauty); font-weight:950; white-space:nowrap; }
+.gm-done{ color:#2e7d32; font-weight:950; white-space:nowrap; }
+.game-icon-wrap{
+  white-space:nowrap;
+  flex:0 0 auto;
+}
+.game-hint{ font-weight:900; }
+.gift-progress-sticky{
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 0 10px;
+  padding: 11px 12px 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid rgba(0,137,123,0.12);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.gps-kicker{
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .05em;
+  color:#607d8b;
+  margin-bottom: 7px;
+}
+.gps-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 8px;
+}
+.gps-metric{
+  flex:1 1 0;
+  min-width:0;
+  border-radius: 12px;
+  padding: 8px 9px;
+  background:#f8faf9;
+  border:1px solid rgba(0,0,0,0.05);
+}
+.gps-metric.beauty{
+  background: rgba(252,228,236,0.48);
+  border-color: rgba(216,27,96,0.10);
+}
+.gps-label{
+  font-size: 11px;
+  font-weight:900;
+  color:#78909c;
+  line-height:1.1;
+}
+.gps-value{
+  margin-top:3px;
+  font-size: 16px;
+  font-weight:950;
+  color:#e65100;
+  line-height:1.05;
+}
+.gps-metric.beauty .gps-value{ color:var(--beauty); }
+.gps-next{
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  color:#455a64;
+  line-height:1.35;
+  display:flex;
+  flex-wrap:wrap;
+  gap: 4px;
+}
+.gps-next .gps-all{ color:#e65100; }
+.gps-next .gps-beauty{ color:var(--beauty); }
+.gps-next .gps-done{ color:#2e7d32; }
+.g-section-title{
+  justify-content:flex-start !important;
+}
+.g-section-amt{ display:none !important; }
+@media (max-width:480px){
+  .game-txt{ gap: 8px; align-items:flex-start; }
+  #gameMsg{ font-size: 1.08em; }
+  .game-icon-wrap{ padding:4px 9px; }
+  .gps-value{ font-size:15px; }
+  .gift-progress-sticky{ border-radius:15px; padding:10px 10px 9px; }
+}
+@media (max-width:380px){
+  #gameMsg{ font-size: 1.02em; }
+  .game-icon-wrap{ padding:3px 8px; }
+  .game-hint{ font-size:10.5px; }
+  .gps-row{ gap:6px; }
+  .gps-metric{ padding:7px 8px; }
+}
+
 </style>
 </head>
 <body>
@@ -3774,7 +3880,7 @@ body.cfg-error .btn-bundle{
         <span id="gameMsg">加油！再 $500 送贈品</span>
         <div class="game-icon-wrap" onclick="openGiftList()">
           <span class="game-icon">🎁</span>
-          <span class="game-hint">查看好禮</span>
+          <span class="game-hint">贈品進度</span>
         </div>
       </div>
       <div class="progress-wrap">
@@ -3951,7 +4057,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_20_milestone_new_gift_hint";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_21_cart_gift_progress_sticky";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4600,16 +4706,75 @@ window.switchRank = function(type) {
   renderRanking(type);
 };
 
+
+function getGiftProgressStatus(){
+  const data = calcCart();
+  const currentTotal = Number((data && data.finalTotal) || 0);
+  const currentBeauty = Number((data && data.beautyTotal) || 0);
+  const giftsAll = ((RULES && RULES.spend) ? RULES.spend : []).filter(r => r.scope === 'all').sort((a,b) => Number(a.amt||0) - Number(b.amt||0));
+  const giftsBeauty = ((RULES && RULES.spend) ? RULES.spend : []).filter(r => r.scope === 'zone_prefix').sort((a,b) => Number(a.amt||0) - Number(b.amt||0));
+  const nextAll = giftsAll.find(r => currentTotal < Number(r.amt||0));
+  const nextBeauty = giftsBeauty.find(r => currentBeauty < Number(r.amt||0));
+  const diffAll = nextAll ? Math.max(0, Math.ceil(Number(nextAll.amt||0) - currentTotal)) : null;
+  const diffBeauty = nextBeauty ? Math.max(0, Math.ceil(Number(nextBeauty.amt||0) - currentBeauty)) : null;
+  const allDone = !nextAll && giftsAll.length > 0;
+  const beautyDone = !nextBeauty && giftsBeauty.length > 0;
+  const allProgress = nextAll ? Math.max(0, Math.min(100, (currentTotal / Math.max(1, Number(nextAll.amt||0))) * 100)) : (giftsAll.length ? 100 : 0);
+  const beautyProgress = nextBeauty ? Math.max(0, Math.min(100, (currentBeauty / Math.max(1, Number(nextBeauty.amt||0))) * 100)) : (giftsBeauty.length ? 100 : 0);
+  return { data, currentTotal, currentBeauty, giftsAll, giftsBeauty, nextAll, nextBeauty, diffAll, diffBeauty, allDone, beautyDone, allProgress, beautyProgress };
+}
+function renderGiftProgressMessage(st){
+  try{
+    const s = st || getGiftProgressStatus();
+    const allPart = s.diffAll === null
+      ? '<span class="gm-done">全站已達最高門檻</span>'
+      : `<span class="gm-all">全站再 $${Math.round(s.diffAll).toLocaleString()}</span>`;
+    const beautyPart = s.diffBeauty === null
+      ? (s.giftsBeauty && s.giftsBeauty.length ? '<span class="gm-done">美容已達最高門檻</span>' : '')
+      : `<span class="gm-beauty">美容再 $${Math.round(s.diffBeauty).toLocaleString()}</span>`;
+    const parts = [allPart, beautyPart].filter(Boolean);
+    if((s.diffAll === null) && (s.diffBeauty === null || !(s.giftsBeauty||[]).length)){
+      return '<span class="gm-main">🎉 太棒了！已解鎖所有滿額贈品</span>';
+    }
+    return `<span class="gm-main">加油！</span>${parts.join('<span class="gm-sep">｜</span>')}<span class="gm-main">解鎖新贈品</span>`;
+  }catch(e){ return '<span class="gm-main">加油！解鎖新贈品</span>'; }
+}
+function renderGiftProgressStickyBar(st){
+  const s = st || getGiftProgressStatus();
+  const allNext = s.diffAll === null
+    ? '<span class="gps-done">全站已達最高門檻</span>'
+    : `<span class="gps-all">全站再 $${Math.round(s.diffAll).toLocaleString()}</span>`;
+  const beautyNext = s.diffBeauty === null
+    ? ((s.giftsBeauty && s.giftsBeauty.length) ? '<span class="gps-done">美容已達最高門檻</span>' : '')
+    : `<span class="gps-beauty">美容再 $${Math.round(s.diffBeauty).toLocaleString()}</span>`;
+  const nextLine = [allNext, beautyNext].filter(Boolean).join('<span style="color:#b0bec5">｜</span>') || '<span class="gps-done">已達目前最高門檻</span>';
+  return `
+    <div class="gift-progress-sticky">
+      <div class="gps-kicker">目前累積</div>
+      <div class="gps-row">
+        <div class="gps-metric all">
+          <div class="gps-label">全站</div>
+          <div class="gps-value">$${Math.round(s.currentTotal||0).toLocaleString()}</div>
+        </div>
+        <div class="gps-metric beauty">
+          <div class="gps-label">美容</div>
+          <div class="gps-value">$${Math.round(s.currentBeauty||0).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="gps-next">${nextLine}<span>解鎖下一份</span></div>
+    </div>`;
+}
+
 // V24.3: Dual Track Gift List
 window.openGiftList = function() {
-    const currentTotal = parseFloat(document.getElementById("sumPay").innerText.replace('$','').replace(/,/g,'')) || 0;
-    const currentBeauty = parseFloat(document.getElementById("sumBeauty").innerText.replace('$','').replace(/,/g,'')) || 0;
-    
-    const giftsAll = RULES.spend.filter(r => r.scope === 'all').sort((a,b) => a.amt - b.amt);
-    const giftsBeauty = RULES.spend.filter(r => r.scope === 'zone_prefix').sort((a,b) => a.amt - b.amt);
+    const st = getGiftProgressStatus();
+    const currentTotal = st.currentTotal;
+    const currentBeauty = st.currentBeauty;
+    const giftsAll = st.giftsAll;
+    const giftsBeauty = st.giftsBeauty;
 
     const grid = document.getElementById("giftListGrid");
-    grid.innerHTML = "";
+    grid.innerHTML = renderGiftProgressStickyBar(st);
 
     // 1. Total Spend Section
     if (giftsAll.length > 0) {
@@ -9504,17 +9669,18 @@ function refreshCart() {
   const warnEl = document.getElementById("warnMsg");
   if(data.warnings.length > 0) { warnEl.style.display = "block"; warnEl.innerText = "⚠️ " + [...new Set(data.warnings)].join("、"); } else { warnEl.style.display = "none"; }
   
-  const next = RULES.spend.find(r => r.scope === "all" && r.amt > data.finalTotal);
-  if(next) {
-    const diff = Math.max(0, (next.amt - data.finalTotal));
-  const diffInt = Math.ceil(diff);
-  document.getElementById("gameMsg").innerText = `加油！再 $${diffInt.toLocaleString()} 解鎖贈品`;
-    document.getElementById("gameBar").style.width = ((data.finalTotal/next.amt)*100) + "%";
-    document.getElementById("gameBar").classList.remove("full");
-  } else {
-    document.getElementById("gameMsg").innerText = "🎉 太棒了！已解鎖所有滿額贈品";
-    document.getElementById("gameBar").style.width = "100%";
-    document.getElementById("gameBar").classList.add("full");
+  const giftProgress = getGiftProgressStatus();
+  const msgEl = document.getElementById("gameMsg");
+  if(msgEl) msgEl.innerHTML = renderGiftProgressMessage(giftProgress);
+  const barEl = document.getElementById("gameBar");
+  if(barEl) {
+    const progressCandidates = [];
+    if(giftProgress.nextAll) progressCandidates.push({ diff: giftProgress.diffAll, pct: giftProgress.allProgress });
+    if(giftProgress.nextBeauty) progressCandidates.push({ diff: giftProgress.diffBeauty, pct: giftProgress.beautyProgress });
+    progressCandidates.sort((a,b)=> (Number(a.diff)||0) - (Number(b.diff)||0));
+    const pct = progressCandidates.length ? progressCandidates[0].pct : 100;
+    barEl.style.width = pct + "%";
+    barEl.classList.toggle("full", !progressCandidates.length);
   }
   
   const finalList = document.getElementById("finalList");
