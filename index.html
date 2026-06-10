@@ -4166,7 +4166,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_27_promo_gift_guard_toast_sheet";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_28_buyngift_rulefix_toast_ok";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -8231,7 +8231,7 @@ function __getCoreParseWorker(){
 
           if(type.includes('tier')) rules.tiers.push({ zone: String(pick('zone')||'').trim(), min: Number(pick('min_qty')), pct: Number(pick('percent_off')) });
           else if(type.includes('bogo')) rules.bogo.push({ code: String(pick('product_code')||''), buy: Number(pick('buy')), get: Number(pick('get')) });
-          else if(type.includes('buy_n_pay_m') || type.includes('mixpay')){
+          else if(type.includes('buy_n_pay_m') || type.includes('buy_n_get_m') || type.includes('buy_n_send_m') || type.includes('buy_n_gift') || type.includes('buy_n_free') || type.includes('mixpay') || /買.*送|buy.*get|buy.*gift|buy.*free/.test(type)){
             const zone = String(pick('zone')||'').trim();
             const codes = String(pick('product_code')||'').split(/[|,、]/).map(s=>String(s||'').trim()).filter(Boolean);
             const choose = Number(pick('choose')||pick('buy')||0);
@@ -8239,8 +8239,10 @@ function __getCoreParseWorker(){
             const accRaw = String(pick('accumulative')||pick('multiples')||'').trim().toUpperCase();
             const accumulative = (accRaw === 'TRUE' || accRaw === '1' || accRaw === 'YES');
             const uiText = String(pick('ui_text')||'').trim();
+            const giftRaw = String(pick('gift_select_required')||pick('requires_gift_choice')||pick('gift_required')||pick('manual_select')||pick('requires_manual_select')||'').trim().toUpperCase();
+            const giftRequired = /^(TRUE|1|YES|Y|是|必選|REQUIRED)$/.test(giftRaw);
             if((zone || codes.length) && Number.isFinite(choose) && choose > 0 && Number.isFinite(charge) && charge >= 0 && choose > charge){
-              rules.mixpay.push({ zone, codes, choose, charge, accumulative, uiText });
+              rules.mixpay.push({ zone, codes, choose, charge, accumulative, uiText, type, giftRequired });
             }
           }
           else if(type.includes('flat_price')){
@@ -8421,7 +8423,7 @@ function parseCoreOnMain(pText, rText){
     const type = String(pick("rule_type")||"").toLowerCase();
     if(type.includes("tier")) rules.tiers.push({ zone: pick("zone").trim(), min: Number(pick("min_qty")), pct: Number(pick("percent_off")) });
     else if(type.includes("bogo")) rules.bogo.push({ code: pick("product_code"), buy: Number(pick("buy")), get: Number(pick("get")) });
-    else if(type.includes("buy_n_pay_m") || type.includes("mixpay")) {
+    else if(type.includes("buy_n_pay_m") || type.includes("buy_n_get_m") || type.includes("buy_n_send_m") || type.includes("buy_n_gift") || type.includes("buy_n_free") || type.includes("mixpay") || /買.*送|buy.*get|buy.*gift|buy.*free/.test(type)) {
       const zone = String(pick("zone")||"").trim();
       const codes = String(pick("product_code")||"").split(/[|,、]/).map(s=>String(s||"").trim()).filter(Boolean);
       const choose = Number(pick("choose")||pick("buy")||0);
@@ -8429,8 +8431,10 @@ function parseCoreOnMain(pText, rText){
       const accRaw = String(pick("accumulative")||pick("multiples")||"").trim().toUpperCase();
       const accumulative = (accRaw === "TRUE" || accRaw === "1" || accRaw === "YES");
       const uiText = String(pick("ui_text")||"").trim();
+      const giftRaw = String(pick("gift_select_required")||pick("requires_gift_choice")||pick("gift_required")||pick("manual_select")||pick("requires_manual_select")||"").trim().toUpperCase();
+      const giftRequired = /^(TRUE|1|YES|Y|是|必選|REQUIRED)$/.test(giftRaw);
       if((zone || codes.length) && Number.isFinite(choose) && choose > 0 && Number.isFinite(charge) && charge >= 0 && choose > charge){
-        rules.mixpay.push({ zone, codes, choose, charge, accumulative, uiText });
+        rules.mixpay.push({ zone, codes, choose, charge, accumulative, uiText, type, giftRequired });
       }
     }
     else if(type.includes("flat_price")) {
@@ -9676,6 +9680,7 @@ window.updateCartItem = function(index, delta) {
 
     saveState();
     const data = refreshCart(); // Refresh and get data
+    if(delta > 0) { try{ tryShowMixpayGiftAddHint(item); }catch(e){} }
     
     // Feedback 2: Check for new gift unlock inside cart
     const currentGiftNames = data.gifts.map(g => g.name);
@@ -9744,31 +9749,61 @@ function mixpayRuleLabel(r){
     return getBadgeName('mixpay','任選優惠');
   }catch(e){ return '任選優惠'; }
 }
+function isTruthyConfigValue(v){
+  const s = String(v||'').trim().toUpperCase();
+  return /^(TRUE|1|YES|Y|是|必選|REQUIRED)$/.test(s);
+}
 function isMixpayGiftChoiceRule(r){
   try{
     const choose = Number(r && r.choose);
     const charge = Number(r && r.charge);
     if(!Number.isFinite(choose) || !Number.isFinite(charge) || choose <= charge || charge <= 0) return false;
-    const txt = String((r && r.uiText) || '').trim();
-    if(/買\s*\d*\s*送|買.*送|搭贈|贈品/.test(txt)) return true;
-    // 現行皂類買2送1若未填 ui_text，仍以此作為保守對應；其他任選折抵不受影響。
-    const z = String((r && r.zone) || '').trim();
-    if(!txt && /皂/.test(z)) return true;
+    if(r && r.giftRequired) return true;
+
+    // V7.28：放寬「買N送N」辨識。原本只看 ui_text 或 zone 是否含「皂」，
+    // 若 Sheet 使用 buy_n_get_m / buy_n_send_m / ui_text=任選優惠 等寫法，就會漏判。
+    const src = [r && r.uiText, r && r.zone, r && r.type, Array.isArray(r && r.codes) ? r.codes.join('|') : ''].map(x=>String(x||'')).join(' ');
+    if(/買\s*\d*\s*送|買.*送|搭贈|贈品|贈送|加選|選贈|buy.*get|buy.*gift|buy.*free|buy_n_get|buy_n_send|buy_n_gift|buy_n_free/.test(src)) return true;
+
+    // 現行皂類任選買2送1：若未在 ui_text 明確寫「買2送1」，仍以皂類關鍵字保守對應。
+    // 僅作為「缺贈品提醒/阻擋」辨識，不改折抵計算本身。
+    if(/皂|肥皂|酒好皂/.test(src)) return true;
+    return false;
+  }catch(e){ return false; }
+}
+function compactTextForMatch(v){
+  return String(v||'').replace(/[\s\-_＊*／/\\｜|、,，：:（）()\[\]【】]/g, '').trim();
+}
+function promoRuleMatchesItem(it, r){
+  try{
+    if(!it || !r) return false;
+    if(String(it.category||'').includes('加價購')) return false;
+    const code = String(it.code||'').trim();
+    const cat = String(it.category||'');
+    const name = String(it.name||'');
+    const zone = String(r.zone||'').trim();
+    const codes = Array.isArray(r.codes) ? r.codes.map(x=>String(x||'').trim()).filter(Boolean) : [];
+    if(codes.length && codes.includes(code)) return true;
+    if(!zone) return false;
+
+    if(cat.includes(zone) || name.includes(zone) || zone.includes(cat)) return true;
+
+    const alias = normalizeZoneToCategoryTitle(zone);
+    if(alias && productMatchesCategoryTitle(it, alias)) return true;
+    if(alias && (cat.includes(alias) || name.includes(alias) || alias.includes(cat))) return true;
+
+    const cz = compactTextForMatch(zone), cc = compactTextForMatch(cat), cn = compactTextForMatch(name), ca = compactTextForMatch(alias);
+    if(cz && (cc.includes(cz) || cn.includes(cz) || cz.includes(cc))) return true;
+    if(ca && (cc.includes(ca) || cn.includes(ca) || ca.includes(cc))) return true;
+
+    // 特別補強：zone 若是清潔用品/皂類但分類較寬，商品名稱含皂即視為符合。
+    if(/皂|肥皂|酒好皂/.test(zone + alias) && /皂|肥皂|酒好皂/.test(name + cat)) return true;
     return false;
   }catch(e){ return false; }
 }
 function mixpayCandidates(items, r){
-  try{
-    return (items || []).filter(it => {
-      if(!it) return false;
-      if(String(it.category||'').includes('加價購')) return false;
-      const code = String(it.code||'').trim();
-      const cat = String(it.category||'');
-      const zoneHit = !!(r.zone && cat.includes(String(r.zone)));
-      const codeHit = !!(Array.isArray(r.codes) && r.codes.length && r.codes.includes(code));
-      return zoneHit || codeHit;
-    });
-  }catch(e){ return []; }
+  try{ return (items || []).filter(it => promoRuleMatchesItem(it, r)); }
+  catch(e){ return []; }
 }
 function getMixpayMissingQty(totalQty, r){
   const choose = Number(r && r.choose);
@@ -9813,9 +9848,7 @@ function detectMixpayGiftSelectionIssues(processedItems){
 function findMixpayGiftRuleForProduct(p){
   try{
     const rules = (RULES && Array.isArray(RULES.mixpay)) ? RULES.mixpay : [];
-    const cat = String((p && p.category) || '');
-    const code = String((p && p.code) || '').trim();
-    return rules.find(r => isMixpayGiftChoiceRule(r) && ((r.zone && cat.includes(String(r.zone))) || (Array.isArray(r.codes) && r.codes.includes(code)))) || null;
+    return rules.find(r => isMixpayGiftChoiceRule(r) && promoRuleMatchesItem(p, r)) || null;
   }catch(e){ return null; }
 }
 function tryShowMixpayGiftAddHint(p){
