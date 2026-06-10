@@ -864,6 +864,8 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .p-price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; justify-content: flex-start; }
 .p-price { font-size: var(--price-size-lg); font-weight: 800; color: #263238; }
 .p-price.strike { font-weight: 600; color: #90a4ae; text-decoration: line-through; }
+.p-price.strike-dark { font-weight: 800; color:#263238; text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: rgba(38,50,56,.78); }
+.p-buyngift-pill{ color:#ad1457; background:rgba(173,20,87,.08); border-color:rgba(173,20,87,.22); }
 
 
 
@@ -4166,7 +4168,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_28_buyngift_rulefix_toast_ok";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_29_addon_hint_category_plus_pricebadges";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5127,6 +5129,9 @@ window.updateQty = function(btnEl, pid, delta) {
     try { showInitBlockedToast(); } catch(e) { try { showToast('系統初始化中…請稍候', 'info', 2800); } catch(e2) {} }return;
   }
 
+  const __catPlusTitle = (delta > 0) ? getCategoryTitleFromAddButton(btnEl, p) : '';
+  const __catPlusHadBefore = (__catPlusTitle && delta > 0) ? cartHasCategoryTitle(__catPlusTitle) : false;
+
   if(delta > 0 && p.category.includes("加價購")) {
     if(!isAddonEligible(p.category)) {
       // Clearer hint + auto-navigate to required主商品區
@@ -5141,7 +5146,7 @@ window.updateQty = function(btnEl, pid, delta) {
           hint = `選購「${zoneDisplay}」系列商品，立即享加購優惠`;
         }
       }
-      showToast(hint, "warn");
+      showToast(hint, "warn", getAddonHintDurationMs());
       if(targetZoneRaw) {
         setTimeout(() => { scrollToZoneSection(targetZoneRaw); }, 300);
       }
@@ -5168,7 +5173,7 @@ window.updateQty = function(btnEl, pid, delta) {
       isFirstAdd = false;
   }
   if (delta > 0) {
-      if(!tryShowMixpayGiftAddHint(p)) showToast("已加入購物車");
+      if(!tryShowMixpayGiftAddHint(p) && !tryShowCategoryFirstAddHint(p, __catPlusTitle, __catPlusHadBefore)) showToast("已加入購物車");
       setTimeout(() => {
           const data = calcCart();
           checkNewGifts(data.gifts); 
@@ -5531,6 +5536,13 @@ function getPromoHintDurationMs(){
     'ui|promo_hint_sec', 'promo_hint_sec'
   ], 2800);
 }
+function getAddonHintDurationMs(){
+  return readDurationMsFromUi([
+    'ui|addon_hint_duration_ms', 'addon_hint_duration_ms',
+    'ui|addon_hint_ms', 'addon_hint_ms',
+    'ui|addon_hint_sec', 'addon_hint_sec'
+  ], 3000);
+}
 function getNavToastDurationMs(kind){
   const k = String(kind||'').trim().toLowerCase();
   const keys = [];
@@ -5607,6 +5619,54 @@ function showCategoryNavToast(msg){
     s = escapeHtml(s).replace(/\r?\n/g, '<br>');
     showToast(s, 'info', getNavToastDurationMs('category'));
   }catch(e){}
+}
+function __catPlusHintStorageKey(title){
+  return 'ttl_cat_plus_hint_seen_v1|' + compactTextForMatch(title || '');
+}
+function getCategoryTitleFromAddButton(btnEl, p){
+  try{
+    const sec = btnEl && btnEl.closest ? btnEl.closest('.cat-section') : null;
+    const title = sec && sec.querySelector ? String(sec.querySelector('.cat-section-title')?.innerText || '').trim() : '';
+    if(title) return title;
+  }catch(e){}
+  try{
+    const cat = String(p && p.category || '').trim();
+    const alias = normalizeZoneToCategoryTitle(cat);
+    if(alias) return alias.includes(' ') ? alias.split(/[\s_]/)[0] : alias;
+    return cat.split(/[\s_]/)[0] || cat;
+  }catch(e){ return ''; }
+}
+function cartHasCategoryTitle(title){
+  try{ return (CART || []).some(it => productMatchesCategoryTitle(it, title)); }catch(e){ return false; }
+}
+function buildCategoryHintMessage(title){
+  try{
+    const t = String(title||'').trim();
+    if(!t) return '';
+    const hint = buildPromoMapRowHint(t);
+    const tpl = uiGet('ui|cat_title_hint_tpl', uiGet('cat_title_hint_tpl',''));
+    if(hint){
+      if(tpl) return String(tpl).replace(/\{cat\}/g, t).replace(/\{hint\}/g, hint) || hint;
+      return hint;
+    }
+    if(tpl) return String(tpl).replace(/\{cat\}/g, t).replace(/\{hint\}/g, '本分類目前無優惠訊息') || '本分類目前無優惠訊息';
+    return '';
+  }catch(e){ return ''; }
+}
+function tryShowCategoryFirstAddHint(p, title, hadBefore){
+  try{
+    if(hadBefore) return false;
+    if(getBuyNGetRuleForProduct(p)) return false;
+    const t = String(title||'').trim();
+    if(!t) return false;
+    const key = __catPlusHintStorageKey(t);
+    try{ if(sessionStorage.getItem(key)) return false; }catch(e){}
+    const msg = buildCategoryHintMessage(t);
+    if(!msg) return false;
+    try{ sessionStorage.setItem(key, '1'); }catch(e){}
+    showCategoryNavToast(msg);
+    return true;
+  }catch(e){ return false; }
 }
 // --- V2.8.9: Promo Map (優惠地圖) Drawer ---
 function getCatHintOverride(catTitle){
@@ -9515,8 +9575,15 @@ const L_tier  = getBadgeName('tier','多件優惠');
           pillHtml = '<span class="p-price-pill" data-promo="bundle_price" data-code="' + p.code + '"><span class="pill-label">優惠</span> <span class="pill-value">' + bp + '</span></span>';
           return { priceHtml, pillHtml };
         }
+        const bgRule = getBuyNGetRuleForProduct(p);
+        if(bgRule){
+          const bgLabel = buyNGetShortLabel(bgRule);
+          priceHtml = '<span class="p-price">$' + p.price.toLocaleString() + '</span>';
+          pillHtml = '<span class="p-price-pill p-buyngift-pill" data-promo="mixpay" data-code="' + String(p.code||'').replace(/"/g,'&quot;') + '" data-zone="' + String(p.category||'').replace(/"/g,'&quot;') + '">' + bgLabel + '</span>';
+          return { priceHtml, pillHtml };
+        }
         const t = getTierRangeText(p);
-        priceHtml = '<span class="p-price">$' + p.price.toLocaleString() + '</span>';
+        priceHtml = '<span class="p-price ' + (t ? 'strike-dark' : '') + '">$' + p.price.toLocaleString() + '</span>';
         if(t) pillHtml = '<span class="p-price-pill" data-promo="tier_range" data-zone="' + (function(){ const _i = getTierBadgeInfoByCategory(p.category); return _i ? String(_i.zone||"").replace(/"/g,'&quot;') : ''; })() + '"><span class="pill-label">折後</span> <span class="pill-value">' + t + '</span></span>';
         return { priceHtml, pillHtml };
       }
@@ -9748,6 +9815,27 @@ function mixpayRuleLabel(r){
     if(zone && charge > 0 && free > 0) return `${zone}買${charge}送${free}`;
     return getBadgeName('mixpay','任選優惠');
   }catch(e){ return '任選優惠'; }
+}
+function getBuyNGetRuleForProduct(p){
+  try{
+    const rules = (RULES && Array.isArray(RULES.mixpay)) ? RULES.mixpay : [];
+    return rules.find(r => isMixpayGiftChoiceRule(r) && promoRuleMatchesItem(p, r)) || null;
+  }catch(e){ return null; }
+}
+function buyNGetShortLabel(r){
+  try{
+    if(!r) return '買N送N';
+    const choose = Number(r.choose)||0;
+    const charge = Number(r.charge)||0;
+    const free = Math.max(0, choose - charge);
+    const src = [r.uiText, r.zone, r.type].map(x=>String(x||'')).join(' ');
+    const prefix = /任選/.test(src) ? '任選' : '';
+    if(charge > 0 && free > 0) return `${prefix}買${charge}送${free}`;
+    return `${prefix}買N送N`;
+  }catch(e){ return '買N送N'; }
+}
+function hasTierPricePromo(p){
+  try{ return !!getTierRangeText(p); }catch(e){ return false; }
 }
 function isTruthyConfigValue(v){
   const s = String(v||'').trim().toUpperCase();
