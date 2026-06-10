@@ -3789,6 +3789,46 @@ body.cfg-error .btn-bundle{
   opacity:.96;
 }
 
+
+/* ==========================================================
+   V7.27 買N送N缺贈品提示 + Toast 時間/位置統一
+   ========================================================== */
+#toast-container{
+  bottom: var(--toast-bottom, calc(90px + var(--safe-bottom))) !important;
+  z-index: 10050 !important;
+}
+.toast.info{
+  max-width: min(86vw, 360px);
+}
+.c-tag.gift-missing{
+  background: rgba(216,27,96,0.12) !important;
+  color:#ad1457 !important;
+  border:1px solid rgba(216,27,96,0.34) !important;
+  font-weight:950 !important;
+  box-shadow: 0 4px 10px rgba(216,27,96,0.08);
+}
+.c-tag.gift-missing::before{
+  content:'card_giftcard';
+  font-family:'Material Icons Round';
+  font-size:13px;
+  line-height:1;
+  font-weight:400;
+}
+.c-tag.gift-missing.promo-missing-shake{
+  animation: promoMissingShake .54s ease-in-out 0s 2, promoMissingGlow .54s ease-in-out 0s 2;
+}
+@keyframes promoMissingShake{
+  0%,100%{ transform: translateX(0); }
+  18%{ transform: translateX(-2px) rotate(-1deg); }
+  36%{ transform: translateX(2px) rotate(1deg); }
+  54%{ transform: translateX(-1.5px) rotate(-0.6deg); }
+  72%{ transform: translateX(1.5px) rotate(0.6deg); }
+}
+@keyframes promoMissingGlow{
+  0%,100%{ box-shadow: 0 4px 10px rgba(216,27,96,0.08); }
+  45%{ box-shadow: 0 0 0 4px rgba(216,27,96,0.12), 0 6px 14px rgba(216,27,96,0.16); }
+}
+
 </style>
 </head>
 <body>
@@ -4126,7 +4166,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_26_guided_return_topfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_27_promo_gift_guard_toast_sheet";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -4384,6 +4424,8 @@ let sectionObserver = null;
 let __SCROLLSPY_SCROLL_BOUND__ = false;
 let GIFT_MAP = new Map();
 let achievedGifts = [];
+let __LAST_PROMO_GIFT_MISSING_SIG__ = "";
+let __MIXPAY_HINT_LAST_TS__ = 0;
 let isFirstAdd = true; 
 
 // --- ADDON (加價購) HELPERS ---
@@ -5126,7 +5168,7 @@ window.updateQty = function(btnEl, pid, delta) {
       isFirstAdd = false;
   }
   if (delta > 0) {
-      showToast("已加入購物車");
+      if(!tryShowMixpayGiftAddHint(p)) showToast("已加入購物車");
       setTimeout(() => {
           const data = calcCart();
           checkNewGifts(data.gifts); 
@@ -5374,22 +5416,50 @@ function loadState() {
   } catch(e) { console.error("Load state failed", e); }
 }
 
+function syncToastPosition(){
+  try{
+    const c = document.getElementById('toast-container');
+    if(!c) return;
+    const fb = document.getElementById('float-bar');
+    const vh = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+    let bottom = 28;
+    if(fb && fb.classList.contains('show') && !fb.classList.contains('hidden')){
+      const r = fb.getBoundingClientRect();
+      if(r && isFinite(r.top)) bottom = Math.max(86, Math.round(vh - r.top + 12));
+    }else{
+      bottom = Math.max(24, 24 + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0));
+    }
+    c.style.setProperty('--toast-bottom', bottom + 'px');
+  }catch(e){}
+}
 function showToast(msg, type='normal', durationMs=null) {
   const c = document.getElementById('toast-container');
+  if(!c) return null;
+  syncToastPosition();
   const t = document.createElement('div');
   t.className = 'toast';
+  if(type) t.classList.add(String(type));
   if(type === 'game') t.classList.add('game');
   let icon = 'check_circle';
   if (type === 'warn') icon = 'error_outline';
   if (type === 'info') icon = 'info';
   if (type === 'game') icon = 'stars'; 
   const color = (type==='warn') ? '#ff5252' : (type==='game' ? '#fff' : (type==='info' ? '#29b6f6' : '#69f0ae'));
+  const msRaw = (durationMs!=null && isFinite(durationMs)) ? Number(durationMs) : (type === 'game' ? 3000 : 2500);
+  const ms = Math.max(900, Math.min(9000, Math.round(msRaw)));
+  const outDelay = Math.max(450, ms - 300);
+  t.style.animation = `toastIn 0.3s forwards, toastOut 0.3s forwards ${outDelay}ms`;
   t.innerHTML = `<span class="material-icons-round" style="color:${color}">${icon}</span> ${msg}`;
+  // 導頁/分類說明 toast 只保留最新一則，避免第二次提示被堆到更上方。
+  if(type === 'info'){
+    try{ c.querySelectorAll('.toast.info').forEach(x => x.remove()); }catch(e){}
+  }
   c.appendChild(t); 
-  const ms = (durationMs!=null && isFinite(durationMs)) ? Number(durationMs) : (type === 'game' ? 3000 : 2500);
-  setTimeout(() => t.remove(), ms);
+  setTimeout(() => { try{ t.remove(); }catch(e){} }, ms + 80);
   return t; 
 }
+try{ window.addEventListener('resize', syncToastPosition, {passive:true}); }catch(e){}
+try{ if(window.visualViewport) visualViewport.addEventListener('resize', syncToastPosition, {passive:true}); }catch(e){}
 
 
 // --- V2.8.8 helpers: unified discount wording (85折 style) + promo hint toast ---
@@ -5440,21 +5510,34 @@ function getPromoMarqueeSpeedPx(){
   speed = Math.max(1, Math.min(120, Number(speed)));
   return speed;
 }
+function readDurationMsFromUi(keys, fallbackMs){
+  try{
+    let ms = NaN;
+    (keys || []).some(k => {
+      const v = uiGetNumber(k, NaN);
+      if(isFinite(v)){ ms = v; return true; }
+      return false;
+    });
+    if(!isFinite(ms)) ms = fallbackMs;
+    if(ms > 0 && ms <= 60) ms = ms * 1000;
+    ms = Math.max(900, Math.min(9000, ms));
+    return Math.round(ms);
+  }catch(e){ return fallbackMs; }
+}
 function getPromoHintDurationMs(){
-  let ms = uiGetNumber('ui|promo_hint_ms', NaN);
-  if(!isFinite(ms)) ms = uiGetNumber('promo_hint_ms', NaN);
-  if(!isFinite(ms)) {
-    const sec = uiGetNumber('ui|promo_hint_sec', NaN);
-    if(isFinite(sec)) ms = sec * 1000;
-  }
-  if(!isFinite(ms)) {
-    const sec = uiGetNumber('promo_hint_sec', NaN);
-    if(isFinite(sec)) ms = sec * 1000;
-  }
-  if(!isFinite(ms)) ms = 2800;
-  if(ms > 0 && ms <= 60) ms = ms * 1000;
-  ms = Math.max(1200, Math.min(8000, ms));
-  return Math.round(ms);
+  return readDurationMsFromUi([
+    'ui|promo_hint_duration_ms', 'promo_hint_duration_ms',
+    'ui|promo_hint_ms', 'promo_hint_ms',
+    'ui|promo_hint_sec', 'promo_hint_sec'
+  ], 2800);
+}
+function getNavToastDurationMs(kind){
+  const k = String(kind||'').trim().toLowerCase();
+  const keys = [];
+  if(k === 'star') keys.push('ui|nav_toast_star_duration_ms', 'nav_toast_star_duration_ms');
+  if(k === 'category' || k === 'cat') keys.push('ui|nav_toast_category_duration_ms', 'nav_toast_category_duration_ms');
+  keys.push('ui|nav_toast_duration_ms', 'nav_toast_duration_ms');
+  return readDurationMsFromUi(keys, k === 'star' ? 3200 : 2800);
 }
 function getBadgeName(kind, fallback){
   return uiGet(`badge_name|${kind}`, uiGet(`ui|badge_name|${kind}`, fallback));
@@ -5516,6 +5599,13 @@ function showPromoHint(msg){
     s = s.replace(/\\n/g, '\n');
     s = escapeHtml(s).replace(/\r?\n/g, '<br>');
     showToast(s, 'info', getPromoHintDurationMs());
+  }catch(e){}
+}
+function showCategoryNavToast(msg){
+  try{
+    let s = String(msg||'').replace(/\\n/g, '\n');
+    s = escapeHtml(s).replace(/\r?\n/g, '<br>');
+    showToast(s, 'info', getNavToastDurationMs('category'));
   }catch(e){}
 }
 // --- V2.8.9: Promo Map (優惠地圖) Drawer ---
@@ -7817,7 +7907,7 @@ function jumpToProductByCode(code){
     if(ok){
       const _tpl = uiGet('star|nav_toast', '已帶你到主打商品：{name} ✨');
       const _msg = _formatStarSubtitle(_tpl, p.name || p.product_name || p.name_zh || '');
-      showToast(_msg, 'info', 1600);
+      showToast(_msg, 'info', getNavToastDurationMs('star'));
     }
   }catch(e){}
 }
@@ -9642,6 +9732,131 @@ function sumQtyByPrefixes(cartItems, prefixes){
   return q;
 }
 
+function mixpayRuleLabel(r){
+  try{
+    const txt = String((r && r.uiText) || '').trim();
+    if(txt) return txt;
+    const charge = Number(r && r.charge) || 0;
+    const choose = Number(r && r.choose) || 0;
+    const free = Math.max(0, choose - charge);
+    const zone = String((r && r.zone) || '').trim();
+    if(zone && charge > 0 && free > 0) return `${zone}買${charge}送${free}`;
+    return getBadgeName('mixpay','任選優惠');
+  }catch(e){ return '任選優惠'; }
+}
+function isMixpayGiftChoiceRule(r){
+  try{
+    const choose = Number(r && r.choose);
+    const charge = Number(r && r.charge);
+    if(!Number.isFinite(choose) || !Number.isFinite(charge) || choose <= charge || charge <= 0) return false;
+    const txt = String((r && r.uiText) || '').trim();
+    if(/買\s*\d*\s*送|買.*送|搭贈|贈品/.test(txt)) return true;
+    // 現行皂類買2送1若未填 ui_text，仍以此作為保守對應；其他任選折抵不受影響。
+    const z = String((r && r.zone) || '').trim();
+    if(!txt && /皂/.test(z)) return true;
+    return false;
+  }catch(e){ return false; }
+}
+function mixpayCandidates(items, r){
+  try{
+    return (items || []).filter(it => {
+      if(!it) return false;
+      if(String(it.category||'').includes('加價購')) return false;
+      const code = String(it.code||'').trim();
+      const cat = String(it.category||'');
+      const zoneHit = !!(r.zone && cat.includes(String(r.zone)));
+      const codeHit = !!(Array.isArray(r.codes) && r.codes.length && r.codes.includes(code));
+      return zoneHit || codeHit;
+    });
+  }catch(e){ return []; }
+}
+function getMixpayMissingQty(totalQty, r){
+  const choose = Number(r && r.choose);
+  const charge = Number(r && r.charge);
+  if(!Number.isFinite(choose) || !Number.isFinite(charge) || choose <= charge || charge <= 0) return 0;
+  const q = Math.max(0, Number(totalQty)||0);
+  if(q <= 0) return 0;
+  if(r && r.accumulative){
+    const rem = q % choose;
+    return (rem >= charge) ? Math.max(0, choose - rem) : 0;
+  }
+  return (q >= charge && q < choose) ? Math.max(0, choose - q) : 0;
+}
+function detectMixpayGiftSelectionIssues(processedItems){
+  const issues = [];
+  try{
+    const rules = (RULES && Array.isArray(RULES.mixpay)) ? RULES.mixpay : [];
+    rules.forEach((r, idx) => {
+      if(!isMixpayGiftChoiceRule(r)) return;
+      const cand = mixpayCandidates(processedItems, r);
+      if(!cand.length) return;
+      const totalQty = cand.reduce((sum, it) => sum + (Number(it.qty)||0), 0);
+      const missing = getMixpayMissingQty(totalQty, r);
+      if(missing <= 0) return;
+      const label = mixpayRuleLabel(r);
+      const text = missing === 1 ? '尚未選擇贈品｜請加選 1 件' : `尚未選足贈品｜請加選 ${missing} 件`;
+      const owner = cand[cand.length - 1];
+      owner.tags = Array.isArray(owner.tags) ? owner.tags : [];
+      owner.tags.push({ text, cls: 'gift-missing' });
+      issues.push({
+        key: `mixpay:${idx}:${String(r.zone||'')}:${String((r.codes||[]).join(','))}`,
+        label,
+        missing,
+        totalQty,
+        choose: Number(r.choose)||0,
+        charge: Number(r.charge)||0
+      });
+    });
+  }catch(e){}
+  return issues;
+}
+function findMixpayGiftRuleForProduct(p){
+  try{
+    const rules = (RULES && Array.isArray(RULES.mixpay)) ? RULES.mixpay : [];
+    const cat = String((p && p.category) || '');
+    const code = String((p && p.code) || '').trim();
+    return rules.find(r => isMixpayGiftChoiceRule(r) && ((r.zone && cat.includes(String(r.zone))) || (Array.isArray(r.codes) && r.codes.includes(code)))) || null;
+  }catch(e){ return null; }
+}
+function tryShowMixpayGiftAddHint(p){
+  try{
+    const r = findMixpayGiftRuleForProduct(p);
+    if(!r) return false;
+    const now = Date.now();
+    if(now - (__MIXPAY_HINT_LAST_TS__ || 0) < 650) return true;
+    __MIXPAY_HINT_LAST_TS__ = now;
+    const cand = mixpayCandidates(CART, r);
+    const totalQty = cand.reduce((sum, it) => sum + (Number(it.qty)||0), 0);
+    const missing = getMixpayMissingQty(totalQty, r);
+    const label = mixpayRuleLabel(r);
+    if(missing > 0){
+      showPromoHint(`${label}｜請再加選 ${missing} 件贈品`);
+    }else if(totalQty >= Number(r.choose||0)){
+      showPromoHint(`已符合${label}｜贈品已計入優惠`);
+    }else{
+      const charge = Number(r.charge)||0;
+      const need = Math.max(0, charge - totalQty);
+      showPromoHint(need > 0 ? `${label}｜再 ${need} 件可加選贈品` : `${label}｜請記得加選贈品`);
+    }
+    return true;
+  }catch(e){ return false; }
+}
+function flashPromoGiftMissing(){
+  try{
+    const els = Array.from(document.querySelectorAll('.c-tag.gift-missing'));
+    if(!els.length) return false;
+    els.forEach(el => {
+      el.classList.remove('promo-missing-shake');
+      void el.offsetWidth;
+      el.classList.add('promo-missing-shake');
+    });
+    const first = els[0];
+    const card = first.closest('.c-item') || first;
+    setTimeout(()=>{ try{ card.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }, 30);
+    return true;
+  }catch(e){ return false; }
+}
+
 function calcCart() {
   let subTotal = 0, finalTotal = 0, beautyTotal = 0, discountAmt = 0;
   let warnings = [];
@@ -9750,6 +9965,8 @@ function calcCart() {
     }
   });
 
+  const promoGiftMissing = detectMixpayGiftSelectionIssues(processedItems);
+
   finalTotal = processedItems.reduce((s, it) => s + (Number(it.finalLine)||0), 0);
   beautyTotal = processedItems.reduce((s, it) => s + (String(it.category||'').includes('美容') ? (Number(it.finalLine)||0) : 0), 0);
   discountAmt = subTotal - finalTotal;
@@ -9800,7 +10017,7 @@ function calcCart() {
     }
   });
 
-  return { items: processedItems, subTotal, finalTotal, discountAmt, beautyTotal, gifts, warnings };
+  return { items: processedItems, subTotal, finalTotal, discountAmt, beautyTotal, gifts, warnings, promoGiftMissing };
 }
 
 
@@ -9845,6 +10062,14 @@ function refreshCart() {
   document.getElementById("sumBeauty").innerText = "$" + Math.round(data.beautyTotal).toLocaleString();
   const warnEl = document.getElementById("warnMsg");
   if(data.warnings.length > 0) { warnEl.style.display = "block"; warnEl.innerText = "⚠️ " + [...new Set(data.warnings)].join("、"); } else { warnEl.style.display = "none"; }
+
+  try{
+    const sig = (data.promoGiftMissing || []).map(x => `${x.key}:${x.missing}:${x.totalQty}`).join('|');
+    if(sig && sig !== __LAST_PROMO_GIFT_MISSING_SIG__){
+      setTimeout(flashPromoGiftMissing, 90);
+    }
+    __LAST_PROMO_GIFT_MISSING_SIG__ = sig;
+  }catch(e){}
   
   const giftProgress = getGiftProgressStatus();
   const msgEl = document.getElementById("gameMsg");
@@ -10170,6 +10395,13 @@ window.submitOrder = () => {
     }
 
     const data = calcCart();
+    if(data.promoGiftMissing && data.promoGiftMissing.length > 0) {
+        refreshCart();
+        const first = data.promoGiftMissing[0];
+        flashPromoGiftMissing();
+        showToast(`尚有 ${first.missing} 件贈品未選擇，請補選後再送出`, "warn", getPromoHintDurationMs());
+        return;
+    }
     if(data.warnings.length > 0) {
         const warnEl = document.getElementById("warnMsg");
         warnEl.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -10653,15 +10885,15 @@ if(hint){
     const msg = String(tpl)
       .replace(/\{cat\}/g, title)
       .replace(/\{hint\}/g, hint);
-    return showPromoHint(msg || hint);
+    return showCategoryNavToast(msg || hint);
   }
-  return showPromoHint(hint);
+  return showCategoryNavToast(hint);
 }
 if(tpl){
   const msg = String(tpl).replace(/\{cat\}/g, title).replace(/\{hint\}/g, '本分類目前無優惠訊息');
-  return showPromoHint(msg || '本分類目前無優惠訊息');
+  return showCategoryNavToast(msg || '本分類目前無優惠訊息');
 }
-return showPromoHint('本分類目前無優惠訊息');
+return showCategoryNavToast('本分類目前無優惠訊息');
 });
 
 </script>
