@@ -844,6 +844,35 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   pointer-events:none;
 }
 
+.series-gift-badge{
+  position:absolute;
+  top:6px;
+  right:6px;
+  z-index:3;
+  width:var(--series-gift-badge-size, 38px);
+  height:var(--series-gift-badge-size, 38px);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.82);
+  background:rgba(255,255,255,0.92);
+  box-shadow:0 4px 10px rgba(0,0,0,0.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:3px;
+  overflow:hidden;
+  cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.series-gift-badge img{
+  width:100%; height:100%; object-fit:contain; display:block;
+  mix-blend-mode:normal;
+}
+.series-gift-badge .material-icons-round{
+  font-size: calc(var(--series-gift-badge-size, 38px) * 0.54);
+  color:#d81b60;
+}
+.series-gift-badge:active{ transform: translateY(1px) scale(0.98); }
+
 .bg-blue { background: rgba(66, 165, 245, 0.95); }
 .bg-gold { background: linear-gradient(135deg, #ffa726, #fb8c00); }
 .bg-purple { background: rgba(171, 71, 188, 0.95); }
@@ -4313,7 +4342,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_32_promo_map_visual_taparea";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_33_series_gift_badge";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5761,6 +5790,23 @@ function getGiftUnlockNotifyDurationMs(){
     'ui|gift_unlock_notify_sec', 'gift_unlock_notify_sec'
   ], 4000);
 }
+function getSeriesGiftBadgeToastDurationMs(){
+  return readDurationMsFromUi([
+    'ui|series_gift_badge_toast_duration_ms', 'series_gift_badge_toast_duration_ms',
+    'ui|series_gift_badge_toast_ms', 'series_gift_badge_toast_ms',
+    'ui|series_gift_badge_toast_sec', 'series_gift_badge_toast_sec'
+  ], 3200);
+}
+function getSeriesGiftBadgeSizePx(){
+  let v = uiGetNumber('ui|series_gift_badge_size_px', NaN);
+  if(!isFinite(v)) v = uiGetNumber('series_gift_badge_size_px', NaN);
+  if(!isFinite(v)) v = 38;
+  v = Math.max(22, Math.min(72, Number(v)));
+  return Math.round(v);
+}
+function isSeriesGiftBadgeEnabled(){
+  return uiGetBool('ui|series_gift_badge_enabled', true);
+}
 function getNavTargetHighlightDurationMs(){
   return readDurationMsFromUi([
     'ui|nav_target_highlight_duration_ms', 'nav_target_highlight_duration_ms',
@@ -5853,6 +5899,8 @@ root.style.setProperty('--milestone-shortfall-tag-bg-beauty', uiColorToRgba(msBd
 root.style.setProperty('--milestone-shortfall-tag-fg', msBd);
 root.style.setProperty('--milestone-shortfall-tag-fg-beauty', msBd);
 
+const sgSize = getSeriesGiftBadgeSizePx();
+root.style.setProperty('--series-gift-badge-size', sgSize + 'px');
 
   }catch(e){}
 }
@@ -9873,8 +9921,22 @@ const newBadgeLabel = (function(){
   try{ return escapeHtml(getBadgeName('new', 'NEW')); }catch(e){ return 'NEW'; }
 })();
 const newBadgeHtml = (p.is_new) ? `<div class="new-badge">${newBadgeLabel}</div>` : '';
+const seriesGiftBadgeHtml = (function(){
+  try{
+    const sg = getSeriesGiftBadgeData(p);
+    if(!sg) return '';
+    const hint = escapeHtml(String(sg.hint||'系列贈品：依活動規則')).replace(/"/g,'&quot;');
+    const giftCode = escapeHtml(String(sg.code||'')).replace(/"/g,'&quot;');
+    const giftName = escapeHtml(String(sg.name||'系列贈品')).replace(/"/g,'&quot;');
+    if(sg.photo){
+      const photo = String(sg.photo).replace(/"/g,'&quot;');
+      return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><img src="${photo}" alt="${giftName}"></button>`;
+    }
+    return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><span class="material-icons-round">redeem</span></button>`;
+  }catch(e){ return ''; }
+})();
     const stepperHtml = isBundleSelect ? '' : `<div class="p-buy-row no-pill"><div class="stepper"><div class="s-btn ${qty===0?'hidden':''}" onclick="window.updateQty(this, ${p._id}, -1)">－</div><div class="s-val ${qty===0?'hidden':''}">${qty}</div><div class="s-btn add" onclick="window.updateQty(this, ${p._id}, 1)">＋</div></div></div>`;
-    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div class="p-main"><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}</div>${stepperHtml}</div>`;
+    card.innerHTML = `<div class="p-img-box"><div class="badges">${badges}</div>${imgHtml}${seriesGiftBadgeHtml}${newBadgeHtml}</div><div class="p-body">${codeChipHtml}<div class="p-main"><div class="p-title">${displayName}</div><div class="p-price-row">${pricePack.priceHtml}</div>${pillRowHtml}${actionBtn}</div>${stepperHtml}</div>`;
     return card;
 }
 
@@ -10055,6 +10117,55 @@ function splitPrefixes(str){
 }
 function seriesGiftUnit(prefixStr){
   return /麥汁/.test(String(prefixStr||"")) ? '箱' : '件';
+}
+
+function getSeriesGiftRuleForProduct(p){
+  try{
+    if(!p || !RULES || !Array.isArray(RULES.series_gift) || !isSeriesGiftBadgeEnabled()) return null;
+    const cat = String(p.category||'');
+    const name = String(p.name||'');
+    return RULES.series_gift.find(r => {
+      if(!r || String(r.gift||'').trim() === '') return false;
+      const prefixes = splitPrefixes(r.prefix);
+      if(!prefixes.length) return false;
+      return prefixes.some(px => {
+        const k = String(px||'').trim();
+        return !!k && (cat.includes(k) || name.includes(k));
+      });
+    }) || null;
+  }catch(e){ return null; }
+}
+function buildSeriesGiftRuleHint(r){
+  try{
+    if(!r) return '系列贈品：依活動規則';
+    const txt = String((r.uiText || r.note || '')).trim();
+    if(txt) return txt;
+    const prefix = String(r.prefix||'').trim() || '系列贈品';
+    const giftMeta = PRODUCT_MAP.get(r.gift) || null;
+    let gName = (giftMeta && giftMeta.name) ? giftMeta.name : String(r.gift||'').trim();
+    gName = gName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '贈品';
+    const thr = Number(r.amt);
+    const qty = Math.max(1, Number(r.qty)||1);
+    const unit = seriesGiftUnit(prefix);
+    if(Number.isFinite(thr) && thr > 0) return `${prefix}｜每滿 ${thr}${unit}搭贈 ${qty} ${gName}`;
+    return `${prefix}｜每 ${unit}搭贈 ${qty} ${gName}`;
+  }catch(e){ return '系列贈品：依活動規則'; }
+}
+function getSeriesGiftBadgeData(p){
+  try{
+    const r = getSeriesGiftRuleForProduct(p);
+    if(!r) return null;
+    const giftMeta = PRODUCT_MAP.get(r.gift) || null;
+    let giftName = (giftMeta && giftMeta.name) ? giftMeta.name : String(r.gift||'').trim();
+    giftName = giftName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '系列贈品';
+    const giftPhoto = (giftMeta && giftMeta.photo) ? String(giftMeta.photo).trim() : '';
+    return {
+      code: String(r.gift||'').trim(),
+      photo: giftPhoto,
+      name: giftName,
+      hint: buildSeriesGiftRuleHint(r)
+    };
+  }catch(e){ return null; }
 }
 
 function sumFinalByPrefixes(processedItems, prefixes){
@@ -11193,7 +11304,7 @@ document.addEventListener('click', function giftPreviewClick(e){
 
 // --- V2.8.8: Click-to-explain for promo badges/pills (non-intrusive) ---
 document.addEventListener('click', function promoHintClick(e){
-  const el = e.target.closest('.promo-badge, .p-price-pill, #shipFreeBadge, #floatShipBadge');
+  const el = e.target.closest('.promo-badge, .p-price-pill, .series-gift-badge, #shipFreeBadge, #floatShipBadge');
   if(!el) return;
   // prevent interfering with +/- buttons etc.
   if(e.target.closest('.s-btn')) return;
@@ -11209,6 +11320,11 @@ document.addEventListener('click', function promoHintClick(e){
   }
 
   const promo = el.dataset.promo || '';
+  if(promo === 'series_gift_badge'){
+    try{ e.preventDefault(); e.stopPropagation(); }catch(ex){}
+    const hint = String(el.dataset.hint || '').trim() || '系列贈品：依活動規則';
+    return showSeriesGiftBadgeHint(hint);
+  }
   if(promo === 'bogo'){
     const code = el.dataset.code || '';
     const r = (RULES && Array.isArray(RULES.bogo)) ? RULES.bogo.find(x => x && x.code === code) : null;
