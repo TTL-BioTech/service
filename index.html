@@ -4342,7 +4342,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_33_series_gift_badge";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_34_series_gift_badge_map_source";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -10140,27 +10140,44 @@ function buildSeriesGiftRuleHint(r){
     if(!r) return '系列贈品：依活動規則';
     const txt = String((r.uiText || r.note || '')).trim();
     if(txt) return txt;
-    const prefix = String(r.prefix||'').trim() || '系列贈品';
-    const giftMeta = PRODUCT_MAP.get(r.gift) || null;
-    let gName = (giftMeta && giftMeta.name) ? giftMeta.name : String(r.gift||'').trim();
-    gName = gName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '贈品';
+
+    // V7.34：商品卡右上角貼紙的 toast 改直接對齊優惠地圖「系列」頁的訊息格式。
+    // 優惠地圖顯示：規則文字 / 贈品名稱 / 適用系列；這裡也使用同一套組字邏輯。
+    const prefixes = (typeof splitPrefixes === 'function') ? splitPrefixes(r.prefix) : [String(r.prefix||'')];
+    const prefixLabel = prefixes.filter(Boolean).join('、');
+    const unit = (typeof seriesGiftUnit === 'function') ? seriesGiftUnit(prefixLabel) : '件';
     const thr = Number(r.amt);
-    const qty = Math.max(1, Number(r.qty)||1);
-    const unit = seriesGiftUnit(prefix);
-    if(Number.isFinite(thr) && thr > 0) return `${prefix}｜每滿 ${thr}${unit}搭贈 ${qty} ${gName}`;
-    return `${prefix}｜每 ${unit}搭贈 ${qty} ${gName}`;
+    const giftQty = Math.max(1, Number(r.qty)||1);
+    let ruleText = '';
+    if(Number.isFinite(thr) && thr > 0) ruleText = `每 ${Math.round(thr)} ${unit}送 ${giftQty} 個`;
+    else ruleText = `每 1 ${unit}送 ${giftQty} 個`;
+
+    let gName = (typeof pmFormatGiftName === 'function') ? pmFormatGiftName(r.gift) : ((PRODUCT_MAP.get(r.gift)||{}).name || r.gift || '贈品');
+    gName = String(gName||'贈品').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '贈品';
+    return prefixLabel ? `${ruleText}｜${gName}｜適用系列：${prefixLabel}` : `${ruleText}｜${gName}`;
   }catch(e){ return '系列贈品：依活動規則'; }
 }
 function getSeriesGiftBadgeData(p){
   try{
     const r = getSeriesGiftRuleForProduct(p);
     if(!r) return null;
-    const giftMeta = PRODUCT_MAP.get(r.gift) || null;
-    let giftName = (giftMeta && giftMeta.name) ? giftMeta.name : String(r.gift||'').trim();
-    giftName = giftName.replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '系列贈品';
-    const giftPhoto = (giftMeta && giftMeta.photo) ? String(giftMeta.photo).trim() : '';
+    const giftCode = String(r.gift||'').trim();
+    let giftName = (typeof pmFormatGiftName === 'function') ? pmFormatGiftName(giftCode) : ((PRODUCT_MAP.get(giftCode)||{}).name || giftCode || '系列贈品');
+    giftName = String(giftName||'系列贈品').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '系列贈品';
+
+    // V7.34：圖片來源改直接對齊優惠地圖。優惠地圖使用 renderGiftImages() → GIFT_MAP.get(giftCode)。
+    // v7.33 只找 PRODUCT_MAP.photo，因此當贈品圖片存在於 GIFT_MAP 時會退回小禮物 icon。
+    let giftPhoto = '';
+    try{
+      const arr = (GIFT_MAP && typeof GIFT_MAP.get === 'function') ? (GIFT_MAP.get(giftCode) || []) : [];
+      giftPhoto = String((arr || []).find(Boolean) || '').trim();
+    }catch(e){}
+    if(!giftPhoto){
+      const giftMeta = PRODUCT_MAP.get(giftCode) || null;
+      giftPhoto = (giftMeta && giftMeta.photo) ? String(giftMeta.photo).trim() : '';
+    }
     return {
-      code: String(r.gift||'').trim(),
+      code: giftCode,
       photo: giftPhoto,
       name: giftName,
       hint: buildSeriesGiftRuleHint(r)
