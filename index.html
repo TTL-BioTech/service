@@ -848,7 +848,9 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   position:absolute;
   top:6px;
   right:6px;
-  z-index:3;
+  z-index:8;
+  pointer-events:auto;
+  touch-action:manipulation;
   width:var(--series-gift-badge-size, 38px);
   height:var(--series-gift-badge-size, 38px);
   border-radius:12px;
@@ -869,6 +871,7 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
   transition:none !important;
   mix-blend-mode:normal !important;
   visibility:visible !important;
+  pointer-events:none;
 }
 .series-gift-badge .material-icons-round{
   font-size: calc(var(--series-gift-badge-size, 38px) * 0.54);
@@ -4345,7 +4348,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_35_series_gift_badge_imagefix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_36_series_gift_badge_clickfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -11306,6 +11309,22 @@ window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"
 initApp();
 try{ __starCaptureTemplate(); }catch(e){}
 try{ initBackGuard(); }catch(e){}
+
+// --- V7.36: Series gift badge must intercept before product/gift image handlers ---
+function handleSeriesGiftBadgeTap(e){
+  const badge = e && e.target && e.target.closest ? e.target.closest('.series-gift-badge') : null;
+  if(!badge) return;
+  try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }catch(ex){}
+  const hint = String(badge.dataset.hint || '').trim() || '系列贈品：依活動規則';
+  try{ showSeriesGiftBadgeHint(hint); }catch(ex){ try{ showPromoHint(hint); }catch(_e){} }
+  return false;
+}
+document.addEventListener('pointerdown', function seriesGiftBadgePointerGuard(e){
+  const badge = e && e.target && e.target.closest ? e.target.closest('.series-gift-badge') : null;
+  if(!badge) return;
+  try{ e.stopPropagation(); }catch(ex){}
+}, true);
+document.addEventListener('click', handleSeriesGiftBadgeTap, true);
 
 // --- V42 UX v4: Click gift thumbnail to preview enlarged image ---
 document.addEventListener('click', function giftPreviewClick(e){
