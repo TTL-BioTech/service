@@ -3903,6 +3903,79 @@ body.cfg-error .btn-bundle{
   filter: none !important;
 }
 
+
+
+/* --- V7.32: Promo Map visual clarity + larger tap areas --- */
+#promoMapDrawer .pm-title{
+  font-size: 19px !important;
+  line-height: 1.1;
+  letter-spacing: .25px;
+}
+#promoMapDrawer .pm-tabs{
+  padding: 4px !important;
+  gap: 3px;
+}
+#promoMapDrawer .pm-tab{
+  font-size: 14px !important;
+  min-height: 34px;
+  padding: 9px 13px !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+#promoMapDrawer .pm-badge{
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+  letter-spacing: .35px;
+}
+#promoMapDrawer .pm-gh-title{
+  font-size: 15.2px !important;
+  line-height: 1.16;
+}
+#promoMapDrawer .pm-gh-sub{
+  font-size: 12.4px !important;
+  line-height: 1.22;
+}
+#promoMapPaneGifts .pm-scope{
+  gap: 12px !important;
+  margin: 11px 2px 13px !important;
+  flex-wrap: wrap;
+}
+#promoMapPaneGifts .pm-scope-btn{
+  font-size: 14px !important;
+  min-height: 42px;
+  min-width: 66px;
+  padding: 11px 18px !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.045);
+}
+#promoMapPaneGifts .pm-scope-btn.active{
+  box-shadow: 0 10px 22px rgba(0,0,0,0.065);
+}
+#promoMapDrawer .pm-gift-name{
+  font-size: 15.4px !important;
+  line-height: 1.26;
+}
+#promoMapDrawer .pm-gift-amt{
+  align-items: baseline;
+}
+#promoMapDrawer .pm-gift-amt .pm-gift-amt-prefix{
+  font-size: 1em;
+}
+#promoMapDrawer .pm-gift-amt .pm-gift-amt-num{
+  font-size: 1.30em;
+  line-height: .9;
+  letter-spacing: .15px;
+}
+@media (max-width: 380px){
+  #promoMapDrawer .pm-title{ font-size: 18px !important; }
+  #promoMapDrawer .pm-tab{ font-size: 13.5px !important; padding: 8px 11px !important; }
+  #promoMapPaneGifts .pm-scope{ gap: 10px !important; }
+  #promoMapPaneGifts .pm-scope-btn{ min-width: 62px; padding-left: 16px !important; padding-right: 16px !important; }
+}
+
 </style>
 </head>
 <body>
@@ -4240,7 +4313,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_31_zoomicon_milestone_flickerfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_32_promo_map_visual_taparea";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6816,7 +6889,7 @@ function buildPromoGiftList(scope){
         <div class="pm-gift-row">
           <div class="pm-gift-media">${imgHtml}</div>
           <div class="pm-gift-info">
-            <div class="pm-gift-amt">滿 $${Math.round(amt).toLocaleString()}</div>
+            <div class="pm-gift-amt"><span class="pm-gift-amt-prefix">滿 $</span><span class="pm-gift-amt-num">${Math.round(amt).toLocaleString()}</span></div>
             <div class="pm-gift-name">${String(gName||'').replace(/[<>]/g,'')}</div>
           </div>
         </div>
