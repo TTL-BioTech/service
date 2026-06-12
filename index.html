@@ -865,7 +865,10 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 }
 .series-gift-badge img{
   width:100%; height:100%; object-fit:contain; display:block;
-  mix-blend-mode:normal;
+  opacity:1 !important;
+  transition:none !important;
+  mix-blend-mode:normal !important;
+  visibility:visible !important;
 }
 .series-gift-badge .material-icons-round{
   font-size: calc(var(--series-gift-badge-size, 38px) * 0.54);
@@ -4342,7 +4345,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_34_series_gift_badge_map_source";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_35_series_gift_badge_imagefix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -9930,7 +9933,7 @@ const seriesGiftBadgeHtml = (function(){
     const giftName = escapeHtml(String(sg.name||'系列贈品')).replace(/"/g,'&quot;');
     if(sg.photo){
       const photo = String(sg.photo).replace(/"/g,'&quot;');
-      return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><img src="${photo}" alt="${giftName}"></button>`;
+      return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><img src="${photo}" alt="${giftName}" onload="this.classList.add('loaded')"></button>`;
     }
     return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><span class="material-icons-round">redeem</span></button>`;
   }catch(e){ return ''; }
