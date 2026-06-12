@@ -8721,12 +8721,20 @@ function __getCoreParseWorker(){
           }
           else if(type.includes('ui_config')){
             const key = String(pick('zone')||'').trim();
-            const txt = String(pick('ui_text')||'').trim();
+            // V7.38: ui_config may be text-based (templates/copy) or numeric (px/ms/sec/opacity).
+            // Do not fall back to Number('') => 0 for text configs; otherwise empty ui_text can make templates display "0".
+            const txt = String(
+              pick('ui_text') || pick('text') || pick('value') || pick('note') || pick('notes') || pick('ui_note') ||
+              pick('memo') || pick('remark') || pick('description') || pick('desc') || pick('ui_text2') || ''
+            ).trim();
             const rawAmt = String(pick('threshold_amount')||'').trim().replace(/,/g,'');
             const amt = Number(rawAmt);
+            const hasAmt = rawAmt !== '' && isFinite(amt);
             if(key){
-              const preferAmt = /^ui\|promo_marquee_(reduce_)?speed_px$/.test(key) || /^promo_marquee_(reduce_)?speed_px$/.test(key);
-              rules.uiCfg[key] = (preferAmt && isFinite(amt)) ? amt : (txt ? txt : (isFinite(amt) ? amt : ''));
+              const kk = String(key||'').replace(/^ui\|/,'');
+              const preferAmt = /^promo_marquee_(reduce_)?speed_px$/.test(kk) ||
+                /(size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
+              rules.uiCfg[key] = (preferAmt && hasAmt) ? amt : txt;
             }
           }
           else if(type.includes('ui_note')){
@@ -8915,12 +8923,20 @@ function parseCoreOnMain(pText, rText){
     }
     else if(type.includes("ui_config")) {
       const key = String(pick("zone")||"").trim();
-      const txt = String(pick("ui_text")||"").trim();
+      // V7.38: ui_config may be text-based (templates/copy) or numeric (px/ms/sec/opacity).
+      // Do not fall back to Number('') => 0 for text configs; otherwise empty ui_text can make templates display "0".
+      const txt = String(
+        pick("ui_text") || pick("text") || pick("value") || pick("note") || pick("notes") || pick("ui_note") ||
+        pick("memo") || pick("remark") || pick("description") || pick("desc") || pick("ui_text2") || ""
+      ).trim();
       const rawAmt = String(pick("threshold_amount")||"").trim().replace(/,/g,'');
       const amt = Number(rawAmt);
+      const hasAmt = rawAmt !== "" && isFinite(amt);
       if(key){
-        const preferAmt = /^ui\|promo_marquee_(reduce_)?speed_px$/.test(key) || /^promo_marquee_(reduce_)?speed_px$/.test(key);
-        rules.uiCfg[key] = (preferAmt && isFinite(amt)) ? amt : (txt ? txt : (isFinite(amt) ? amt : ""));
+        const kk = String(key||"").replace(/^ui\|/,"");
+        const preferAmt = /^promo_marquee_(reduce_)?speed_px$/.test(kk) ||
+          /(size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
+        rules.uiCfg[key] = (preferAmt && hasAmt) ? amt : txt;
       }
     }
     else if(type.includes("ui_note")) {
@@ -10223,7 +10239,9 @@ function buildSeriesGiftRuleHint(r){
     let gName = (typeof pmFormatGiftName === 'function') ? pmFormatGiftName(r.gift) : ((PRODUCT_MAP.get(r.gift)||{}).name || r.gift || '贈品');
     gName = String(gName||'贈品').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '贈品';
 
-    const tpl = String(uiGet('ui|series_gift_badge_toast_template', uiGet('series_gift_badge_toast_template', '')) || '').trim();
+    let tpl = String(uiGet('ui|series_gift_badge_toast_template', uiGet('series_gift_badge_toast_template', '')) || '').trim();
+    // V7.38: Guard against legacy/empty ui_config rows parsed as numeric 0.
+    if(tpl === '0') tpl = '';
     if(tpl){
       const rendered = formatSeriesGiftToastTemplate(tpl, {
         rule: ruleText,
