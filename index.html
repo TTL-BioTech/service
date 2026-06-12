@@ -56,6 +56,7 @@ body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%;
   mix-blend-mode: multiply; 
 }
 .p-img-box img.loaded { opacity: 1; }
+.p-img-box img[data-img-cached="1"] { transition: none !important; }
 
 /* --- FIX: WELCOME & LOADER --- */
 #welcome-overlay, #loader {
@@ -846,16 +847,16 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 
 .series-gift-badge{
   position:absolute;
-  top:6px;
-  right:6px;
+  top:var(--series-gift-badge-top, 3px);
+  right:var(--series-gift-badge-right, 3px);
   z-index:8;
   pointer-events:auto;
   touch-action:manipulation;
   width:var(--series-gift-badge-size, 38px);
   height:var(--series-gift-badge-size, 38px);
-  border-radius:12px;
+  border-radius:var(--series-gift-badge-radius, 999px);
   border:1px solid rgba(255,255,255,0.82);
-  background:rgba(255,255,255,0.92);
+  background:rgba(255,255,255,var(--series-gift-badge-bg-opacity, 0.58));
   box-shadow:0 4px 10px rgba(0,0,0,0.12);
   display:flex;
   align-items:center;
@@ -4348,7 +4349,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_36_series_gift_badge_clickfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_37_series_gift_badge_toast_imgcache";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5660,6 +5661,16 @@ try{ if(window.visualViewport) visualViewport.addEventListener('resize', syncToa
 
 // --- V2.8.8 helpers: unified discount wording (85折 style) + promo hint toast ---
 const BOOT_TS = Date.now();
+window.__IMG_LOADED_CACHE__ = window.__IMG_LOADED_CACHE__ || new Set();
+try{
+  document.addEventListener('load', function(e){
+    const img = e && e.target;
+    if(img && img.tagName === 'IMG'){
+      const src = img.getAttribute('src') || img.currentSrc || img.src || '';
+      if(src) window.__IMG_LOADED_CACHE__.add(src);
+    }
+  }, true);
+}catch(e){}
 
 function fmtZheFromPctOff(pctOff){
   const off = Number(pctOff);
@@ -5810,6 +5821,36 @@ function getSeriesGiftBadgeSizePx(){
   v = Math.max(22, Math.min(72, Number(v)));
   return Math.round(v);
 }
+function getSeriesGiftBadgeTopPx(){
+  let v = uiGetNumber('ui|series_gift_badge_top_px', NaN);
+  if(!isFinite(v)) v = uiGetNumber('series_gift_badge_top_px', NaN);
+  if(!isFinite(v)) v = 3;
+  v = Math.max(-8, Math.min(18, Number(v)));
+  return Math.round(v);
+}
+function getSeriesGiftBadgeRightPx(){
+  let v = uiGetNumber('ui|series_gift_badge_right_px', NaN);
+  if(!isFinite(v)) v = uiGetNumber('series_gift_badge_right_px', NaN);
+  if(!isFinite(v)) v = 3;
+  v = Math.max(-8, Math.min(18, Number(v)));
+  return Math.round(v);
+}
+function getSeriesGiftBadgeBgOpacity(){
+  let v = uiGetNumber('ui|series_gift_badge_bg_opacity', NaN);
+  if(!isFinite(v)) v = uiGetNumber('series_gift_badge_bg_opacity', NaN);
+  if(!isFinite(v)) v = 0.58;
+  v = Number(v);
+  if(v > 1 && v <= 100) v = v / 100;
+  v = Math.max(0.05, Math.min(1, v));
+  return Math.round(v * 100) / 100;
+}
+function getSeriesGiftBadgeRadiusPx(){
+  let v = uiGetNumber('ui|series_gift_badge_radius_px', NaN);
+  if(!isFinite(v)) v = uiGetNumber('series_gift_badge_radius_px', NaN);
+  if(!isFinite(v)) v = 999;
+  v = Math.max(0, Math.min(999, Number(v)));
+  return Math.round(v);
+}
 function isSeriesGiftBadgeEnabled(){
   return uiGetBool('ui|series_gift_badge_enabled', true);
 }
@@ -5907,6 +5948,10 @@ root.style.setProperty('--milestone-shortfall-tag-fg-beauty', msBd);
 
 const sgSize = getSeriesGiftBadgeSizePx();
 root.style.setProperty('--series-gift-badge-size', sgSize + 'px');
+root.style.setProperty('--series-gift-badge-top', getSeriesGiftBadgeTopPx() + 'px');
+root.style.setProperty('--series-gift-badge-right', getSeriesGiftBadgeRightPx() + 'px');
+root.style.setProperty('--series-gift-badge-bg-opacity', String(getSeriesGiftBadgeBgOpacity()));
+root.style.setProperty('--series-gift-badge-radius', getSeriesGiftBadgeRadiusPx() + 'px');
 
   }catch(e){}
 }
@@ -8646,7 +8691,9 @@ function __getCoreParseWorker(){
           else if(type.includes('series_gift')){
             const mRaw = String(pick('multiples')||'').trim().toUpperCase();
             const mult = (mRaw === 'TRUE' || mRaw === '1' || mRaw === 'YES');
-            rules.series_gift.push({ scope: pick('threshold_scope'), prefix: pick('zone_prefix'), amt: Number(pick('threshold_amount')), gift: pick('gift_code'), qty: Number(pick('gift_qty')), mult });
+            const uiText = String(pick('ui_text')||'').trim();
+            const note = String(pick('note')||pick('notes')||pick('ui_note')||pick('memo')||pick('remark')||'').trim();
+            rules.series_gift.push({ scope: pick('threshold_scope'), prefix: pick('zone_prefix'), amt: Number(pick('threshold_amount')), gift: pick('gift_code'), qty: Number(pick('gift_qty')), mult, uiText, note });
           }
           else if(type.includes('spend')){
             const mRaw = String(pick('multiples')||'').trim().toUpperCase();
@@ -8838,7 +8885,9 @@ function parseCoreOnMain(pText, rText){
     else if(type.includes("series_gift")) {
       const mRaw = String(pick("multiples") || "").trim().toUpperCase();
       const mult = (mRaw === "TRUE" || mRaw === "1" || mRaw === "YES");
-      rules.series_gift.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult });
+      const uiText = String(pick("ui_text")||"").trim();
+      const note = String(pick("note")||pick("notes")||pick("ui_note")||pick("memo")||pick("remark")||"").trim();
+      rules.series_gift.push({ scope: pick("threshold_scope"), prefix: pick("zone_prefix"), amt: Number(pick("threshold_amount")), gift: pick("gift_code"), qty: Number(pick("gift_qty")), mult, uiText, note });
     }
     else if(type.includes("spend")) {
       const mRaw = String(pick("multiples") || "").trim().toUpperCase();
@@ -9875,7 +9924,12 @@ const L_tier  = getBadgeName('tier','多件優惠');
     const lazyImgAttr = (window.FF && FF.has && FF.has('p3_lazyimg')) ? 'loading="lazy" decoding="async"' : '';
     let imgHtml = `<div class="p-no-img"><span class="material-icons-round" style="font-size:32px">image_not_supported</span>無圖片</div>`;
     if(p.photo && p.photo.length > 5) {
-      imgHtml = `<img src="${p.photo}" class="p-img" ${lazyImgAttr} onload="this.classList.add('loaded')" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'p-no-img\'>暫無圖片</div>'">`;
+      const photoSrc = String(p.photo||'').trim();
+      const photoEsc = escapeHtml(photoSrc).replace(/"/g,'&quot;');
+      const imgCached = !!(window.__IMG_LOADED_CACHE__ && window.__IMG_LOADED_CACHE__.has(photoSrc));
+      const loadedCls = imgCached ? ' loaded' : '';
+      const cachedAttr = imgCached ? ' data-img-cached="1"' : '';
+      imgHtml = `<img src="${photoEsc}" class="p-img${loadedCls}" ${lazyImgAttr}${cachedAttr} onload="try{window.__IMG_LOADED_CACHE__&&window.__IMG_LOADED_CACHE__.add(this.getAttribute('src')||this.currentSrc||this.src)}catch(e){};this.classList.add('loaded')" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'p-no-img\'>暫無圖片</div>'">`;
     }
     
     // RESTORED HIGHLIGHT LOGIC
@@ -10124,6 +10178,14 @@ function splitPrefixes(str){
 function seriesGiftUnit(prefixStr){
   return /麥汁/.test(String(prefixStr||"")) ? '箱' : '件';
 }
+function formatSeriesGiftToastTemplate(template, vars){
+  try{
+    const map = vars || {};
+    return String(template||'').replace(/\{([a-zA-Z0-9_]+)\}/g, function(_, key){
+      return (map[key] != null) ? String(map[key]) : '';
+    }).trim();
+  }catch(e){ return String(template||'').trim(); }
+}
 
 function getSeriesGiftRuleForProduct(p){
   try{
@@ -10160,6 +10222,20 @@ function buildSeriesGiftRuleHint(r){
 
     let gName = (typeof pmFormatGiftName === 'function') ? pmFormatGiftName(r.gift) : ((PRODUCT_MAP.get(r.gift)||{}).name || r.gift || '贈品');
     gName = String(gName||'贈品').replace(/^(贈品|贈|Gift)[:\s|｜_]*/i, '') || '贈品';
+
+    const tpl = String(uiGet('ui|series_gift_badge_toast_template', uiGet('series_gift_badge_toast_template', '')) || '').trim();
+    if(tpl){
+      const rendered = formatSeriesGiftToastTemplate(tpl, {
+        rule: ruleText,
+        gift: gName,
+        series: prefixLabel,
+        gift_code: String(r.gift||'').trim(),
+        threshold: (Number.isFinite(thr) && thr > 0) ? Math.round(thr) : 1,
+        unit: unit,
+        qty: giftQty
+      });
+      if(rendered) return rendered;
+    }
     return prefixLabel ? `${ruleText}｜${gName}｜適用系列：${prefixLabel}` : `${ruleText}｜${gName}`;
   }catch(e){ return '系列贈品：依活動規則'; }
 }
