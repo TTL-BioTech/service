@@ -767,7 +767,7 @@ main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 /* --- General --- */
 .highlight { background-color: #fff176 !important; color: #212121 !important; font-weight: 900; border-radius: 2px; padding: 0 2px; }
 .cat-section-title{
-  font-size: 18px;
+  font-size: var(--cat-section-title-font, 21.6px);
   font-weight: 900;
   color: var(--primary);
   padding: 16px 44px 8px 8px;
@@ -4012,6 +4012,40 @@ body.cfg-error .btn-bundle{
   #promoMapPaneGifts .pm-scope-btn{ min-width: 62px; padding-left: 16px !important; padding-right: 16px !important; }
 }
 
+
+/* ==========================================================
+   V7.39 分類標題 +20%、加價購商品卡 SHEET 化、Modal 遮罩返回
+   - 加價購卡片只有設定 ui_config 時才套色；未設定完全維持原樣
+   - 支援 ui|cat_section_title_font_px 控制分類標題字級
+   ========================================================== */
+.p-card-addon.addon-themed{
+  background: var(--addon-card-bg, #ffffff);
+  border-color: var(--addon-card-border, #f0f0f0);
+}
+.p-card-addon.addon-themed .badge[data-promo="addon"]{
+  background: var(--addon-card-accent, rgba(239, 83, 80, 0.95));
+}
+.p-card-addon.addon-themed .p-price-pill[data-promo="addon_price"]{
+  background: var(--addon-price-pill-bg, rgba(198,40,40,.08));
+  color: var(--addon-price-pill-text, #c62828);
+  border-color: var(--addon-price-pill-border, rgba(198,40,40,.22));
+}
+.p-card-addon.addon-themed .s-btn.add{
+  background: var(--addon-card-accent, var(--primary));
+  border-color: var(--addon-card-accent, var(--primary));
+}
+.p-card-addon.addon-themed .s-btn.add:active{
+  background: var(--addon-card-accent, var(--primary));
+}
+#milestone-overlay,
+#giftModal{
+  cursor: pointer;
+}
+#milestone-overlay .ms-card-v,
+#giftModal .m-box{
+  cursor: default;
+}
+
 </style>
 </head>
 <body>
@@ -4062,7 +4096,7 @@ body.cfg-error .btn-bundle{
   <div class="tn-body" id="tn-text"></div>
 </div>
 
-<div id="milestone-overlay">
+<div id="milestone-overlay" onclick="if(event.target===this) closeMilestoneCard()">
   <div class="ms-card-v" id="msCard">
     <div class="ms-header">
        <button class="ms-close" onclick="closeMilestoneCard()" aria-label="關閉"><span class="material-icons-round">close</span></button>
@@ -4249,7 +4283,7 @@ body.cfg-error .btn-bundle{
   </div>
 </div>
 
-<div id="giftModal" class="modal">
+<div id="giftModal" class="modal" onclick="if(event.target===this) closeGiftList()">
   <div class="m-box">
     <div class="m-head" style="margin-bottom:20px">全站獲得贈品</div>
     <div class="gift-list" id="giftListGrid"></div>
@@ -5871,6 +5905,21 @@ function getMilestoneHintDurationMs(){
 function isGiftImageZoomBadgeEnabled(){
   return uiGetBool('ui|gift_image_zoom_badge_enabled', true);
 }
+
+function getConfiguredUiColorKey(key){
+  try{
+    const k = String(key||'').trim();
+    if(!k) return '';
+    return getUiColor(['ui|' + k, k], '');
+  }catch(e){ return ''; }
+}
+function hasAddonCardThemeConfig(){
+  try{
+    if(typeof window.__ADDON_CARD_THEME_ON__ === 'boolean') return window.__ADDON_CARD_THEME_ON__;
+    return ['addon_card_bg','addon_card_border','addon_card_accent','addon_price_pill_bg','addon_price_pill_text','addon_price_pill_border']
+      .some(k => !!getConfiguredUiColorKey(k));
+  }catch(e){ return false; }
+}
 function getNavToastDurationMs(kind){
   const k = String(kind||'').trim().toLowerCase();
   const keys = [];
@@ -5945,6 +5994,29 @@ root.style.setProperty('--milestone-shortfall-tag-bg', uiColorToRgba(msBd, 0.13,
 root.style.setProperty('--milestone-shortfall-tag-bg-beauty', uiColorToRgba(msBd, 0.13, 'rgba(251,113,133,0.13)'));
 root.style.setProperty('--milestone-shortfall-tag-fg', msBd);
 root.style.setProperty('--milestone-shortfall-tag-fg-beauty', msBd);
+
+// V7.39: category title font size and add-on card theme (only effective when SHEET keys are set)
+let catTitleFont = uiGetNumber('ui|cat_section_title_font_px', NaN);
+if(!isFinite(catTitleFont)) catTitleFont = uiGetNumber('cat_section_title_font_px', NaN);
+if(!isFinite(catTitleFont)) catTitleFont = 21.6;
+catTitleFont = Math.max(16, Math.min(30, Number(catTitleFont)));
+root.style.setProperty('--cat-section-title-font', catTitleFont + 'px');
+
+const addonVarMap = {
+  '--addon-card-bg': 'addon_card_bg',
+  '--addon-card-border': 'addon_card_border',
+  '--addon-card-accent': 'addon_card_accent',
+  '--addon-price-pill-bg': 'addon_price_pill_bg',
+  '--addon-price-pill-text': 'addon_price_pill_text',
+  '--addon-price-pill-border': 'addon_price_pill_border'
+};
+let addonThemeOn = false;
+Object.keys(addonVarMap).forEach(prop => {
+  const c = getConfiguredUiColorKey(addonVarMap[prop]);
+  if(c){ root.style.setProperty(prop, c); addonThemeOn = true; }
+  else root.style.removeProperty(prop);
+});
+try{ window.__ADDON_CARD_THEME_ON__ = addonThemeOn; }catch(e){}
 
 const sgSize = getSeriesGiftBadgeSizePx();
 root.style.setProperty('--series-gift-badge-size', sgSize + 'px');
@@ -8733,7 +8805,7 @@ function __getCoreParseWorker(){
             if(key){
               const kk = String(key||'').replace(/^ui\|/,'');
               const preferAmt = /^promo_marquee_(reduce_)?speed_px$/.test(kk) ||
-                /(size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
+                /(_px|font_px|size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
               rules.uiCfg[key] = (preferAmt && hasAmt) ? amt : txt;
             }
           }
@@ -8935,7 +9007,7 @@ function parseCoreOnMain(pText, rText){
       if(key){
         const kk = String(key||"").replace(/^ui\|/,"");
         const preferAmt = /^promo_marquee_(reduce_)?speed_px$/.test(kk) ||
-          /(size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
+          /(_px|font_px|size_px|top_px|right_px|radius_px|opacity|duration_ms|_ms|_sec|speed_px)$/i.test(kk);
         rules.uiCfg[key] = (preferAmt && hasAmt) ? amt : txt;
       }
     }
@@ -9915,9 +9987,10 @@ const L_bundleSel = getBadgeName('bundle_select','優惠組合');
 const L_setBundle = getBadgeName('set_bundle','精選套組');
 const L_order = getBadgeName('order_discount','訂單折扣');
 const L_tier  = getBadgeName('tier','多件優惠');
+const isAddonProduct = String(p.category||'').includes("加價購");
 
     let badges = "";
-    if(p.category.includes("加價購")) badges += `<span class="badge bg-red promo-badge" data-promo="addon">${L_addon}</span>`;
+    if(isAddonProduct) badges += `<span class="badge bg-red promo-badge" data-promo="addon">${L_addon}</span>`;
     if(RULES && Array.isArray(RULES.mixpay) && RULES.mixpay.some(r => (r && r.zone && String(p.category||'').includes(String(r.zone||''))) || (r && Array.isArray(r.codes) && r.codes.includes(String(p.code||'').trim())))) badges += `<span class="badge bg-gold promo-badge" data-promo="mixpay" data-code="${String(p.code||'').replace(/"/g,'&quot;')}" data-zone="${String(p.category||'').replace(/"/g,'&quot;')}">${L_mixpay}</span>`;
     if(RULES.bogo.some(b => b.code === p.code)) badges += `<span class="badge bg-blue promo-badge" data-promo="bogo" data-code="${p.code}">${L_bogo}</span>`;
     if(p.name.includes("任選")) badges += `<span class="badge bg-gold promo-badge" data-promo="bundle_select">${L_bundleSel}</span>`;
@@ -9952,11 +10025,13 @@ const L_tier  = getBadgeName('tier','多件優惠');
     let displayName = p.name;
     if (highlightQuery) { displayName = highlightText(p.name, highlightQuery); }
     
-    const card = document.createElement("div"); card.className = "p-card"; card.id = `p-${p._id}`;
+    const card = document.createElement("div");
+    card.className = "p-card" + (isAddonProduct ? " p-card-addon" : "") + ((isAddonProduct && hasAddonCardThemeConfig()) ? " addon-themed" : "");
+    card.id = `p-${p._id}`;
     const pricePack = (function(){
       let priceHtml = '';
       let pillHtml = '';
-      if(String(p.category||"").includes("加價購")){
+      if(isAddonProduct){
         const fr = getFlatPriceRule(p.code, p.category);
         const ap = (fr && fr.unit > 0) ? Number(fr.unit).toLocaleString() : "";
         priceHtml = '<span class="p-price strike">$' + p.price.toLocaleString() + '</span>';
