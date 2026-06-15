@@ -4212,6 +4212,57 @@ body.cfg-error .btn-bundle{
   padding: 2px 0;
   word-break: break-word;
 }
+
+.pi-section.has-media{
+  display:flex;
+  align-items:flex-start;
+  gap: 12px;
+}
+.pi-sec-main{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pi-sec-media{
+  flex: 0 0 58px;
+  width: 58px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding-top: 2px;
+}
+.pi-sec-media-img{
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(226,232,240,0.92);
+  box-shadow: 0 7px 16px rgba(15,23,42,0.07);
+  padding: 4px;
+  mix-blend-mode: multiply;
+}
+.pi-section.gift .pi-sec-media-img{
+  background: rgba(255,255,255,0.78);
+  border-color: rgba(251,146,60,0.18);
+}
+.pi-sec-media-price{
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1;
+  font-weight: 950;
+  color:#be185d;
+  letter-spacing: -.01em;
+  transform: translateX(3px);
+  white-space: nowrap;
+}
+.pi-section.bundle .pi-sec-media-price{ color:#1d4ed8; }
+@media (max-width: 380px){
+  .pi-section.has-media{ gap: 9px; }
+  .pi-sec-media{ flex-basis: 53px; width: 53px; }
+  .pi-sec-media-img{ width:46px; height:46px; border-radius: 13px; }
+  .pi-sec-media-price{ font-size: 11px; }
+}
 .pi-empty{
   padding: 14px 12px;
   text-align:center;
@@ -4611,7 +4662,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_41_product_info_links_noscrolljump";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_41_3_product_info_media";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -11831,6 +11882,40 @@ function findSameProductAddonItem(p){
     }) || null;
   }catch(e){ return null; }
 }
+
+function getProductInfoProductPriceValue(prod){
+  try{
+    if(!prod) return null;
+    const fr = (typeof getFlatPriceRule === 'function') ? getFlatPriceRule(prod.code, prod.category) : null;
+    if(fr && Number(fr.unit) > 0) return Math.round(Number(fr.unit));
+  }catch(e){}
+  try{
+    const br = (RULES && Array.isArray(RULES.bundle)) ? RULES.bundle.find(r => r && String(r.code||'') === String(prod.code||'') && isFinite(r.price) && Number(r.price) > 0) : null;
+    if(br && Number(br.price) > 0) return Math.round(Number(br.price));
+  }catch(e){}
+  try{
+    const base = Number(prod && prod.price);
+    if(Number.isFinite(base) && base > 0) return Math.round(base);
+  }catch(e){}
+  return null;
+}
+function formatProductInfoPrice(prod){
+  try{
+    const v = getProductInfoProductPriceValue(prod);
+    return (v && v > 0) ? `$${Number(v).toLocaleString('zh-TW')}` : '';
+  }catch(e){ return ''; }
+}
+function buildProductInfoMedia(meta){
+  try{
+    const m = meta || {};
+    const photo = String(m.photo || '').trim();
+    if(!photo) return '';
+    const name = String(m.name || '').trim() || '關聯圖片';
+    const price = String(m.price || '').trim();
+    const src = escapeHtml(photo).replace(/"/g,'&quot;');
+    return `<div class="pi-sec-media" aria-hidden="true"><img class="pi-sec-media-img" src="${src}" alt="${escapeHtml(name)}" loading="lazy">${price?`<div class="pi-sec-media-price">${escapeHtml(price)}</div>`:''}</div>`;
+  }catch(e){ return ''; }
+}
 function getProductInfoAddonMeta(p){
   try{
     const cat = String(p && p.category || '');
@@ -11856,7 +11941,12 @@ function getProductInfoAddonMeta(p){
         lines: ['此商品另有加價購優惠方案'],
         action: 'addon-product',
         targetPid: sameAddon._id,
-        toast: '已帶你到加價購優惠品項'
+        toast: '已帶你到加價購優惠品項',
+        media: {
+          photo: sameAddon.photo || '',
+          name: sameAddon.name || '',
+          price: formatProductInfoPrice(sameAddon)
+        }
       };
     }
 
@@ -11911,7 +12001,17 @@ function getProductInfoBundleOfferMeta(p){
     const line = hits.length === 1
       ? `此商品亦包含於「${first.name}」`
       : `此商品亦包含於「${first.name}」等 ${hits.length} 項組合`;
-    return { lines:[line], action:'bundle-product', targetPid:first._id, toast:'已帶你到商品組優惠' };
+    return {
+      lines:[line],
+      action:'bundle-product',
+      targetPid:first._id,
+      toast:'已帶你到商品組優惠',
+      media: {
+        photo: first.photo || '',
+        name: first.name || '',
+        price: formatProductInfoPrice(first)
+      }
+    };
   }catch(e){ return null; }
 }
 function buildProductInfoBundleLines(p){
@@ -11939,11 +12039,12 @@ function renderProductInfoSection(kind, icon, title, lines, opts){
   if(!arr.length) return '';
   const o = opts || {};
   const isLink = !!o.action;
+  const mediaHtml = buildProductInfoMedia(o.media);
   const attrs = isLink
     ? ` data-pi-action="${escapeHtml(o.action)}"${o.targetPid!=null?` data-target-pid="${escapeHtml(o.targetPid)}"`:''}${o.targetZone?` data-target-zone="${escapeHtml(o.targetZone)}"`:''}${o.toast?` data-toast="${escapeHtml(o.toast)}"`:''} role="button" tabindex="0" aria-label="${escapeHtml(title)}，點擊前往"`
     : '';
   const arrow = isLink ? '<span class="pi-arrow" aria-hidden="true">›</span>' : '';
-  return `<div class="pi-section ${kind}${isLink?' pi-link':''}"${attrs}><div class="pi-sec-title"><span class="material-icons-round">${icon}</span>${escapeHtml(title)}${arrow}</div><div class="pi-sec-lines">${arr.map(x=>`<div class="pi-sec-line">${escapeHtml(x)}</div>`).join('')}</div></div>`;
+  return `<div class="pi-section ${kind}${isLink?' pi-link':''}${mediaHtml?' has-media':''}"${attrs}><div class="pi-sec-main"><div class="pi-sec-title"><span class="material-icons-round">${icon}</span>${escapeHtml(title)}${arrow}</div><div class="pi-sec-lines">${arr.map(x=>`<div class="pi-sec-line">${escapeHtml(x)}</div>`).join('')}</div></div>${mediaHtml}</div>`;
 }
 function renderProductInfoSheet(p){
   const body = document.getElementById('productInfoBody');
@@ -11960,7 +12061,7 @@ function renderProductInfoSheet(p){
   const bundleLines = buildProductInfoBundleLines(p);
   const sections = [
     renderProductInfoSection('promo', 'local_offer', '分類促銷', promoLines),
-    renderProductInfoSection('gift', 'redeem', '系列贈品', giftLines),
+    renderProductInfoSection('gift', 'redeem', '系列贈品', giftLines, sg && sg.photo ? { media: { photo: sg.photo, name: sg.name || '系列贈品' } } : null),
     addonMeta ? renderProductInfoSection('addon', 'add_shopping_cart', '加價購說明', addonMeta.lines, addonMeta) : '',
     bundleOfferMeta ? renderProductInfoSection('bundle', 'inventory_2', '商品組優惠', bundleOfferMeta.lines, bundleOfferMeta) : '',
     renderProductInfoSection('bundle', 'inventory_2', '商品組成', bundleLines),
