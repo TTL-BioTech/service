@@ -4066,7 +4066,6 @@ body.cfg-error .btn-bundle{
   align-items: flex-end;
   justify-content: center;
   padding: 0;
-  overscroll-behavior: contain;
 }
 .pi-overlay.open{
   opacity: 1;
@@ -4085,7 +4084,6 @@ body.cfg-error .btn-bundle{
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0,0,0,0.06);
-  touch-action: pan-y;
 }
 .pi-overlay.open .pi-sheet{ transform: translateY(0); }
 .pi-handle{
@@ -4166,7 +4164,7 @@ body.cfg-error .btn-bundle{
 }
 .pi-slogan{
   margin-top: 8px;
-  font-size: var(--product-info-slogan-font, 14px);
+  font-size: 13px;
   font-weight: 850;
   color:#0f766e;
   line-height:1.42;
@@ -4195,7 +4193,7 @@ body.cfg-error .btn-bundle{
   display:flex;
   align-items:center;
   gap:7px;
-  font-size: var(--product-info-section-title-font, 13px);
+  font-size: 12px;
   font-weight: 950;
   color:#334155;
   margin-bottom: 7px;
@@ -4207,28 +4205,13 @@ body.cfg-error .btn-bundle{
 .pi-section.addon .pi-sec-title{ color:#be185d; }
 .pi-section.bundle .pi-sec-title{ color:#1d4ed8; }
 .pi-sec-line{
-  font-size: var(--product-info-section-line-font, 14px);
+  font-size: 13px;
   font-weight: 720;
   color:#475569;
   line-height:1.46;
   padding: 2px 0;
   word-break: break-word;
 }
-.pi-section.pi-link{
-  cursor: pointer;
-  position: relative;
-  transition: transform .12s ease, filter .16s ease, box-shadow .16s ease;
-}
-.pi-section.pi-link:active{ transform: scale(.992); filter: brightness(.985); }
-.pi-section.pi-link .pi-sec-title{ padding-right: 18px; }
-.pi-section.pi-link .pi-arrow{
-  margin-left: auto;
-  font-size: 22px;
-  line-height: 1;
-  color: rgba(71,85,105,.62);
-  font-weight: 900;
-}
-.pi-section.pi-link:hover{ box-shadow: 0 8px 18px rgba(15,23,42,.055); }
 .pi-empty{
   padding: 14px 12px;
   text-align:center;
@@ -12036,8 +12019,9 @@ function handleProductInfoAction(el){
     const action = String(el.dataset.piAction || '').trim();
     const toast = String(el.dataset.toast || '').trim();
     if(action === 'addon-product' || action === 'bundle-product'){
-      const pid = Number(el.dataset.targetPid || 0);
-      if(!pid) return;
+      const rawPid = String(el.dataset.targetPid || '').trim();
+      const pid = Number(rawPid);
+      if(!rawPid || !Number.isFinite(pid)) return;
       closeProductInfoThenNavigate(()=>{
         try{ jumpToProduct(pid, 'productInfo'); }catch(e){}
         if(toast) try{ showToast(toast, 'info', getNavToastDurationMs('category')); }catch(e){}
@@ -12130,11 +12114,13 @@ document.addEventListener('click', function productInfoSectionActionClick(e){
   try{
     const el = e.target && e.target.closest ? e.target.closest('.pi-section[data-pi-action]') : null;
     if(!el) return;
+    // Capture phase is required because .pi-sheet intentionally stops bubbling
+    // to prevent overlay-close; without capture, link sections appear clickable but do nothing.
     e.preventDefault();
     e.stopPropagation();
     handleProductInfoAction(el);
   }catch(ex){}
-}, false);
+}, true);
 document.addEventListener('keydown', function productInfoSectionActionKey(e){
   try{
     if(e.key !== 'Enter' && e.key !== ' ') return;
