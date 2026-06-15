@@ -4223,8 +4223,8 @@ body.cfg-error .btn-bundle{
   min-width: 0;
 }
 .pi-sec-media{
-  flex: 0 0 58px;
-  width: 58px;
+  flex: 0 0 calc(var(--product-info-media-img-size, 50px) + 8px);
+  width: calc(var(--product-info-media-img-size, 50px) + 8px);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -4232,23 +4232,23 @@ body.cfg-error .btn-bundle{
   padding-top: 2px;
 }
 .pi-sec-media-img{
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
+  width: var(--product-info-media-img-size, 50px);
+  height: var(--product-info-media-img-size, 50px);
+  border-radius: var(--product-info-media-radius, 14px);
   object-fit: contain;
-  background: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,var(--product-info-media-bg-opacity, 0.92));
   border: 1px solid rgba(226,232,240,0.92);
   box-shadow: 0 7px 16px rgba(15,23,42,0.07);
   padding: 4px;
   mix-blend-mode: multiply;
 }
 .pi-section.gift .pi-sec-media-img{
-  background: rgba(255,255,255,0.78);
+  background: rgba(255,255,255,var(--product-info-gift-media-bg-opacity, 0.78));
   border-color: rgba(251,146,60,0.18);
 }
 .pi-sec-media-price{
   margin-top: 3px;
-  font-size: 11.5px;
+  font-size: var(--product-info-media-price-font, 11.5px);
   line-height: 1;
   font-weight: 950;
   color:#be185d;
@@ -4259,9 +4259,15 @@ body.cfg-error .btn-bundle{
 .pi-section.bundle .pi-sec-media-price{ color:#1d4ed8; }
 @media (max-width: 380px){
   .pi-section.has-media{ gap: 9px; }
-  .pi-sec-media{ flex-basis: 53px; width: 53px; }
-  .pi-sec-media-img{ width:46px; height:46px; border-radius: 13px; }
-  .pi-sec-media-price{ font-size: 11px; }
+  .pi-sec-media{
+    flex-basis: calc(var(--product-info-media-img-size, 50px) + 3px);
+    width: calc(var(--product-info-media-img-size, 50px) + 3px);
+  }
+  .pi-sec-media-img{
+    width: calc(var(--product-info-media-img-size, 50px) - 4px);
+    height: calc(var(--product-info-media-img-size, 50px) - 4px);
+    border-radius: max(8px, calc(var(--product-info-media-radius, 14px) - 1px));
+  }
 }
 .pi-empty{
   padding: 14px 12px;
@@ -4662,7 +4668,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_41_3_product_info_media";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_41_4_product_info_media_sheet";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6291,6 +6297,29 @@ piSecLineFont = Math.max(12, Math.min(17, Number(piSecLineFont)||14));
 root.style.setProperty('--product-info-slogan-font', piSloganFont + 'px');
 root.style.setProperty('--product-info-section-title-font', piSecTitleFont + 'px');
 root.style.setProperty('--product-info-section-line-font', piSecLineFont + 'px');
+
+// V7.41.4: product info right-side media (small image / price / white base) sheet-configurable
+function normalizeProductInfoOpacity(v, fallback){
+  const n = Number(v);
+  if(!Number.isFinite(n)) return fallback;
+  const x = (n > 1 && n <= 100) ? n / 100 : n;
+  return Math.max(0, Math.min(1, x));
+}
+let piMediaImgSize = uiGetNumber('ui|product_info_media_img_px', uiGetNumber('product_info_media_img_px', 50));
+let piMediaPriceFont = uiGetNumber('ui|product_info_media_price_font_px', uiGetNumber('product_info_media_price_font_px', 11.5));
+let piMediaRadius = uiGetNumber('ui|product_info_media_radius_px', uiGetNumber('product_info_media_radius_px', 14));
+let piMediaBgOpacity = uiGetNumber('ui|product_info_media_bg_opacity', uiGetNumber('product_info_media_bg_opacity', 0.92));
+let piGiftMediaBgOpacity = uiGetNumber('ui|product_info_gift_media_bg_opacity', uiGetNumber('product_info_gift_media_bg_opacity', 0.78));
+piMediaImgSize = Math.max(34, Math.min(76, Number(piMediaImgSize)||50));
+piMediaPriceFont = Math.max(9, Math.min(16, Number(piMediaPriceFont)||11.5));
+piMediaRadius = Math.max(6, Math.min(999, Number(piMediaRadius)||14));
+piMediaBgOpacity = normalizeProductInfoOpacity(piMediaBgOpacity, 0.92);
+piGiftMediaBgOpacity = normalizeProductInfoOpacity(piGiftMediaBgOpacity, 0.78);
+root.style.setProperty('--product-info-media-img-size', piMediaImgSize + 'px');
+root.style.setProperty('--product-info-media-price-font', piMediaPriceFont + 'px');
+root.style.setProperty('--product-info-media-radius', piMediaRadius + 'px');
+root.style.setProperty('--product-info-media-bg-opacity', String(piMediaBgOpacity));
+root.style.setProperty('--product-info-gift-media-bg-opacity', String(piGiftMediaBgOpacity));
 
 const addonVarMap = {
   '--addon-card-bg': 'addon_card_bg',
