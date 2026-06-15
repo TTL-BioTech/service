@@ -4164,7 +4164,7 @@ body.cfg-error .btn-bundle{
 }
 .pi-slogan{
   margin-top: 8px;
-  font-size: 13px;
+  font-size: var(--product-info-slogan-font, 14px);
   font-weight: 850;
   color:#0f766e;
   line-height:1.42;
@@ -4193,7 +4193,7 @@ body.cfg-error .btn-bundle{
   display:flex;
   align-items:center;
   gap:7px;
-  font-size: 12px;
+  font-size: var(--product-info-section-title-font, 13px);
   font-weight: 950;
   color:#334155;
   margin-bottom: 7px;
@@ -4205,7 +4205,7 @@ body.cfg-error .btn-bundle{
 .pi-section.addon .pi-sec-title{ color:#be185d; }
 .pi-section.bundle .pi-sec-title{ color:#1d4ed8; }
 .pi-sec-line{
-  font-size: 13px;
+  font-size: var(--product-info-section-line-font, 14px);
   font-weight: 720;
   color:#475569;
   line-height:1.46;
@@ -6234,9 +6234,9 @@ root.style.setProperty('--cat-section-title-font', catTitleFont + 'px');
 let piSloganFont = uiGetNumber('ui|product_info_slogan_font_px', uiGetNumber('product_info_slogan_font_px', 14));
 let piSecTitleFont = uiGetNumber('ui|product_info_section_title_font_px', uiGetNumber('product_info_section_title_font_px', 13));
 let piSecLineFont = uiGetNumber('ui|product_info_section_line_font_px', uiGetNumber('product_info_section_line_font_px', 14));
-piSloganFont = Math.max(12, Math.min(16, Number(piSloganFont)||14));
-piSecTitleFont = Math.max(11, Math.min(15, Number(piSecTitleFont)||13));
-piSecLineFont = Math.max(12, Math.min(16, Number(piSecLineFont)||14));
+piSloganFont = Math.max(12, Math.min(17, Number(piSloganFont)||14));
+piSecTitleFont = Math.max(11, Math.min(16, Number(piSecTitleFont)||13));
+piSecLineFont = Math.max(12, Math.min(17, Number(piSecLineFont)||14));
 root.style.setProperty('--product-info-slogan-font', piSloganFont + 'px');
 root.style.setProperty('--product-info-section-title-font', piSecTitleFont + 'px');
 root.style.setProperty('--product-info-section-line-font', piSecLineFont + 'px');
