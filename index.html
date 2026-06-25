@@ -10431,7 +10431,10 @@ const isAddonProduct = String(p.category||'').includes("加價購");
       const hasSel = SELECTED_BUNDLE.has(p._id);
       actionBtn = `<div class="btn-bundle" onclick="openBundle(${p._id})">${hasSel ? "內容已選 ✓" : "選擇內容物"}</div>`;
     }
-    const lazyImgAttr = (window.FF && FF.has && FF.has('p3_lazyimg')) ? 'loading="lazy" decoding="async"' : '';
+    // V7.42.3: iOS Safari test A — product main images do not use lazy/async decode.
+    // This isolates whether Safari flicker is caused by lazy decoding after VList rebuilds img nodes.
+    const isIosSafariImgSafe = !!(document.documentElement && document.documentElement.classList && document.documentElement.classList.contains('is-ios-safari'));
+    const lazyImgAttr = (!isIosSafariImgSafe && window.FF && FF.has && FF.has('p3_lazyimg')) ? 'loading="lazy" decoding="async"' : '';
     let imgHtml = `<div class="p-no-img"><span class="material-icons-round" style="font-size:32px">image_not_supported</span>無圖片</div>`;
     if(p.photo && p.photo.length > 5) {
       const photoSrc = String(p.photo||'').trim();
