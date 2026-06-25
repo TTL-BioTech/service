@@ -7,6 +7,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+(function(){
+  try{
+    var ua = navigator.userAgent || '';
+    var platform = navigator.platform || '';
+    var isIOS = /iP(ad|hone|od)/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isWebKit = /WebKit/i.test(ua);
+    var isAltIOSBrowser = /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+    if(isIOS && isWebKit && !isAltIOSBrowser){
+      document.documentElement.classList.add('is-ios-safari');
+    }
+  }catch(e){}
+})();
+</script>
 
 <style>
 /* --- CORE VARIABLES --- */
@@ -57,6 +71,21 @@ body.modal-open { overflow: hidden; height: 100vh; position: fixed; width: 100%;
 }
 .p-img-box img.loaded { opacity: 1; }
 .p-img-box img[data-img-cached="1"] { transition: none !important; }
+
+/* --- V7.42.2: iOS Safari product main image flicker safe mode ---
+   Safari may re-composite opacity fade + mix-blend-mode during scroll.
+   Scope is intentionally limited to product main images only. */
+html.is-ios-safari .p-img-box img{
+  transition: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+html.is-ios-safari .p-img-box img.loaded,
+html.is-ios-safari .p-img-box img[data-img-cached="1"]{
+  transition: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
 
 /* --- FIX: WELCOME & LOADER --- */
 #welcome-overlay, #loader {
