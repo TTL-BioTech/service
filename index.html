@@ -4324,6 +4324,32 @@ body.cfg-error .btn-bundle{
   .pi-body{ padding-left: 15px; padding-right: 15px; }
 }
 
+
+
+/* ==========================================================
+   V7.42.1 iOS Safari：優惠地圖入口按鈕色調修正
+   - 保留 pm-attn 首次提醒狀態與 pulse 動效
+   - 但不再讓 pm-attn 的舊淡色背景覆蓋跑馬燈右下角入口
+   ========================================================== */
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta,
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta.pm-attn{
+  background: linear-gradient(135deg, #0d9488, #0f766e) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: rgba(255,255,255,0.30) !important;
+  box-shadow: 0 10px 22px rgba(13,148,136,0.24), inset 0 1px 1px rgba(255,255,255,0.36) !important;
+}
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta.pm-attn{
+  box-shadow: 0 12px 26px rgba(13,148,136,0.34), inset 0 1px 1px rgba(255,255,255,0.42) !important;
+}
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta .cta-icon,
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta .cta-text,
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta.pm-attn .cta-icon,
+#promoMarqueeSlot #promoMapCtaBtn.pm-map-floating.sys-ann-cta.pm-attn .cta-text{
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 </style>
 </head>
 <body>
@@ -4669,7 +4695,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_cart_gift_visual_tune";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_1_promo_map_cta_iosfix";
 window.BUILD_ID = BUILD_ID;
 
 
