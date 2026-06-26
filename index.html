@@ -4725,7 +4725,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_1_promo_map_cta_iosfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_4_ranking_sold_tag_sheet_toggle";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6274,6 +6274,19 @@ function getMilestoneHintDurationMs(){
 }
 function isGiftImageZoomBadgeEnabled(){
   return uiGetBool('ui|gift_image_zoom_badge_enabled', true);
+}
+
+// V7.42.4: Ranking sold-count tag can be toggled from SHEET.
+// rules sheet: rule_type=ui_config, zone=ui|ranking_sold_tag_enabled, ui_text=開啟/關閉 (or 1/0, true/false).
+function isRankingSoldTagEnabled(){
+  try{
+    const keys = ['ui|ranking_sold_tag_enabled', 'ranking_sold_tag_enabled', 'ui|rank_sold_tag_enabled', 'rank_sold_tag_enabled'];
+    for(const k of keys){
+      const raw = uiGet(k, '');
+      if(raw != null && String(raw).trim() !== '') return uiGetBool(k, true);
+    }
+    return true;
+  }catch(e){ return true; }
 }
 
 function getConfiguredUiColorKey(key){
@@ -9598,6 +9611,7 @@ function renderRanking(type) {
   const list = document.getElementById("rankList");
   list.innerHTML = "";
   const data = RANKINGS[type] || [];
+  const showSoldTag = isRankingSoldTagEnabled();
   data.forEach((p, idx) => {
     const card = document.createElement("div");
     card.className = "r-card";
@@ -9605,7 +9619,8 @@ function renderRanking(type) {
     card.onclick = () => handleRankingClick(p);
     let imgHtml = `<div class="p-no-img" style="height:100%;justify-content:center;font-size:10px">無圖</div>`;
     if(p.photo && p.photo.length > 5) imgHtml = `<img src="${p.photo}" class="r-img" loading="lazy" decoding="async" draggable="false">`;
-    card.innerHTML = `<div class="r-img-wrap"><div class="r-badge">${idx + 1}</div><div class="r-sold-tag">售${p.sold.toLocaleString()}件</div>${imgHtml}</div><div class="r-name">${p.name}</div>`;
+    const soldTagHtml = showSoldTag ? `<div class="r-sold-tag">售${p.sold.toLocaleString()}件</div>` : '';
+    card.innerHTML = `<div class="r-img-wrap"><div class="r-badge">${idx + 1}</div>${soldTagHtml}${imgHtml}</div><div class="r-name">${p.name}</div>`;
     list.appendChild(card);
   });
 }
