@@ -96,6 +96,53 @@ html.is-ios-safari .p-img-box img[data-img-cached="1"]{
 #loader { z-index: 9990; background: #f4f6f8; align-items: flex-start; padding-top: 120px; transition: opacity 0.3s ease; }
 #welcome-overlay.fade-out { opacity: 0; pointer-events: none; }
 
+/* V7.42.5: Order closed mode (Sheet toggle). Keep existing ordering flow intact when enabled. */
+body.order-closed-mode{
+  overflow:auto !important;
+}
+body.order-closed-mode header,
+body.order-closed-mode #ranking-section,
+body.order-closed-mode #promoMarqueeSlot,
+body.order-closed-mode #systemAnnouncementSlot,
+body.order-closed-mode main#list,
+body.order-closed-mode #empty-state,
+body.order-closed-mode #float-bar,
+body.order-closed-mode #back-to-top,
+body.order-closed-mode #starHeroOverlay,
+body.order-closed-mode #drawer,
+body.order-closed-mode #bundleModal,
+body.order-closed-mode #giftModal,
+body.order-closed-mode #productInfoOverlay,
+body.order-closed-mode #giftImagePreviewModal{
+  display:none !important;
+}
+body.order-closed-mode #welcome-overlay{
+  display:flex !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  background: linear-gradient(145deg, rgba(236,253,245,.96), rgba(240,249,255,.94));
+  backdrop-filter: blur(10px);
+}
+body.order-closed-mode #welcome-overlay.fade-out{
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+.order-closed-card .w-logo{
+  width:64px; height:64px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:22px; background:rgba(0,137,123,.10); color:#00897b !important; font-size:36px !important;
+  margin-bottom:14px;
+}
+.order-closed-card .w-title{
+  font-size:24px; line-height:1.35; color:#17443f;
+}
+.order-closed-card .w-sub{
+  margin-top:14px; line-height:1.8; color:#49625d; font-size:15px;
+}
+.order-closed-card .closed-note{
+  margin-top:18px; padding:12px 14px; border-radius:18px; background:rgba(0,137,123,.08);
+  color:#00695c; font-size:13px; line-height:1.65; font-weight:650;
+}
+
 /* --- LAYOUT --- */
 main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; width: 100%; 
@@ -4725,7 +4772,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_4_ranking_sold_tag_sheet_toggle";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_5_order_closed_screen_sheet_toggle";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5232,6 +5279,7 @@ function cleanupUI() {
 }
 
 window.closeWelcome = function() {
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   const el = document.getElementById('welcome-overlay');
   if(!el) return;
   el.classList.add('fade-out');
@@ -5244,6 +5292,7 @@ window.closeWelcome = function() {
 
 window.safeOpenCart = function(ev) {
   try{ if(ev && ev.stopPropagation) ev.stopPropagation(); }catch(e){}
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   if(!CART || CART.length === 0) {
     showToast("購物車還是空的喔！趕快去選購吧", "warn");
     return;
@@ -5339,6 +5388,7 @@ function setCheckoutStage(stage){
 }
 function handleCheckoutSubmit(){
   try{
+    if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
     if(__CHECKOUT_STAGE__ !== 2){
       setCheckoutStage(2);
       const details = document.getElementById('checkoutDetails');
@@ -5354,6 +5404,7 @@ function handleCheckoutSubmit(){
 }
 
 window.openCart = function() {
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   setCheckoutStage(1);
   document.getElementById("drawer").classList.add("open"); 
   document.getElementById("float-bar").classList.add("hidden"); 
@@ -5713,6 +5764,7 @@ window.toggleSum = function() {
 window.updateQty = function(btnEl, pid, delta) {
   const p = PRODUCTS.find(x => x._id === pid);
   if(!p) return;
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
 
   // Strict mode: if config isn't ready, do not allow cart operations
   if(typeof CONFIG_READY !== 'undefined' && !CONFIG_READY) {
@@ -6287,6 +6339,147 @@ function isRankingSoldTagEnabled(){
     }
     return true;
   }catch(e){ return true; }
+}
+
+
+// V7.42.5: Sheet-controlled order system open/closed mode.
+// rules sheet: rule_type=ui_config, zone=ui|order_system_enabled, ui_text=開啟/關閉.
+window.ORDER_SYSTEM_CLOSED = false;
+function parseSheetBoolValue_(value, fallback=true){
+  try{
+    if(value == null || String(value).trim() === '') return !!fallback;
+    const s = String(value).trim().toLowerCase();
+    if(['1','true','yes','y','on','開','開啟','是','啟用'].includes(s)) return true;
+    if(['0','false','no','n','off','關','關閉','否','停用','截止','暫停'].includes(s)) return false;
+    const n = Number(s);
+    if(isFinite(n)) return n !== 0;
+    return !!fallback;
+  }catch(e){ return !!fallback; }
+}
+function isOrderSystemEnabled(){
+  try{
+    const keys = ['ui|order_system_enabled', 'order_system_enabled', 'ui|ordering_enabled', 'ordering_enabled'];
+    for(const k of keys){
+      const raw = uiGet(k, '');
+      if(raw != null && String(raw).trim() !== '') return uiGetBool(k, true);
+    }
+    return true;
+  }catch(e){ return true; }
+}
+function getOrderClosedCopy(key, fallback){
+  try{
+    const k = String(key||'').trim();
+    return uiGet('ui|order_closed_' + k, uiGet('order_closed_' + k, fallback));
+  }catch(e){ return String(fallback||''); }
+}
+function getOrderClosedMessage(){
+  return getOrderClosedCopy('toast', getOrderClosedCopy('subtitle', '本次預購活動已截止，感謝您的支持。'));
+}
+function showOrderClosedNotice(){
+  try{ showToast(getOrderClosedMessage(), 'info', 3600); }catch(e){}
+}
+function isOrderSystemClosed(){
+  try{ return !!window.ORDER_SYSTEM_CLOSED || !isOrderSystemEnabled(); }catch(e){ return !!window.ORDER_SYSTEM_CLOSED; }
+}
+function renderOrderClosedScreen(){
+  try{
+    window.ORDER_SYSTEM_CLOSED = true;
+    document.body.classList.add('order-closed-mode');
+    const overlay = document.getElementById('welcome-overlay');
+    const card = overlay ? overlay.querySelector('.balloon-card') : null;
+    const title = getOrderClosedCopy('title', '感謝支持本預購活動');
+    const subtitle = getOrderClosedCopy('subtitle', '本次預購活動已截止，感謝各位同仁的熱情參與與支持。');
+    const body = getOrderClosedCopy('body', '訂單資料將依活動公告進行統計與後續處理，如有相關問題請洽承辦單位。');
+    const note = getOrderClosedCopy('note', '台酒生技感謝您的支持與參與');
+    if(card){
+      card.classList.add('order-closed-card');
+      card.innerHTML = `
+        <span class="material-icons-round w-logo">volunteer_activism</span>
+        <div class="w-title">${escapeHtml(title)}</div>
+        <div class="w-sub">${escapeHtml(subtitle).replace(/\n/g,'<br>')}</div>
+        <div class="w-sub">${escapeHtml(body).replace(/\n/g,'<br>')}</div>
+        ${note ? `<div class="closed-note">${escapeHtml(note).replace(/\n/g,'<br>')}</div>` : ''}
+      `;
+    }
+    if(overlay){
+      overlay.classList.remove('fade-out');
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden','false');
+    }
+    try{ document.getElementById('loader')?.remove(); }catch(e){}
+    try{ document.getElementById('float-bar')?.classList.remove('show'); }catch(e){}
+    try{ closeCart && closeCart(); }catch(e){}
+  }catch(e){ console.warn('[order-closed] render failed', e); }
+}
+function setOrderSystemModeFromSheet(){
+  try{
+    if(isOrderSystemEnabled()){
+      window.ORDER_SYSTEM_CLOSED = false;
+      document.body.classList.remove('order-closed-mode');
+      return false;
+    }
+    renderOrderClosedScreen();
+    return true;
+  }catch(e){ return false; }
+}
+function extractOrderSystemEnabledFromRulesCsv(csvText){
+  try{
+    if(!csvText || !window.Papa) return null;
+    const rows = Papa.parse(csvText, { header:true, skipEmptyLines:true }).data || [];
+    const keys = ['ui|order_system_enabled', 'order_system_enabled', 'ui|ordering_enabled', 'ordering_enabled'];
+    for(const row of rows){
+      const pick = (k) => {
+        const kk = String(k||'').replace(/^\uFEFF/,'').trim().toLowerCase();
+        const key = Object.keys(row || {}).find(x => String(x||'').replace(/^\uFEFF/,'').trim().toLowerCase() === kk);
+        return (key ? row[key] : '') || '';
+      };
+      const type = String(pick('rule_type')||'').toLowerCase();
+      if(!type.includes('ui_config')) continue;
+      const zone = String(pick('zone')||'').trim();
+      if(!keys.includes(zone)) continue;
+      const txt = String(pick('ui_text') || pick('text') || pick('value') || pick('note') || pick('notes') || pick('ui_note') || pick('memo') || pick('remark') || pick('description') || pick('desc') || '').trim();
+      const rawAmt = String(pick('threshold_amount')||'').trim();
+      return parseSheetBoolValue_(txt || rawAmt, true);
+    }
+    return null;
+  }catch(e){ return null; }
+}
+async function refreshOrderSystemClosedFlagOnce(){
+  try{
+    const txt = await fetchCsvTextSmart(SHEET_R, '訂購開關', { optional:true, minLength:20, timeoutMs:6500, __noCache:true });
+    const enabled = extractOrderSystemEnabledFromRulesCsv(txt);
+    if(enabled === false){
+      renderOrderClosedScreen();
+      return false;
+    }
+    if(enabled === true && !window.ORDER_SYSTEM_CLOSED) return true;
+    return !isOrderSystemClosed();
+  }catch(e){
+    console.warn('[order-closed] refresh flag failed; keep current mode', e);
+    return !isOrderSystemClosed();
+  }
+}
+async function ensureOrderSystemOpenForSubmit(){
+  if(isOrderSystemClosed()){
+    renderOrderClosedScreen();
+    showOrderClosedNotice();
+    return false;
+  }
+  const ok = await refreshOrderSystemClosedFlagOnce();
+  if(!ok){
+    renderOrderClosedScreen();
+    showOrderClosedNotice();
+    return false;
+  }
+  return true;
+}
+function guardOrderSystemOpenForAction(){
+  if(isOrderSystemClosed()){
+    renderOrderClosedScreen();
+    showOrderClosedNotice();
+    return false;
+  }
+  return true;
 }
 
 function getConfiguredUiColorKey(key){
@@ -9527,6 +9720,17 @@ if (rankText) {
 
     try{ applyUiThemeVars(); }catch(e){}
 
+    // V7.42.5: If ordering is closed from Sheet, show the closed screen and do not enter the ordering UI.
+    if(typeof setOrderSystemModeFromSheet === 'function' && setOrderSystemModeFromSheet()){
+      window.__APP_READY__ = true;
+      const loaderEl = document.getElementById("loader");
+      if(loaderEl) {
+        loaderEl.style.opacity = 0;
+        setTimeout(()=>{ try{ loaderEl.remove(); } catch(e){} }, 220);
+      }
+      return;
+    }
+
     renderUI();
     window.__APP_READY__=true;
     renderSystemAnnouncement();
@@ -10532,6 +10736,7 @@ const seriesGiftBadgeHtml = (function(){
 }
 
 window.openBundle = function(pid) {
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   modalPid = pid;
   const p = PRODUCTS.find(x => x._id === pid);
   const grid = document.getElementById("mGrid");
@@ -10587,6 +10792,7 @@ function updateModalCounts() {
 
 // V22.2: Confirm Bundle creates a NEW cart item
 window.confirmBundle = function() {
+  if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   if (tempBundleSelection.length !== 2) return;
   
   const p = PRODUCTS.find(x => x._id === modalPid);
@@ -11335,7 +11541,10 @@ window.onpopstate = (e) => {
     if(st && st.page === 'guard') return;
     handleRootBack();
 };
-window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"; };
+window.addEventListener("pageshow", () => {
+  try{ if(isOrderSystemClosed()) renderOrderClosedScreen(); }catch(e){}
+});
+window.onbeforeunload = (e) => { if(!isOrderSystemClosed() && CART.length > 0) return "訂單尚未送出"; };
 
 // OPTIMIZATION 2: Clear Search Logic
 document.getElementById("clearSearch").addEventListener("click", () => {
@@ -11488,7 +11697,9 @@ window.addEventListener("pageshow", () => {
   }
 });
 
-window.submitOrder = () => {
+window.submitOrder = async () => {
+    if(typeof ensureOrderSystemOpenForSubmit === 'function' && !(await ensureOrderSystemOpenForSubmit())) return;
+
     // V2 Sprint1: strict mode — if config isn't ready, don't allow submission
     if(!CONFIG_READY) {
         try { showInitBlockedToast(); } catch(e) { try { showToast('系統初始化中…請稍候', 'info', 2800); } catch(e2) {} }
