@@ -4482,6 +4482,247 @@ body.cfg-error .btn-bundle{
   -webkit-text-fill-color: #ffffff !important;
 }
 
+
+/* ==========================================================
+   V7.42.7 個資同意 + 匯款資訊必填流程
+   ========================================================== */
+.privacy-box,
+.remit-box{
+  width:min(92vw, 460px);
+  max-height:86vh;
+  background:#fff;
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 26px 70px rgba(0,0,0,.30);
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(0,0,0,.06);
+}
+.privacy-head,
+.remit-head{
+  padding:18px 20px 14px;
+  background:linear-gradient(135deg, rgba(0,137,123,.12), rgba(255,255,255,.95));
+  border-bottom:1px solid rgba(0,0,0,.06);
+}
+.privacy-title,
+.remit-title{
+  font-size:18px;
+  font-weight:950;
+  color:#17443f;
+  line-height:1.35;
+}
+.privacy-intro,
+.remit-sub{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.6;
+  color:#607d8b;
+  font-weight:650;
+}
+.privacy-body{
+  flex:1;
+  min-height:240px;
+  max-height:46vh;
+  overflow:auto;
+  padding:18px 20px;
+  color:#37474f;
+  font-size:13px;
+  line-height:1.78;
+  background:#fff;
+  white-space:pre-line;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.privacy-foot{
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid #edf2f1;
+  background:#fafdfc;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.privacy-scroll-hint{
+  font-size:12px;
+  font-weight:850;
+  color:#e65100;
+  background:#fff8e1;
+  border:1px solid #ffe0b2;
+  border-radius:12px;
+  padding:8px 10px;
+  line-height:1.45;
+}
+.privacy-scroll-hint.ready{
+  color:#00695c;
+  background:#e0f2f1;
+  border-color:#b2dfdb;
+}
+.privacy-consent-label{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:11px 12px;
+  border-radius:14px;
+  background:#fff;
+  border:1px solid #d7ece8;
+  font-size:13px;
+  line-height:1.55;
+  color:#37474f;
+  font-weight:780;
+  cursor:pointer;
+}
+.privacy-consent-label input{
+  width:20px !important;
+  height:20px;
+  margin:2px 0 0;
+  flex:0 0 20px;
+  accent-color:#00897b;
+}
+.privacy-consent-label.disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.privacy-actions,
+.remit-actions{
+  display:flex;
+  gap:10px;
+  margin-top:2px;
+}
+.pv-btn,
+.remit-btn-action{
+  flex:1;
+  border:0;
+  border-radius:14px;
+  padding:13px 14px;
+  font-size:15px;
+  font-weight:900;
+  font-family:inherit;
+  cursor:pointer;
+}
+.pv-btn.back,
+.remit-btn-action.back{
+  background:#f1f5f4;
+  color:#455a64;
+}
+.remit-btn-action.done{
+  background:linear-gradient(135deg,#00897b,#00695c);
+  color:#fff;
+  box-shadow:0 10px 22px rgba(0,137,123,.20);
+}
+.dept-remit-cell{ min-width:0; }
+.dept-remit-cell select,
+.dept-remit-cell .remit-info-btn{ width:100%; height:100%; min-height:49px; }
+.remit-info-btn{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid rgba(0,137,123,.26);
+  border-radius:12px;
+  background:#e0f2f1;
+  color:#00695c;
+  font-size:14px;
+  font-weight:900;
+  font-family:inherit;
+  cursor:pointer;
+  padding:13px 14px;
+  line-height:1.2;
+}
+.remit-info-btn.show{ display:inline-flex; }
+.remit-info-btn.done{
+  background:#ecfdf5;
+  border-color:#a7f3d0;
+  color:#047857;
+}
+.remit-info-btn.input-error{
+  background:#ffebee !important;
+  border-color:#ef5350 !important;
+  color:#c62828 !important;
+}
+.btn-submit.remit-pending{
+  opacity:.55;
+  filter:grayscale(.18);
+  box-shadow:none;
+}
+.remit-body{
+  padding:16px 18px 6px;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.remit-total-card{
+  border-radius:18px;
+  padding:14px 16px;
+  background:linear-gradient(135deg,#263238,#37474f);
+  color:#fff;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:14px;
+}
+.remit-total-label{ font-size:13px; font-weight:850; opacity:.86; }
+.remit-total-value{ font-size:22px; font-weight:950; white-space:nowrap; }
+.remit-info-list{ display:grid; gap:10px; margin-bottom:14px; }
+.remit-info-row{
+  padding:12px 13px;
+  border:1px solid #edf2f1;
+  background:#fafdfc;
+  border-radius:14px;
+}
+.remit-info-label{
+  font-size:12px;
+  font-weight:900;
+  color:#78909c;
+  margin-bottom:5px;
+}
+.remit-info-value{
+  font-size:15px;
+  font-weight:900;
+  color:#263238;
+  word-break:break-word;
+  line-height:1.45;
+}
+.remit-last4-wrap{
+  padding:13px;
+  border-radius:16px;
+  background:#fff8e1;
+  border:1px solid #ffe0b2;
+  margin-bottom:12px;
+}
+.remit-last4-wrap label{
+  display:block;
+  font-size:13px;
+  font-weight:950;
+  color:#e65100;
+  margin-bottom:8px;
+}
+#remitLast4Input{
+  font-size:22px !important;
+  letter-spacing:.22em;
+  text-align:center;
+  font-weight:950;
+  background:#fff !important;
+}
+.remit-error{
+  color:#c62828;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.45;
+  min-height:18px;
+  margin-top:6px;
+}
+.remit-foot{
+  padding:12px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+  background:#fff;
+  border-top:1px solid #edf2f1;
+}
+@media (max-width:480px){
+  .privacy-box,.remit-box{ width:94vw; max-height:88vh; border-radius:22px; }
+  .privacy-body{ max-height:45vh; padding:15px 16px; }
+  .privacy-head,.remit-head{ padding:16px 17px 12px; }
+  .remit-body{ padding:14px 15px 4px; }
+  .remit-total-value{ font-size:20px; }
+}
+
 </style>
 </head>
 <body>
@@ -4696,7 +4937,7 @@ body.cfg-error .btn-bundle{
       </div>
       <div class="form-grid">
         <input id="fName" placeholder="訂購人姓名 (必填)">
-        <select id="fDept"><option value="" selected disabled>載入中…</option></select>
+        <div class="dept-remit-cell"><select id="fDept"><option value="" selected disabled>載入中…</option></select><button type="button" id="btnRemitInfo" class="remit-info-btn" onclick="openRemitModal()"><span class="material-icons-round" style="font-size:18px">payments</span><span id="remitInfoBtnText">匯款資訊</span></button></div>
         <select id="fPay">
           <option value="現金">現金</option>
           <option value="信用卡">信用卡</option>
@@ -4751,6 +4992,59 @@ body.cfg-error .btn-bundle{
     <div class="gip-meta" id="gipMeta"></div>
     <div class="gip-thumbs" id="gipThumbs"></div>
     <div class="gip-hint">點擊圖片外任一位置即可返回</div>
+  </div>
+</div>
+
+
+
+<div id="privacyConsentModal" class="modal" style="z-index:10060;" onclick="if(event.target===this) closePrivacyConsentModal(false)">
+  <div class="privacy-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="個人資料告知同意書">
+    <div class="privacy-head">
+      <div class="privacy-title" id="privacyConsentTitle">個人資料告知同意書</div>
+      <div class="privacy-intro" id="privacyConsentIntro">請詳閱以下個人資料告知事項。</div>
+    </div>
+    <div class="privacy-body" id="privacyConsentBody"></div>
+    <div class="privacy-foot">
+      <div class="privacy-scroll-hint" id="privacyScrollHint">請先滑動閱讀至底部後再勾選同意。</div>
+      <label class="privacy-consent-label disabled" id="privacyConsentLabel">
+        <input type="checkbox" id="privacyConsentCheckbox" disabled>
+        <span id="privacyConsentCheckboxText"></span>
+      </label>
+      <div class="privacy-actions">
+        <button type="button" class="pv-btn back" onclick="closePrivacyConsentModal(false)">返回</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="remitModal" class="modal" style="z-index:10055;" onclick="if(event.target===this) closeRemitModal()">
+  <div class="remit-box" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="匯款資訊">
+    <div class="remit-head">
+      <div class="remit-title" id="remitModalTitle">匯款資訊</div>
+      <div class="remit-sub" id="remitModalSubtitle">請完成匯款後填寫帳戶轉帳末 4 碼，以利後續核對。</div>
+    </div>
+    <div class="remit-body">
+      <div class="remit-total-card">
+        <span class="remit-total-label" id="remitTotalLabel">目前購物車總金額</span>
+        <span class="remit-total-value" id="remitTotalValue">$0</span>
+      </div>
+      <div class="remit-info-list">
+        <div class="remit-info-row"><div class="remit-info-label" id="remitAccountNameLabel">帳戶名稱</div><div class="remit-info-value" id="remitAccountName">XXX</div></div>
+        <div class="remit-info-row"><div class="remit-info-label" id="remitAccountNoLabel">匯款帳號</div><div class="remit-info-value" id="remitAccountNo">XXXXXXXXXX</div></div>
+        <div class="remit-info-row"><div class="remit-info-label" id="remitNoteLabel">備註說明</div><div class="remit-info-value" id="remitNoteText">請於匯款完成後填寫帳戶轉帳末 4 碼，以利後續核對。</div></div>
+      </div>
+      <div class="remit-last4-wrap">
+        <label for="remitLast4Input" id="remitLast4Label">匯款末 4 碼</label>
+        <input id="remitLast4Input" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="____">
+        <div class="remit-error" id="remitErrorText"></div>
+      </div>
+    </div>
+    <div class="remit-foot">
+      <div class="remit-actions">
+        <button type="button" class="remit-btn-action back" onclick="closeRemitModal()">返回</button>
+        <button type="button" class="remit-btn-action done" onclick="completeRemitInfo()">完成</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4836,7 +5130,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_6_submit_idempotency_cart_restore_fix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_7_privacy_consent_remit_info";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5005,6 +5299,7 @@ async function fetchAndApplyConfigOptions() {
       applyConfigToForm(data, false);
       setConfigLoadingUI('ready');
       CONFIG_READY = true;
+      try { syncPaymentModeUI(); } catch(e) {}
       setBootConfigState('ready');
       return true;
     }
@@ -5073,6 +5368,8 @@ function applyConfigToForm(cfg, fromCache) {
     }
   }
 
+  try { syncPaymentModeUI(); } catch(e) {}
+
   // If cache, do not surface messages; if fetch, also silent to keep UI clean
 }
 
@@ -5084,6 +5381,8 @@ let PRODUCT_ID_MAP = new Map();
 const CART_STORAGE_KEY = 'v17_cart_data';
 const CLIENT_SUBMIT_KEY_STORAGE = 'ttlbt_client_submit_key_v1';
 let __ORDER_SUBMIT_IN_FLIGHT__ = false; 
+let REMIT_INFO = { last4: '' };
+let __PRIVACY_CONTINUE_AFTER_CONSENT__ = false;
 let RANKINGS = { all:[], health:[], beauty:[], cleaning:[] };
 let currentCat = "", categories = [];
 let modalPid = null, isCartOpen = false;
@@ -5558,19 +5857,32 @@ function setCheckoutStage(stage){
       btn.textContent = (__CHECKOUT_STAGE__ === 2) ? '確認訂購' : '結帳去';
     }
     try{ syncDeliveryHeaderUI(); }catch(e){}
+    try{ syncRemitButtonUI(); }catch(e){}
   }catch(e){}
+}
+function proceedToCheckoutDetails(){
+  setCheckoutStage(2);
+  const details = document.getElementById('checkoutDetails');
+  if(details){
+    details.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+  const f = document.getElementById('fName');
+  if(f) setTimeout(()=>{ try{ f.focus(); }catch(e){} }, 260);
+  try{ syncRemitButtonUI(); }catch(e){}
 }
 function handleCheckoutSubmit(){
   try{
     if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
     if(__CHECKOUT_STAGE__ !== 2){
-      setCheckoutStage(2);
-      const details = document.getElementById('checkoutDetails');
-      if(details){
-        details.scrollIntoView({ behavior:'smooth', block:'nearest' });
+      if(isPrivacyConsentEnabled() && !hasPrivacyConsentInSession()){
+        openPrivacyConsentModal(true);
+        return;
       }
-      const f = document.getElementById('fName');
-      if(f) setTimeout(()=>{ try{ f.focus(); }catch(e){} }, 260);
+      proceedToCheckoutDetails();
+      return;
+    }
+    if(isRemitPaymentSelected() && !isRemitInfoComplete()){
+      flashRemitRequired();
       return;
     }
     submitOrder();
@@ -5580,6 +5892,7 @@ function handleCheckoutSubmit(){
 window.openCart = function() {
   if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   setCheckoutStage(1);
+  try{ syncRemitButtonUI(); }catch(e){}
   document.getElementById("drawer").classList.add("open"); 
   document.getElementById("float-bar").classList.add("hidden"); 
   document.body.classList.add('modal-open');
@@ -6211,7 +6524,7 @@ function saveState() {
   try{
     CART = (CART || []).map(it => stampCartItem(it, (it && it._id != null && PRODUCT_ID_MAP) ? PRODUCT_ID_MAP.get(String(it._id)) : it));
   }catch(e){}
-  const state = { cart: CART }; 
+  const state = { cart: CART, remit_info: REMIT_INFO }; 
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -6221,6 +6534,7 @@ function loadState() {
   try {
     const data = JSON.parse(raw);
     const savedCart = Array.isArray(data.cart) ? data.cart : [];
+    if(data && data.remit_info && /^\d{4}$/.test(String(data.remit_info.last4 || ''))) REMIT_INFO.last4 = String(data.remit_info.last4);
     CART = savedCart.map(oldItem => {
       const freshItem = findProductForCartRestore(oldItem);
       if(freshItem && !freshItem.is_hidden) {
@@ -6356,6 +6670,209 @@ function uiGetBool(key, fallback=false){
     return !!fallback;
   }catch(e){ return !!fallback; }
 }
+
+
+// V7.42.7: privacy consent + remittance info helpers
+const DEFAULT_PRIVACY_CONSENT_BODY = "臺灣菸酒股份有限公司暨所屬機構（以下簡稱本公司）為辦理生技展銷售業務並遵循個人資料保護法等相關規定，向台端告知下列事項，請台端詳閱：\n\n一、蒐集之目的：\n040 行銷、063 非公務機關依法定義務所進行個人資料之蒐集處理及利用、069 契約、類似契約或其他法律關係事務、090 消費者、客戶管理與服務。\n\n二、蒐集之個人資料類別：\n本公司蒐集之個人資料種類包括但不限於 C001 識別個人者，例如姓名、職稱、住址、工作地址、聯絡電話、電子郵件、通訊地址及其他可辨識本人之資料。\n\n三、個人資料利用之期間、地區、對象及方式：\n（一）期間：上述蒐集目的未消失與法令規定之必要保存期間內。\n（二）地區：台端之個人資料將於服務所能到達之地區內利用。\n（三）對象：以本公司及與本公司業務往來之機關（構）及公司為限。\n（四）方式：以紙本、電腦系統、電子檔案、電話、email、傳真、郵寄或其他合法合理方式使用。\n\n四、依個資法第三條規定，台端得向本公司申請查詢、閱覽、製給複製本、補充、更正、停止蒐集處理利用或刪除，惟依法本公司因執行業務所必須者，得不依台端請求為之。聯絡方式：02-23214567 分機 1451 張先生。\n\n五、台端得自由選擇是否提供相關個人資料，惟若拒絕提供，本公司將無法提供蒐集目的所包含之完整服務或資訊，致使台端權益受損。\n\n立書人已瞭解本同意書符合個資法及相關規定要求，並同意本公司基於業務所需之特定目的內蒐集、處理及利用個人資料。";
+function getPrivacyConsentVersion(){ return uiGet('ui|privacy_consent_version', '2026BioExpo-v1'); }
+function isPrivacyConsentEnabled(){ return uiGetBool('ui|privacy_consent_enabled', true); }
+function getPrivacySessionKey(){ return 'ttlbt_privacy_consent_' + getPrivacyConsentVersion(); }
+function hasPrivacyConsentInSession(){
+  try{ return sessionStorage.getItem(getPrivacySessionKey()) === '1'; }catch(e){ return false; }
+}
+function setPrivacyConsentInSession(){
+  try{ sessionStorage.setItem(getPrivacySessionKey(), '1'); }catch(e){}
+}
+function getPrivacyCopy(k, fallback){ return uiGet('ui|privacy_consent_' + k, fallback); }
+function renderPrivacyConsentModal(){
+  const title = document.getElementById('privacyConsentTitle');
+  const intro = document.getElementById('privacyConsentIntro');
+  const body = document.getElementById('privacyConsentBody');
+  const chk = document.getElementById('privacyConsentCheckbox');
+  const label = document.getElementById('privacyConsentLabel');
+  const hint = document.getElementById('privacyScrollHint');
+  const chkText = document.getElementById('privacyConsentCheckboxText');
+  if(title) title.textContent = getPrivacyCopy('title', '臺灣菸酒股份有限公司個人資料告知同意書');
+  if(intro) intro.textContent = getPrivacyCopy('intro', '以下內容涉及本次生技展銷售業務所需之個人資料蒐集、處理及利用，請詳閱後勾選同意。');
+  if(body){
+    body.textContent = getPrivacyCopy('body', DEFAULT_PRIVACY_CONSENT_BODY);
+    body.scrollTop = 0;
+  }
+  if(chk){ chk.checked = false; chk.disabled = true; }
+  if(label) label.classList.add('disabled');
+  if(hint){ hint.classList.remove('ready'); hint.textContent = '請先滑動閱讀至底部後再勾選同意。'; }
+  if(chkText) chkText.textContent = getPrivacyCopy('checkbox_text', '請勾選同意上述文字，已詳閱個人資料同意書並同意本公司基於業務所需之特定目的內蒐集、處理及利用個人資料。勾選同意後將關閉視窗並繼續結帳流程。');
+  setTimeout(checkPrivacyScrolledToBottom, 80);
+}
+function checkPrivacyScrolledToBottom(){
+  const body = document.getElementById('privacyConsentBody');
+  const chk = document.getElementById('privacyConsentCheckbox');
+  const label = document.getElementById('privacyConsentLabel');
+  const hint = document.getElementById('privacyScrollHint');
+  if(!body || !chk) return;
+  const atBottom = (body.scrollTop + body.clientHeight) >= (body.scrollHeight - 10);
+  if(atBottom){
+    chk.disabled = false;
+    if(label) label.classList.remove('disabled');
+    if(hint){ hint.classList.add('ready'); hint.textContent = '已閱讀至底部，勾選同意後將繼續結帳流程。'; }
+  }
+}
+function openPrivacyConsentModal(onContinue){
+  __PRIVACY_CONTINUE_AFTER_CONSENT__ = !!onContinue;
+  renderPrivacyConsentModal();
+  const modal = document.getElementById('privacyConsentModal');
+  if(modal) modal.classList.add('open');
+}
+function closePrivacyConsentModal(agreed){
+  const modal = document.getElementById('privacyConsentModal');
+  if(modal) modal.classList.remove('open');
+  if(agreed){
+    setPrivacyConsentInSession();
+    if(__PRIVACY_CONTINUE_AFTER_CONSENT__){
+      __PRIVACY_CONTINUE_AFTER_CONSENT__ = false;
+      setTimeout(()=>{ try{ proceedToCheckoutDetails(); }catch(e){} }, 60);
+    }
+  }else{
+    __PRIVACY_CONTINUE_AFTER_CONSENT__ = false;
+  }
+}
+function onPrivacyConsentChecked(){
+  const chk = document.getElementById('privacyConsentCheckbox');
+  if(chk && chk.checked && !chk.disabled) closePrivacyConsentModal(true);
+}
+function isRemitPaymentSelected(){
+  try{
+    const payEl = document.getElementById('fPay');
+    const target = uiGet('ui|remit_payment_method_value', '匯款');
+    return !!payEl && String(payEl.value || '').trim() === String(target || '匯款').trim();
+  }catch(e){ return false; }
+}
+function normalizeRemitLast4(v){ return String(v || '').replace(/\D/g,'').slice(0,4); }
+function isRemitInfoComplete(){ return /^\d{4}$/.test(String(REMIT_INFO && REMIT_INFO.last4 || '')); }
+function getRemitCopy(k, fallback){ return uiGet('ui|remit_' + k, fallback); }
+function syncRemitButtonUI(){
+  const btn = document.getElementById('btnRemitInfo');
+  const txt = document.getElementById('remitInfoBtnText');
+  const dept = document.getElementById('fDept');
+  const submit = document.getElementById('btnCheckoutSubmit');
+  const isRemit = isRemitPaymentSelected();
+  if(dept){ dept.style.display = isRemit ? 'none' : ''; dept.disabled = isRemit ? true : (typeof CONFIG_READY !== 'undefined' ? !CONFIG_READY : false); }
+  if(btn){
+    btn.classList.toggle('show', isRemit);
+    btn.classList.toggle('done', isRemit && isRemitInfoComplete());
+    btn.classList.remove('input-error');
+  }
+  if(txt) txt.textContent = (isRemit && isRemitInfoComplete()) ? ('末四碼 ' + REMIT_INFO.last4) : getRemitCopy('button_text', '匯款資訊');
+  if(submit) submit.classList.toggle('remit-pending', (typeof __CHECKOUT_STAGE__ !== 'undefined' && __CHECKOUT_STAGE__ === 2 && isRemit && !isRemitInfoComplete()));
+}
+function resetRemitIfNotSelected(){ if(!isRemitPaymentSelected()){ REMIT_INFO.last4 = ''; } }
+function syncPaymentModeUI(){ resetRemitIfNotSelected(); syncRemitButtonUI(); try{ saveState(); }catch(e){} }
+function openRemitModal(){
+  if(!isRemitPaymentSelected()) return;
+  const data = calcCart();
+  const total = Math.round(Number(data && data.finalTotal || 0));
+  const title = document.getElementById('remitModalTitle');
+  const sub = document.getElementById('remitModalSubtitle');
+  const totalLabel = document.getElementById('remitTotalLabel');
+  const totalValue = document.getElementById('remitTotalValue');
+  const nameLabel = document.getElementById('remitAccountNameLabel');
+  const name = document.getElementById('remitAccountName');
+  const noLabel = document.getElementById('remitAccountNoLabel');
+  const no = document.getElementById('remitAccountNo');
+  const noteLabel = document.getElementById('remitNoteLabel');
+  const note = document.getElementById('remitNoteText');
+  const last4Label = document.getElementById('remitLast4Label');
+  const input = document.getElementById('remitLast4Input');
+  const err = document.getElementById('remitErrorText');
+  if(title) title.textContent = getRemitCopy('modal_title', '匯款資訊');
+  if(sub) sub.textContent = getRemitCopy('modal_subtitle', '請完成匯款後填寫帳戶轉帳末 4 碼，以利後續核對。');
+  if(totalLabel) totalLabel.textContent = getRemitCopy('total_label', '目前購物車總金額');
+  if(totalValue) totalValue.textContent = '$' + total.toLocaleString() + ' 元';
+  if(nameLabel) nameLabel.textContent = getRemitCopy('account_name_label', '帳戶名稱');
+  if(name) name.textContent = getRemitCopy('account_name', 'XXX');
+  if(noLabel) noLabel.textContent = getRemitCopy('account_no_label', '匯款帳號');
+  if(no) no.textContent = getRemitCopy('account_no', 'XXXXXXXXXX');
+  if(noteLabel) noteLabel.textContent = getRemitCopy('note_label', '備註說明');
+  if(note) note.textContent = getRemitCopy('note', '請於匯款完成後填寫帳戶轉帳末 4 碼，以利後續核對。');
+  if(last4Label) last4Label.textContent = getRemitCopy('last4_label', '匯款末 4 碼');
+  if(input){ input.value = REMIT_INFO.last4 || ''; input.classList.remove('input-error','flash-anim'); }
+  if(err) err.textContent = '';
+  const modal = document.getElementById('remitModal');
+  if(modal) modal.classList.add('open');
+  setTimeout(()=>{ try{ input && input.focus(); }catch(e){} }, 120);
+}
+function closeRemitModal(){
+  const modal = document.getElementById('remitModal');
+  if(modal) modal.classList.remove('open');
+}
+function completeRemitInfo(){
+  const input = document.getElementById('remitLast4Input');
+  const err = document.getElementById('remitErrorText');
+  const v = normalizeRemitLast4(input && input.value);
+  if(input) input.value = v;
+  if(!/^\d{4}$/.test(v)){
+    if(err) err.textContent = '請輸入 4 碼數字。';
+    if(input){ input.classList.remove('input-error','flash-anim'); void input.offsetWidth; input.classList.add('input-error','flash-anim'); }
+    return;
+  }
+  REMIT_INFO.last4 = v;
+  try{ saveState(); }catch(e){}
+  syncRemitButtonUI();
+  closeRemitModal();
+}
+function flashRemitRequired(){
+  const btn = document.getElementById('btnRemitInfo');
+  if(btn){ btn.classList.remove('input-error','flash-anim'); void btn.offsetWidth; btn.classList.add('input-error','flash-anim'); }
+  try{ showToast(getRemitCopy('required_toast', '尚未填妥相關訂購資訊'), 'warn', 3000); }catch(e){}
+}
+function areNonRemitCheckoutFieldsReady(){
+  const f = (id)=>String(document.getElementById(id)?.value || '').trim();
+  if(!f('fName')) return false;
+  const isDelivery = !!document.getElementById('chkDelivery')?.checked;
+  if(isDelivery && (!f('dName') || !f('dPhone') || !f('dAddr'))) return false;
+  return true;
+}
+function maybeCueRemitWhenReady(){
+  try{
+    if(isRemitPaymentSelected() && !isRemitInfoComplete() && areNonRemitCheckoutFieldsReady()) flashRemitRequired();
+  }catch(e){}
+}
+function appendRemitLast4ToRemarks(note){
+  if(!isRemitPaymentSelected() || !isRemitInfoComplete()) return String(note || '').trim();
+  const line = '匯款末四碼：' + REMIT_INFO.last4;
+  const base = String(note || '').trim();
+  return base ? (base + '｜' + line) : line;
+}
+function getRemitPayloadInfo(total){
+  if(!isRemitPaymentSelected() || !isRemitInfoComplete()) return null;
+  return {
+    last4: REMIT_INFO.last4,
+    account_name: getRemitCopy('account_name', 'XXX'),
+    account_no: getRemitCopy('account_no', 'XXXXXXXXXX'),
+    note: getRemitCopy('note', '請於匯款完成後填寫帳戶轉帳末 4 碼，以利後續核對。'),
+    total_pay: Math.round(Number(total || 0))
+  };
+}
+function bindPrivacyAndRemitEvents(){
+  try{
+    const body = document.getElementById('privacyConsentBody');
+    if(body) body.addEventListener('scroll', checkPrivacyScrolledToBottom, { passive:true });
+    const chk = document.getElementById('privacyConsentCheckbox');
+    if(chk) chk.addEventListener('change', onPrivacyConsentChecked);
+    const pay = document.getElementById('fPay');
+    if(pay) pay.addEventListener('change', syncPaymentModeUI);
+    const last4 = document.getElementById('remitLast4Input');
+    if(last4) last4.addEventListener('input', ()=>{ last4.value = normalizeRemitLast4(last4.value); });
+    ['fName','dName','dPhone','dAddr'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){
+        el.addEventListener('change', ()=>{ try{ syncRemitButtonUI(); }catch(e){} }, { passive:true });
+      }
+    });
+    syncRemitButtonUI();
+  }catch(e){}
+}
+
 function normalizeUiColor(value, fallback){
   const v = String(value || '').trim();
   if(!v) return fallback;
@@ -9935,7 +10452,9 @@ if(loaderEl) {
 await new Promise(r => requestAnimationFrame(r));
 
 // Restore cart as soon as UI exists
+try{ bindPrivacyAndRemitEvents(); }catch(e){}
 loadState();
+try{ syncRemitButtonUI(); }catch(e){}
 
 // Load dropdown config (departments / payments) in background.
 // Ordering stays strict: config not ready => cannot submit.
@@ -11026,6 +11545,7 @@ window.closeBundle = function() { document.getElementById("bundleModal").classLi
 window.clearCart = function() {
   if(confirm("確定要清空購物車嗎？")) { 
     CART = []; 
+    REMIT_INFO.last4 = '';
     clearClientSubmitKey();
     SELECTED_BUNDLE.clear(); 
     achievedGifts = []; // Reset gifts memory
@@ -11897,7 +12417,7 @@ window.submitOrder = async () => {
         return;
     }
 
-    const f = (id) => document.getElementById(id).value.trim();
+    const f = (id) => String(document.getElementById(id)?.value || '').trim();
     const nameEl = document.getElementById("fName");
     const deptEl = document.getElementById("fDept");
     // 錯誤提示重置
@@ -11912,8 +12432,9 @@ window.submitOrder = async () => {
     const receiptEmail = "";
 
     // 1. 基本驗證
+    const isRemitPayment = isRemitPaymentSelected();
     if(!f("fName")) { nameEl.classList.add("input-error", "flash-anim"); hasError = true; }
-    if(!f("fDept")) { deptEl.classList.add("input-error", "flash-anim"); hasError = true; }
+    if(!isRemitPayment && !f("fDept")) { deptEl.classList.add("input-error", "flash-anim"); hasError = true; }
 
     // 2. 宅配驗證
     const isDelivery = document.getElementById("chkDelivery").checked;
@@ -11935,7 +12456,12 @@ window.submitOrder = async () => {
     }
 
     if(hasError) {
-        showToast(isDelivery ? "請填寫完整訂購與宅配資訊" : "請填寫姓名與部門", "warn");
+        showToast(isDelivery ? "請填寫完整訂購與宅配資訊" : (isRemitPayment ? "請填寫訂購人姓名" : "請填寫姓名與部門"), "warn");
+        return;
+    }
+
+    if(isRemitPayment && !isRemitInfoComplete()) {
+        flashRemitRequired();
         return;
     }
 
@@ -12034,10 +12560,12 @@ window.submitOrder = async () => {
         action: 'create_order',
         client_submit_key: clientSubmitKey,
         employee_name: f("fName"),
-        department: f("fDept"),
+        department: isRemitPayment ? getRemitCopy('department_value', '匯款資訊') : f("fDept"),
         payment_method: f("fPay"),
+        remit_last4: isRemitPayment ? REMIT_INFO.last4 : '',
+        remit_info: getRemitPayloadInfo(data.finalTotal),
         receipt_email: receiptEmail,
-        remarks: f("fNote"),
+        remarks: appendRemitLast4ToRemarks(f("fNote")),
         totals: {
             base: data.subTotal,
             discount: Math.round(data.discountAmt),
@@ -12116,6 +12644,7 @@ function openReceipt(orderId, res = {}) {
       <div class="rc-info-cell">訂購人<b>${escapeHtml(lastOrderData.employee_name || '')}</b></div>
       <div class="rc-info-cell">部門<b>${escapeHtml(lastOrderData.department || '')}</b></div>
       <div class="rc-info-cell">付款方式<b>${escapeHtml(lastOrderData.payment_method || '')}</b></div>
+      ${lastOrderData.remit_last4 ? `<div class="rc-info-cell full">匯款資訊<b>末四碼 ${escapeHtml(lastOrderData.remit_last4)}</b></div>` : ''}
       <div class="rc-info-cell">取貨方式<b>${escapeHtml(lastOrderData.pickup_method || '自取')}</b></div>
       ${lastOrderData.remarks ? `<div class="rc-info-cell full">訂單備註<b>${escapeHtml(lastOrderData.remarks)}</b></div>` : ''}
     </div>`;
@@ -12186,6 +12715,7 @@ function buildReceiptPrintHtml() {
               <div class="pr-cell">訂購人<b>${escapeHtml(d.employee_name || '')}</b></div>
               <div class="pr-cell">部門<b>${escapeHtml(d.department || '')}</b></div>
               <div class="pr-cell">付款方式<b>${escapeHtml(d.payment_method || '')}</b></div>
+              ${d.remit_last4 ? `<div class="pr-cell full">匯款資訊<b>末四碼 ${escapeHtml(d.remit_last4)}</b></div>` : ''}
               <div class="pr-cell">取貨方式<b>${escapeHtml(d.pickup_method || '自取')}</b></div>
               ${d.remarks ? `<div class="pr-cell full">訂單備註<b>${escapeHtml(d.remarks || '')}</b></div>` : ''}
             </div>
@@ -12239,6 +12769,7 @@ function saveReceiptCredential() {
 function closeReceipt() {
     document.getElementById("receiptModal").classList.remove("open");
     CART = [];
+    REMIT_INFO.last4 = '';
     clearClientSubmitKey();
     SELECTED_BUNDLE.clear();
     achievedGifts = [];
