@@ -4484,7 +4484,7 @@ body.cfg-error .btn-bundle{
 
 
 /* ==========================================================
-   V7.42.9 結帳檢查時機 + 強制宅配門檻修正
+   V7.42.10 強制宅配展開 + 門檻提示文案微調
    ========================================================== */
 .privacy-box,
 .remit-box{
@@ -5186,7 +5186,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_9_checkout_delivery_validation_fix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_10_force_delivery_open_toastcopy";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5912,7 +5912,7 @@ function setCheckoutStage(stage){
     if(btn){
       btn.textContent = (__CHECKOUT_STAGE__ === 2) ? '確認訂購' : '結帳去';
     }
-    try{ applyForceDeliveryMode(); }catch(e){}
+    try{ applyForceDeliveryMode({ forceOpen: isForceDeliveryEnabled() && __CHECKOUT_STAGE__ === 2 }); }catch(e){}
     try{ syncDeliveryHeaderUI(); }catch(e){}
     try{ syncRemitButtonUI(); }catch(e){}
   }catch(e){}
@@ -5924,7 +5924,7 @@ function proceedToCheckoutDetails(){
     details.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
   try{ blurActiveElement(); }catch(e){}
-  try{ applyForceDeliveryMode(); }catch(e){}
+  try{ applyForceDeliveryMode({ forceOpen: isForceDeliveryEnabled() }); }catch(e){}
   try{ syncRemitButtonUI(); }catch(e){}
 }
 function handleCheckoutSubmit(){
@@ -6731,7 +6731,7 @@ function uiGetBool(key, fallback=false){
 }
 
 
-// V7.42.9: modal keyboard guard + forced delivery helpers + checkout validation timing fix
+// V7.42.10: modal keyboard guard + forced delivery helpers + checkout validation timing fix + forced delivery always opens on checkout
 function blurActiveElement(){
   try{
     const ae = document.activeElement;
@@ -6789,7 +6789,7 @@ function applyForceDeliveryMode(opts = {}){
   }catch(e){}
 }
 function formatForceDeliveryThresholdToast(status, total){
-  const tpl = uiGet('ui|force_delivery_threshold_toast', '本次訂單須達 {threshold} 元以上方可宅配，目前尚差 {diff} 元。');
+  const tpl = uiGet('ui|force_delivery_threshold_toast', '本階段採宅配出貨，訂單金額需達 {threshold} 元以上方可完成訂購，目前尚差 {diff} 元。');
   const threshold = Math.round(Number(status && status.enabled ? getFreeShipThreshold() : 0) || 0);
   const diff = Math.max(0, Math.round(Number(status && status.diff || 0)));
   const current = Math.round(Number(total || 0));
@@ -12563,7 +12563,8 @@ window.syncDeliveryUI = function(opts = { collapse: true }) {
   if(!chk || !form || !status) return;
   if(isForceDeliveryEnabled()){
     const completeNow = (typeof isDeliveryRequiredComplete === 'function') ? isDeliveryRequiredComplete() : false;
-    applyForceDeliveryMode({ autoOpen: !completeNow });
+    const checkoutOpened = (typeof __CHECKOUT_STAGE__ !== 'undefined' && __CHECKOUT_STAGE__ === 2);
+    applyForceDeliveryMode({ forceOpen: checkoutOpened, autoOpen: checkoutOpened || !completeNow });
     return;
   }
 
