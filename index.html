@@ -5186,7 +5186,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_10_force_delivery_open_toastcopy";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_11_cloudflare_imgbase";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5197,6 +5197,53 @@ const SHEET_GIFTS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBtV8q
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxQ9Etloak3ZNv6yfyMCK9KbjoLyDqjRQHHVlASY5iMwwy_c4NCPxWpMK1YkzSXstHN/exec";
 // Free-shipping threshold for宅配提示（可依活動調整）
 const FREE_SHIP_THRESHOLD = 1000;
+
+// V7.42.11: Cloudflare Pages image CDN support.
+// Product sheet may use either a full URL or a relative path such as:
+//   products/37110005-12-s11-probiotics.png
+// Full URLs remain untouched for backward compatibility.
+const IMG_BASE = "https://ttl-biotech-images.pages.dev/product-images/";
+window.IMG_BASE = IMG_BASE;
+function resolveImageUrl(raw){
+  let s = String(raw || '').trim();
+  if(!s) return '';
+  if(/^(https?:)?\/\//i.test(s)) return s;
+  if(/^(data:|blob:)/i.test(s)) return s;
+
+  // Normalize Windows paths / accidental copied sample paths.
+  s = s.replace(/\\+/g, '/').replace(/^\/+/, '');
+  s = s.replace(/^product-images\/+?/i, '');
+
+  // Preserve query/hash suffix when a manual version marker is used.
+  let suffix = '';
+  const m = s.match(/([?#].*)$/);
+  if(m){
+    suffix = m[1];
+    s = s.slice(0, -suffix.length);
+  }
+
+  const path = s.split('/').filter(Boolean).map(part => encodeURIComponent(part)).join('/');
+  if(!path) return '';
+  return IMG_BASE.replace(/\/+$/, '') + '/' + path + suffix;
+}
+function resolveImageList(list){
+  return (Array.isArray(list) ? list : [list]).map(resolveImageUrl).filter(Boolean);
+}
+function normalizeAppImageUrls(){
+  try{
+    if(Array.isArray(PRODUCTS)){
+      PRODUCTS.forEach(p => { if(p && p.photo) p.photo = resolveImageUrl(p.photo); });
+    }
+    if(PRODUCT_MAP && typeof PRODUCT_MAP.forEach === 'function'){
+      PRODUCT_MAP.forEach(p => { if(p && p.photo) p.photo = resolveImageUrl(p.photo); });
+    }
+    if(GIFT_MAP && typeof GIFT_MAP.forEach === 'function'){
+      const next = new Map();
+      GIFT_MAP.forEach((arr, key) => next.set(key, resolveImageList(arr)));
+      GIFT_MAP = next;
+    }
+  }catch(e){ console.warn('[IMG] normalize failed:', e); }
+}
 
 const PROXY = (url) => "https://corsproxy.io/?" + encodeURIComponent(url);
 // --- V28.1 FIX: Resilient CSV fetch (direct-first, proxy fallback) ---
@@ -10588,11 +10635,14 @@ if (gText) {
       const code = pick("product_code");
       const url = pick("photos url");
       if(code && url) {
-          let imgs = [url];
+          let imgs = resolveImageList([url]);
           GIFT_MAP.set(code, imgs);
       }
   });
 }
+
+// V7.42.11: normalize product/gift image URLs after optional gift image overrides.
+normalizeAppImageUrls();
 
 if (rankText) {
   processRankings(rankText);
@@ -10705,7 +10755,7 @@ function renderRanking(type) {
     card.dataset.rank = idx + 1; 
     card.onclick = () => handleRankingClick(p);
     let imgHtml = `<div class="p-no-img" style="height:100%;justify-content:center;font-size:10px">無圖</div>`;
-    if(p.photo && p.photo.length > 5) imgHtml = `<img src="${p.photo}" class="r-img" loading="lazy" decoding="async" draggable="false">`;
+    if(p.photo && p.photo.length > 5) imgHtml = `<img src="${escapeHtml(String(p.photo)).replace(/"/g,'&quot;')}" class="r-img" loading="lazy" decoding="async" draggable="false">`;
     const soldTagHtml = showSoldTag ? `<div class="r-sold-tag">售${p.sold.toLocaleString()}件</div>` : '';
     card.innerHTML = `<div class="r-img-wrap"><div class="r-badge">${idx + 1}</div>${soldTagHtml}${imgHtml}</div><div class="r-name">${p.name}</div>`;
     list.appendChild(card);
@@ -11607,7 +11657,7 @@ const seriesGiftBadgeHtml = (function(){
     const giftCode = escapeHtml(String(sg.code||'')).replace(/"/g,'&quot;');
     const giftName = escapeHtml(String(sg.name||'系列贈品')).replace(/"/g,'&quot;');
     if(sg.photo){
-      const photo = String(sg.photo).replace(/"/g,'&quot;');
+      const photo = escapeHtml(String(sg.photo)).replace(/"/g,'&quot;');
       return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><img src="${photo}" alt="${giftName}" onload="this.classList.add('loaded')"></button>`;
     }
     return `<button type="button" class="series-gift-badge" data-promo="series_gift_badge" data-hint="${hint}" data-gift-code="${giftCode}" aria-label="查看系列贈品：${giftName}" title="${giftName}"><span class="material-icons-round">redeem</span></button>`;
