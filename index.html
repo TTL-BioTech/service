@@ -1417,6 +1417,40 @@ input:focus, select:focus { border-color: var(--primary); background: #fff; outl
 .delivery-collapse-hint.show{ display:inline-flex; }
 
 
+/* V7.42.12: Checkout draft memory notice */
+.checkout-memory-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(0,137,123,0.06);
+  border:1px solid rgba(0,137,123,0.12);
+  color:#607d8b;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.35;
+}
+.checkout-memory-row button{
+  flex:0 0 auto;
+  border:0;
+  background:rgba(0,137,123,0.12);
+  color:#00695c;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:900;
+  cursor:pointer;
+}
+.checkout-memory-row button:active{ transform:translateY(1px); background:rgba(0,137,123,0.18); }
+@media (max-width:480px){
+  .checkout-memory-row{ align-items:flex-start; font-size:10.5px; }
+  .checkout-memory-row button{ padding:5px 8px; }
+}
+
+
 /* --- V2.8: Delivery free-shipping badge + better spacing when expanded --- */
 .ship-free-badge{
   position:absolute;
@@ -4996,6 +5030,10 @@ body.cfg-error .btn-bundle{
         </select>
         <input id="fNote" placeholder="訂單備註">
       </div>
+      <div class="checkout-memory-row" id="checkoutMemoryRow">
+        <span>本機已記憶訂購人與宅配欄位，方便下次填寫。</span>
+        <button type="button" id="btnClearCheckoutDraft" onclick="clearCheckoutDraftMemory()">清除記憶</button>
+      </div>
     </div>
       <div class="btn-bar">
         <button class="btn-clear" onclick="clearCart()"><span class="material-icons-round">delete_outline</span></button>
@@ -5186,7 +5224,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_11_cloudflare_imgbase";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_12_checkout_draft_memory";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5472,6 +5510,7 @@ function applyConfigToForm(cfg, fromCache) {
   }
 
   try { syncPaymentModeUI(); } catch(e) {}
+  try { applyCheckoutDraftToForm({ overwrite:false }); } catch(e) {}
 
   // If cache, do not surface messages; if fetch, also silent to keep UI clean
 }
@@ -5482,6 +5521,9 @@ let PRODUCT_MAP = new Map();
 let PRODUCT_CART_KEY_MAP = new Map();
 let PRODUCT_ID_MAP = new Map();
 const CART_STORAGE_KEY = 'v17_cart_data';
+const CHECKOUT_DRAFT_STORAGE_KEY = 'ttlbt_checkout_draft_v1';
+const CHECKOUT_DRAFT_FIELDS = ['fName','fDept','fNote','dName','dPhone','dAddr','dNote'];
+let __CHECKOUT_DRAFT_APPLYING__ = false;
 const CLIENT_SUBMIT_KEY_STORAGE = 'ttlbt_client_submit_key_v1';
 let __ORDER_SUBMIT_IN_FLIGHT__ = false; 
 let REMIT_INFO = { last4: '', phone: '' };
@@ -6622,6 +6664,122 @@ function checkNewGifts(currentGifts) {
     }
     achievedGifts = currentNames;
 }
+
+
+// V7.42.12: Checkout draft memory (local device only)
+function normalizeCheckoutDraftValue(id, value){
+  let v = String(value || '').trim();
+  if(id === 'dPhone') v = v.replace(/\s+/g, '');
+  return v;
+}
+
+function getCheckoutDraft(){
+  try{
+    const raw = localStorage.getItem(CHECKOUT_DRAFT_STORAGE_KEY);
+    if(!raw) return {};
+    const data = JSON.parse(raw);
+    return (data && typeof data === 'object') ? data : {};
+  }catch(e){ return {}; }
+}
+
+function readCheckoutDraftFromForm(){
+  const draft = {};
+  CHECKOUT_DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    draft[id] = normalizeCheckoutDraftValue(id, el.value);
+  });
+  draft.savedAt = new Date().toISOString();
+  return draft;
+}
+
+function saveCheckoutDraftFromForm(){
+  if(__CHECKOUT_DRAFT_APPLYING__) return;
+  try{
+    const draft = readCheckoutDraftFromForm();
+    const hasAny = CHECKOUT_DRAFT_FIELDS.some(id => String(draft[id] || '').trim() !== '');
+    if(hasAny) localStorage.setItem(CHECKOUT_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    else localStorage.removeItem(CHECKOUT_DRAFT_STORAGE_KEY);
+  }catch(e){}
+}
+
+function applySelectDraftValue(el, value, overwrite){
+  if(!el || !value) return false;
+  const cur = String(el.value || '').trim();
+  if(cur && !overwrite) return false;
+  const exists = Array.from(el.options || []).some(o => String(o.value) === String(value));
+  if(!exists) {
+    try{ el.dataset.pendingDraftValue = String(value); }catch(e){}
+    return false;
+  }
+  el.value = String(value);
+  try{ delete el.dataset.pendingDraftValue; }catch(e){}
+  return true;
+}
+
+function applyCheckoutDraftToForm(opts){
+  opts = opts || {};
+  const overwrite = !!opts.overwrite;
+  const draft = getCheckoutDraft();
+  if(!draft || Object.keys(draft).length === 0) return;
+
+  __CHECKOUT_DRAFT_APPLYING__ = true;
+  try{
+    CHECKOUT_DRAFT_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      const v = normalizeCheckoutDraftValue(id, draft[id]);
+      if(!v) return;
+      const tag = String(el.tagName || '').toUpperCase();
+      if(tag === 'SELECT') {
+        applySelectDraftValue(el, v, overwrite);
+        return;
+      }
+      if(overwrite || !String(el.value || '').trim()) el.value = v;
+    });
+  }catch(e){} finally {
+    __CHECKOUT_DRAFT_APPLYING__ = false;
+  }
+
+  try{ window.syncDeliveryUI && window.syncDeliveryUI({ collapse: true }); }catch(e){}
+  try{ updateDeliveryCollapseCue(); }catch(e){}
+  try{ syncDeliveryHeaderUI(); }catch(e){}
+}
+
+function bindCheckoutDraftMemory(){
+  CHECKOUT_DRAFT_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el || el.dataset.checkoutDraftBound === '1') return;
+    el.dataset.checkoutDraftBound = '1';
+    const handler = () => {
+      try{ saveCheckoutDraftFromForm(); }catch(e){}
+      if(id === 'dName' || id === 'dPhone' || id === 'dAddr' || id === 'dNote'){
+        try{ updateDeliveryCollapseCue(); }catch(e){}
+        try{ syncDeliveryHeaderUI(); }catch(e){}
+      }
+    };
+    el.addEventListener('input', handler, { passive:true });
+    el.addEventListener('change', handler, { passive:true });
+  });
+  applyCheckoutDraftToForm({ overwrite:false });
+}
+
+window.clearCheckoutDraftMemory = function(){
+  if(!confirm('確定清除本機記憶的訂購人與宅配資料嗎？')) return;
+  try{ localStorage.removeItem(CHECKOUT_DRAFT_STORAGE_KEY); }catch(e){}
+  __CHECKOUT_DRAFT_APPLYING__ = true;
+  try{
+    CHECKOUT_DRAFT_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(String(el.tagName || '').toUpperCase() === 'SELECT') el.value = '';
+      else el.value = '';
+    });
+  }catch(e){} finally { __CHECKOUT_DRAFT_APPLYING__ = false; }
+  try{ window.syncDeliveryUI && window.syncDeliveryUI({ collapse: false }); }catch(e){}
+  try{ syncDeliveryHeaderUI(); }catch(e){}
+  try{ showToast('已清除本機記憶資料', 'info'); }catch(e){}
+};
 
 // --- LOGIC FUNCTIONS ---
 
@@ -10682,7 +10840,9 @@ await new Promise(r => requestAnimationFrame(r));
 
 // Restore cart as soon as UI exists
 try{ bindPrivacyAndRemitEvents(); }catch(e){}
+try{ bindCheckoutDraftMemory(); }catch(e){}
 loadState();
+try{ applyCheckoutDraftToForm({ overwrite:false }); }catch(e){}
 try{ syncRemitButtonUI(); }catch(e){}
 
 // Load dropdown config (departments / payments) in background.
@@ -12557,6 +12717,7 @@ window.toggleDelivery = function() {
   }
   try { updateDeliveryCollapseCue(); } catch(e) {}
   try { syncDeliveryHeaderUI(); } catch(e) {}
+  try { saveCheckoutDraftFromForm(); } catch(e) {}
 };
 
 // [NEW] 宅配表單收合（需先完成必填欄位）
@@ -12601,6 +12762,7 @@ window.collapseDelivery = function() {
     status.style.fontWeight = "700";
   }
   try { syncDeliveryHeaderUI(); } catch(e) {}
+  try { saveCheckoutDraftFromForm(); } catch(e) {}
 };
 
 
@@ -12665,6 +12827,7 @@ window.submitOrder = async () => {
         return;
     }
 
+    try{ saveCheckoutDraftFromForm(); }catch(e){}
     const f = (id) => String(document.getElementById(id)?.value || '').trim();
     const nameEl = document.getElementById("fName");
     const deptEl = document.getElementById("fDept");
@@ -13029,7 +13192,7 @@ function closeReceipt() {
     refreshCart();
     closeCart();
     renderList();
-    document.getElementById("fNote").value = "";
+    try{ applyCheckoutDraftToForm({ overwrite:false }); }catch(e){}
     lastOrderData = null;
     lastOrderId = null;
     lastPickupToken = '';
