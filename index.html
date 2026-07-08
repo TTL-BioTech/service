@@ -4484,7 +4484,7 @@ body.cfg-error .btn-bundle{
 
 
 /* ==========================================================
-   V7.42.7 個資同意 + 匯款資訊必填流程
+   V7.42.8 個資同意 + 匯款電話 + 強制宅配 + 鍵盤修正
    ========================================================== */
 .privacy-box,
 .remit-box{
@@ -4702,6 +4702,56 @@ body.cfg-error .btn-bundle{
   font-weight:950;
   background:#fff !important;
 }
+.remit-phone-wrap{
+  padding:13px;
+  border-radius:16px;
+  background:#f8faf9;
+  border:1px solid #d7ece8;
+  margin-bottom:12px;
+}
+.remit-phone-wrap label{
+  display:block;
+  font-size:13px;
+  font-weight:950;
+  color:#00695c;
+  margin-bottom:8px;
+}
+#remitPhoneInput{
+  font-size:17px !important;
+  font-weight:850;
+  background:#fff !important;
+}
+.remit-input-hint{
+  margin-top:6px;
+  font-size:11px;
+  color:#78909c;
+  font-weight:750;
+  line-height:1.4;
+}
+.delivery-toggle-wrap.force-delivery{
+  background:#e0f2f1 !important;
+  border-color:#80cbc4 !important;
+}
+.delivery-toggle-wrap.force-delivery .d-toggle-label{
+  color:#00695c !important;
+  font-weight:900;
+}
+.delivery-toggle-wrap.force-delivery input[type="checkbox"]{
+  opacity:.72;
+}
+.delivery-force-badge{
+  display:none;
+  align-items:center;
+  gap:4px;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  color:#00695c;
+  background:rgba(0,137,123,.10);
+  border:1px solid rgba(0,137,123,.18);
+}
+.delivery-toggle-wrap.force-delivery .delivery-force-badge{ display:inline-flex; }
 .remit-error{
   color:#c62828;
   font-size:12px;
@@ -4923,7 +4973,7 @@ body.cfg-error .btn-bundle{
       <div class="delivery-toggle-wrap">
         <label class="d-toggle-label">
           <input type="checkbox" id="chkDelivery" onchange="toggleDelivery()">
-          <span>需宅配寄送</span> <span id="deliveryStatusText" style="font-size:12px;font-weight:400;color:#ef6c00">(請填寫收件資訊)</span><span id="deliveryCollapseHint" class="delivery-collapse-hint">資料已填，可收合</span>
+          <span>需宅配寄送</span> <span id="deliveryForceBadge" class="delivery-force-badge">全單宅配</span> <span id="deliveryStatusText" style="font-size:12px;font-weight:400;color:#ef6c00">(請填寫收件資訊)</span><span id="deliveryCollapseHint" class="delivery-collapse-hint">資料已填，可收合</span>
         </label>
         <span id="shipFreeBadge" class="ship-free-badge" style="display:none"></span>
         <button type="button" class="d-collapse-btn" id="btnDeliveryCollapse" onclick="collapseDelivery()">收合</button>
@@ -5038,6 +5088,12 @@ body.cfg-error .btn-bundle{
         <input id="remitLast4Input" type="tel" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="____">
         <div class="remit-error" id="remitErrorText"></div>
       </div>
+      <div class="remit-phone-wrap">
+        <label for="remitPhoneInput" id="remitPhoneLabel">匯款聯絡電話</label>
+        <input id="remitPhoneInput" type="tel" inputmode="tel" maxlength="18" autocomplete="tel" placeholder="09XXXXXXXX 或 0X-XXXXXXXX#XXXX">
+        <div class="remit-input-hint" id="remitPhoneHint">手機請以 09 開頭</div>
+        <div class="remit-error" id="remitPhoneErrorText"></div>
+      </div>
     </div>
     <div class="remit-foot">
       <div class="remit-actions">
@@ -5130,7 +5186,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_7_privacy_consent_remit_info";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_8_remit_phone_force_delivery_keyboardfix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5381,7 +5437,7 @@ let PRODUCT_ID_MAP = new Map();
 const CART_STORAGE_KEY = 'v17_cart_data';
 const CLIENT_SUBMIT_KEY_STORAGE = 'ttlbt_client_submit_key_v1';
 let __ORDER_SUBMIT_IN_FLIGHT__ = false; 
-let REMIT_INFO = { last4: '' };
+let REMIT_INFO = { last4: '', phone: '' };
 let __PRIVACY_CONTINUE_AFTER_CONSENT__ = false;
 let RANKINGS = { all:[], health:[], beauty:[], cleaning:[] };
 let currentCat = "", categories = [];
@@ -5856,6 +5912,7 @@ function setCheckoutStage(stage){
     if(btn){
       btn.textContent = (__CHECKOUT_STAGE__ === 2) ? '確認訂購' : '結帳去';
     }
+    try{ applyForceDeliveryMode(); }catch(e){}
     try{ syncDeliveryHeaderUI(); }catch(e){}
     try{ syncRemitButtonUI(); }catch(e){}
   }catch(e){}
@@ -5866,8 +5923,8 @@ function proceedToCheckoutDetails(){
   if(details){
     details.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
-  const f = document.getElementById('fName');
-  if(f) setTimeout(()=>{ try{ f.focus(); }catch(e){} }, 260);
+  try{ blurActiveElement(); }catch(e){}
+  try{ applyForceDeliveryMode(); }catch(e){}
   try{ syncRemitButtonUI(); }catch(e){}
 }
 function handleCheckoutSubmit(){
@@ -5892,6 +5949,7 @@ function handleCheckoutSubmit(){
 window.openCart = function() {
   if(typeof guardOrderSystemOpenForAction === 'function' && !guardOrderSystemOpenForAction()) return;
   setCheckoutStage(1);
+  try{ applyForceDeliveryMode(); }catch(e){}
   try{ syncRemitButtonUI(); }catch(e){}
   document.getElementById("drawer").classList.add("open"); 
   document.getElementById("float-bar").classList.add("hidden"); 
@@ -6535,6 +6593,7 @@ function loadState() {
     const data = JSON.parse(raw);
     const savedCart = Array.isArray(data.cart) ? data.cart : [];
     if(data && data.remit_info && /^\d{4}$/.test(String(data.remit_info.last4 || ''))) REMIT_INFO.last4 = String(data.remit_info.last4);
+    if(data && data.remit_info && isValidRemitPhone(data.remit_info.phone || '')) REMIT_INFO.phone = normalizeRemitPhone(data.remit_info.phone || '');
     CART = savedCart.map(oldItem => {
       const freshItem = findProductForCartRestore(oldItem);
       if(freshItem && !freshItem.is_hidden) {
@@ -6672,6 +6731,49 @@ function uiGetBool(key, fallback=false){
 }
 
 
+// V7.42.8: modal keyboard guard + forced delivery helpers
+function blurActiveElement(){
+  try{
+    const ae = document.activeElement;
+    if(ae && typeof ae.blur === 'function') ae.blur();
+  }catch(e){}
+}
+function focusModalShell(id){
+  try{
+    const modal = document.getElementById(id);
+    if(!modal) return;
+    modal.setAttribute('tabindex','-1');
+    setTimeout(()=>{ try{ modal.focus({ preventScroll:true }); }catch(e){} }, 30);
+  }catch(e){}
+}
+function isForceDeliveryEnabled(){ return uiGetBool('ui|force_delivery_enabled', false); }
+function applyForceDeliveryMode(){
+  try{
+    const forced = isForceDeliveryEnabled();
+    const wrap = document.querySelector('.delivery-toggle-wrap');
+    const chk = document.getElementById('chkDelivery');
+    const form = document.getElementById('deliveryForm');
+    const status = document.getElementById('deliveryStatusText');
+    if(wrap) wrap.classList.toggle('force-delivery', forced);
+    if(chk){
+      if(forced){ chk.checked = true; chk.disabled = true; }
+      else { chk.disabled = false; }
+    }
+    if(forced && form){
+      form.classList.add('show');
+      const btn = document.getElementById('btnDeliveryCollapse');
+      if(btn) btn.style.display = 'inline-flex';
+      if(status){
+        status.textContent = '(所有訂單皆需宅配)';
+        status.style.color = '#00695c';
+        status.style.fontWeight = '900';
+      }
+    }
+    try{ updateDeliveryCollapseCue(); }catch(e){}
+    try{ syncDeliveryHeaderUI(); }catch(e){}
+  }catch(e){}
+}
+
 // V7.42.7: privacy consent + remittance info helpers
 const DEFAULT_PRIVACY_CONSENT_BODY = "臺灣菸酒股份有限公司暨所屬機構（以下簡稱本公司）為辦理生技展銷售業務並遵循個人資料保護法等相關規定，向台端告知下列事項，請台端詳閱：\n\n一、蒐集之目的：\n040 行銷、063 非公務機關依法定義務所進行個人資料之蒐集處理及利用、069 契約、類似契約或其他法律關係事務、090 消費者、客戶管理與服務。\n\n二、蒐集之個人資料類別：\n本公司蒐集之個人資料種類包括但不限於 C001 識別個人者，例如姓名、職稱、住址、工作地址、聯絡電話、電子郵件、通訊地址及其他可辨識本人之資料。\n\n三、個人資料利用之期間、地區、對象及方式：\n（一）期間：上述蒐集目的未消失與法令規定之必要保存期間內。\n（二）地區：台端之個人資料將於服務所能到達之地區內利用。\n（三）對象：以本公司及與本公司業務往來之機關（構）及公司為限。\n（四）方式：以紙本、電腦系統、電子檔案、電話、email、傳真、郵寄或其他合法合理方式使用。\n\n四、依個資法第三條規定，台端得向本公司申請查詢、閱覽、製給複製本、補充、更正、停止蒐集處理利用或刪除，惟依法本公司因執行業務所必須者，得不依台端請求為之。聯絡方式：02-23214567 分機 1451 張先生。\n\n五、台端得自由選擇是否提供相關個人資料，惟若拒絕提供，本公司將無法提供蒐集目的所包含之完整服務或資訊，致使台端權益受損。\n\n立書人已瞭解本同意書符合個資法及相關規定要求，並同意本公司基於業務所需之特定目的內蒐集、處理及利用個人資料。";
 function getPrivacyConsentVersion(){ return uiGet('ui|privacy_consent_version', '2026BioExpo-v1'); }
@@ -6719,9 +6821,11 @@ function checkPrivacyScrolledToBottom(){
 }
 function openPrivacyConsentModal(onContinue){
   __PRIVACY_CONTINUE_AFTER_CONSENT__ = !!onContinue;
+  try{ blurActiveElement(); }catch(e){}
   renderPrivacyConsentModal();
   const modal = document.getElementById('privacyConsentModal');
   if(modal) modal.classList.add('open');
+  focusModalShell('privacyConsentModal');
 }
 function closePrivacyConsentModal(agreed){
   const modal = document.getElementById('privacyConsentModal');
@@ -6748,7 +6852,15 @@ function isRemitPaymentSelected(){
   }catch(e){ return false; }
 }
 function normalizeRemitLast4(v){ return String(v || '').replace(/\D/g,'').slice(0,4); }
-function isRemitInfoComplete(){ return /^\d{4}$/.test(String(REMIT_INFO && REMIT_INFO.last4 || '')); }
+function normalizeRemitPhone(v){ return String(v || '').replace(/[^0-9#-]/g,'').slice(0,18); }
+function isValidRemitPhone(v){
+  const s = normalizeRemitPhone(v);
+  if(/^09\d{8}$/.test(s)) return true;
+  if(/^0\d-\d{7,8}(#\d{1,6})?$/.test(s)) return true;
+  if(/^0\d{1,2}-\d{6,8}(#\d{1,6})?$/.test(s)) return true;
+  return false;
+}
+function isRemitInfoComplete(){ return /^\d{4}$/.test(String(REMIT_INFO && REMIT_INFO.last4 || '')) && isValidRemitPhone(REMIT_INFO && REMIT_INFO.phone || ''); }
 function getRemitCopy(k, fallback){ return uiGet('ui|remit_' + k, fallback); }
 function syncRemitButtonUI(){
   const btn = document.getElementById('btnRemitInfo');
@@ -6765,7 +6877,7 @@ function syncRemitButtonUI(){
   if(txt) txt.textContent = (isRemit && isRemitInfoComplete()) ? ('末四碼 ' + REMIT_INFO.last4) : getRemitCopy('button_text', '匯款資訊');
   if(submit) submit.classList.toggle('remit-pending', (typeof __CHECKOUT_STAGE__ !== 'undefined' && __CHECKOUT_STAGE__ === 2 && isRemit && !isRemitInfoComplete()));
 }
-function resetRemitIfNotSelected(){ if(!isRemitPaymentSelected()){ REMIT_INFO.last4 = ''; } }
+function resetRemitIfNotSelected(){ if(!isRemitPaymentSelected()){ REMIT_INFO.last4 = ''; REMIT_INFO.phone = ''; } }
 function syncPaymentModeUI(){ resetRemitIfNotSelected(); syncRemitButtonUI(); try{ saveState(); }catch(e){} }
 function openRemitModal(){
   if(!isRemitPaymentSelected()) return;
@@ -6783,6 +6895,10 @@ function openRemitModal(){
   const note = document.getElementById('remitNoteText');
   const last4Label = document.getElementById('remitLast4Label');
   const input = document.getElementById('remitLast4Input');
+  const phoneLabel = document.getElementById('remitPhoneLabel');
+  const phoneInput = document.getElementById('remitPhoneInput');
+  const phoneHint = document.getElementById('remitPhoneHint');
+  const phoneErr = document.getElementById('remitPhoneErrorText');
   const err = document.getElementById('remitErrorText');
   if(title) title.textContent = getRemitCopy('modal_title', '匯款資訊');
   if(sub) sub.textContent = getRemitCopy('modal_subtitle', '請完成匯款後填寫帳戶轉帳末 4 碼，以利後續核對。');
@@ -6796,10 +6912,15 @@ function openRemitModal(){
   if(note) note.textContent = getRemitCopy('note', '請於匯款完成後填寫帳戶轉帳末 4 碼，以利後續核對。');
   if(last4Label) last4Label.textContent = getRemitCopy('last4_label', '匯款末 4 碼');
   if(input){ input.value = REMIT_INFO.last4 || ''; input.classList.remove('input-error','flash-anim'); }
+  if(phoneLabel) phoneLabel.textContent = getRemitCopy('phone_label', '匯款聯絡電話');
+  if(phoneInput){ phoneInput.value = REMIT_INFO.phone || ''; phoneInput.placeholder = getRemitCopy('phone_placeholder', '09XXXXXXXX 或 0X-XXXXXXXX#XXXX'); phoneInput.classList.remove('input-error','flash-anim'); }
+  if(phoneHint) phoneHint.textContent = getRemitCopy('phone_hint', '手機請以 09 開頭');
   if(err) err.textContent = '';
+  if(phoneErr) phoneErr.textContent = '';
+  try{ blurActiveElement(); }catch(e){}
   const modal = document.getElementById('remitModal');
   if(modal) modal.classList.add('open');
-  setTimeout(()=>{ try{ input && input.focus(); }catch(e){} }, 120);
+  focusModalShell('remitModal');
 }
 function closeRemitModal(){
   const modal = document.getElementById('remitModal');
@@ -6807,15 +6928,27 @@ function closeRemitModal(){
 }
 function completeRemitInfo(){
   const input = document.getElementById('remitLast4Input');
+  const phoneInput = document.getElementById('remitPhoneInput');
   const err = document.getElementById('remitErrorText');
+  const phoneErr = document.getElementById('remitPhoneErrorText');
   const v = normalizeRemitLast4(input && input.value);
+  const phone = normalizeRemitPhone(phoneInput && phoneInput.value);
   if(input) input.value = v;
+  if(phoneInput) phoneInput.value = phone;
+  let bad = false;
   if(!/^\d{4}$/.test(v)){
     if(err) err.textContent = '請輸入 4 碼數字。';
     if(input){ input.classList.remove('input-error','flash-anim'); void input.offsetWidth; input.classList.add('input-error','flash-anim'); }
-    return;
-  }
+    bad = true;
+  }else if(err){ err.textContent = ''; }
+  if(!isValidRemitPhone(phone)){
+    if(phoneErr) phoneErr.textContent = getRemitCopy('phone_invalid_toast', '請填寫正確匯款聯絡電話');
+    if(phoneInput){ phoneInput.classList.remove('input-error','flash-anim'); void phoneInput.offsetWidth; phoneInput.classList.add('input-error','flash-anim'); }
+    bad = true;
+  }else if(phoneErr){ phoneErr.textContent = ''; }
+  if(bad) return;
   REMIT_INFO.last4 = v;
+  REMIT_INFO.phone = phone;
   try{ saveState(); }catch(e){}
   syncRemitButtonUI();
   closeRemitModal();
@@ -6839,7 +6972,8 @@ function maybeCueRemitWhenReady(){
 }
 function appendRemitLast4ToRemarks(note){
   if(!isRemitPaymentSelected() || !isRemitInfoComplete()) return String(note || '').trim();
-  const line = '匯款末四碼：' + REMIT_INFO.last4;
+  const phoneLine = REMIT_INFO.phone ? '匯款聯絡電話：' + REMIT_INFO.phone : '';
+  const line = '匯款末四碼：' + REMIT_INFO.last4 + (phoneLine ? '｜' + phoneLine : '');
   const base = String(note || '').trim();
   return base ? (base + '｜' + line) : line;
 }
@@ -6847,6 +6981,7 @@ function getRemitPayloadInfo(total){
   if(!isRemitPaymentSelected() || !isRemitInfoComplete()) return null;
   return {
     last4: REMIT_INFO.last4,
+    phone: REMIT_INFO.phone || '',
     account_name: getRemitCopy('account_name', 'XXX'),
     account_no: getRemitCopy('account_no', 'XXXXXXXXXX'),
     note: getRemitCopy('note', '請於匯款完成後填寫帳戶轉帳末 4 碼，以利後續核對。'),
@@ -6863,13 +6998,18 @@ function bindPrivacyAndRemitEvents(){
     if(pay) pay.addEventListener('change', syncPaymentModeUI);
     const last4 = document.getElementById('remitLast4Input');
     if(last4) last4.addEventListener('input', ()=>{ last4.value = normalizeRemitLast4(last4.value); });
+    const phone = document.getElementById('remitPhoneInput');
+    if(phone) phone.addEventListener('input', ()=>{ phone.value = normalizeRemitPhone(phone.value); });
     ['fName','dName','dPhone','dAddr'].forEach(id=>{
       const el = document.getElementById(id);
       if(el){
-        el.addEventListener('change', ()=>{ try{ syncRemitButtonUI(); }catch(e){} }, { passive:true });
+        const sync = ()=>{ try{ syncRemitButtonUI(); maybeCueRemitWhenReady(); }catch(e){} };
+        el.addEventListener('input', sync, { passive:true });
+        el.addEventListener('change', sync, { passive:true });
       }
     });
     syncRemitButtonUI();
+    try{ applyForceDeliveryMode(); }catch(e){}
   }catch(e){}
 }
 
@@ -11546,6 +11686,7 @@ window.clearCart = function() {
   if(confirm("確定要清空購物車嗎？")) { 
     CART = []; 
     REMIT_INFO.last4 = '';
+    REMIT_INFO.phone = '';
     clearClientSubmitKey();
     SELECTED_BUNDLE.clear(); 
     achievedGifts = []; // Reset gifts memory
@@ -12264,6 +12405,7 @@ window.toggleSum = () => { const b = document.getElementById("finalList"); const
 
 // [NEW] 切換宅配表單顯示
 window.toggleDelivery = function() {
+  if(isForceDeliveryEnabled()){ try{ applyForceDeliveryMode(); }catch(e){} return; }
   const chk = document.getElementById("chkDelivery");
   const form = document.getElementById("deliveryForm");
   const btn = document.getElementById("btnDeliveryCollapse");
@@ -12369,6 +12511,7 @@ window.syncDeliveryUI = function(opts = { collapse: true }) {
   const btn = document.getElementById("btnDeliveryCollapse");
   const status = document.getElementById("deliveryStatusText");
   if(!chk || !form || !status) return;
+  if(isForceDeliveryEnabled()){ applyForceDeliveryMode(); return; }
 
   const n = (document.getElementById("dName")?.value || "").trim();
   const p = (document.getElementById("dPhone")?.value || "").trim();
@@ -12437,6 +12580,7 @@ window.submitOrder = async () => {
     if(!isRemitPayment && !f("fDept")) { deptEl.classList.add("input-error", "flash-anim"); hasError = true; }
 
     // 2. 宅配驗證
+    try{ applyForceDeliveryMode(); }catch(e){}
     const isDelivery = document.getElementById("chkDelivery").checked;
     let pickupInfo = null;
 
@@ -12563,6 +12707,7 @@ window.submitOrder = async () => {
         department: isRemitPayment ? getRemitCopy('department_value', '匯款資訊') : f("fDept"),
         payment_method: f("fPay"),
         remit_last4: isRemitPayment ? REMIT_INFO.last4 : '',
+        remit_phone: isRemitPayment ? (REMIT_INFO.phone || '') : '',
         remit_info: getRemitPayloadInfo(data.finalTotal),
         receipt_email: receiptEmail,
         remarks: appendRemitLast4ToRemarks(f("fNote")),
@@ -12644,7 +12789,7 @@ function openReceipt(orderId, res = {}) {
       <div class="rc-info-cell">訂購人<b>${escapeHtml(lastOrderData.employee_name || '')}</b></div>
       <div class="rc-info-cell">部門<b>${escapeHtml(lastOrderData.department || '')}</b></div>
       <div class="rc-info-cell">付款方式<b>${escapeHtml(lastOrderData.payment_method || '')}</b></div>
-      ${lastOrderData.remit_last4 ? `<div class="rc-info-cell full">匯款資訊<b>末四碼 ${escapeHtml(lastOrderData.remit_last4)}</b></div>` : ''}
+      ${lastOrderData.remit_last4 ? `<div class="rc-info-cell full">匯款資訊<b>末四碼 ${escapeHtml(lastOrderData.remit_last4)}${lastOrderData.remit_phone ? '｜電話 ' + escapeHtml(lastOrderData.remit_phone) : ''}</b></div>` : ''}
       <div class="rc-info-cell">取貨方式<b>${escapeHtml(lastOrderData.pickup_method || '自取')}</b></div>
       ${lastOrderData.remarks ? `<div class="rc-info-cell full">訂單備註<b>${escapeHtml(lastOrderData.remarks)}</b></div>` : ''}
     </div>`;
@@ -12715,7 +12860,7 @@ function buildReceiptPrintHtml() {
               <div class="pr-cell">訂購人<b>${escapeHtml(d.employee_name || '')}</b></div>
               <div class="pr-cell">部門<b>${escapeHtml(d.department || '')}</b></div>
               <div class="pr-cell">付款方式<b>${escapeHtml(d.payment_method || '')}</b></div>
-              ${d.remit_last4 ? `<div class="pr-cell full">匯款資訊<b>末四碼 ${escapeHtml(d.remit_last4)}</b></div>` : ''}
+              ${d.remit_last4 ? `<div class="pr-cell full">匯款資訊<b>末四碼 ${escapeHtml(d.remit_last4)}${d.remit_phone ? '｜電話 ' + escapeHtml(d.remit_phone) : ''}</b></div>` : ''}
               <div class="pr-cell">取貨方式<b>${escapeHtml(d.pickup_method || '自取')}</b></div>
               ${d.remarks ? `<div class="pr-cell full">訂單備註<b>${escapeHtml(d.remarks || '')}</b></div>` : ''}
             </div>
@@ -12770,6 +12915,7 @@ function closeReceipt() {
     document.getElementById("receiptModal").classList.remove("open");
     CART = [];
     REMIT_INFO.last4 = '';
+    REMIT_INFO.phone = '';
     clearClientSubmitKey();
     SELECTED_BUNDLE.clear();
     achievedGifts = [];
