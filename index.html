@@ -143,6 +143,62 @@ body.order-closed-mode #welcome-overlay.fade-out{
   color:#00695c; font-size:13px; line-height:1.65; font-weight:650;
 }
 
+
+/* V7.42.6: Submit idempotency lock overlay */
+#submit-lock-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+#submit-lock-overlay.show{ display:flex; }
+.submit-lock-card{
+  width: min(90vw, 360px);
+  border-radius: 26px;
+  padding: 26px 22px 24px;
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 26px 70px rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.72);
+  text-align: center;
+}
+.submit-lock-icon{
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#00897b;
+  background: rgba(0,137,123,.10);
+  animation: submitLockPulse 1.35s ease-in-out infinite;
+}
+.submit-lock-icon .material-icons-round{ font-size: 33px; }
+.submit-lock-title{
+  font-size: 18px;
+  font-weight: 950;
+  color:#173d35;
+  line-height: 1.35;
+}
+.submit-lock-sub{
+  margin-top: 9px;
+  font-size: 13px;
+  font-weight: 750;
+  color:#607d8b;
+  line-height: 1.65;
+}
+@keyframes submitLockPulse{
+  0%,100%{ transform: scale(1); filter: saturate(1); }
+  50%{ transform: scale(1.05); filter: saturate(1.18); }
+}
+
 /* --- LAYOUT --- */
 main { padding: 12px; max-width: 900px; margin: 0 auto; margin-top: 10px; }
 .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; align-content: start; width: 100%; 
@@ -4519,6 +4575,14 @@ body.cfg-error .btn-bundle{
   </div>
 </div>
 
+<div id="submit-lock-overlay" aria-live="polite" aria-modal="true" role="status">
+  <div class="submit-lock-card">
+    <div class="submit-lock-icon"><span class="material-icons-round">hourglass_top</span></div>
+    <div class="submit-lock-title" id="submitLockTitle">訂單資料傳送中</div>
+    <div class="submit-lock-sub" id="submitLockSub">系統正在確認訂單，請勿關閉視窗或重複送出。</div>
+  </div>
+</div>
+
 <header>
   <div class="search-wrap">
     <div class="search-box">
@@ -4772,7 +4836,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_5_order_closed_screen_sheet_toggle";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_6_submit_idempotency_cart_restore_fix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5014,7 +5078,12 @@ function applyConfigToForm(cfg, fromCache) {
 
 
 let PRODUCTS = [], RULES = {}, CART = [], SELECTED_BUNDLE = new Map();
-let PRODUCT_MAP = new Map(); 
+let PRODUCT_MAP = new Map();
+let PRODUCT_CART_KEY_MAP = new Map();
+let PRODUCT_ID_MAP = new Map();
+const CART_STORAGE_KEY = 'v17_cart_data';
+const CLIENT_SUBMIT_KEY_STORAGE = 'ttlbt_client_submit_key_v1';
+let __ORDER_SUBMIT_IN_FLIGHT__ = false; 
 let RANKINGS = { all:[], health:[], beauty:[], cleaning:[] };
 let currentCat = "", categories = [];
 let modalPid = null, isCartOpen = false;
@@ -5041,6 +5110,111 @@ function splitMultiVals(s) {
     .split(/[&＆|、,;；]/)
     .map(x => x.trim())
     .filter(Boolean);
+}
+
+
+// V7.42.6: stable cart identity. Same product_code may exist as normal item and add-on item.
+function normalizeCartKeyPart(v){
+  return String(v ?? '').trim().replace(/\s+/g, ' ');
+}
+function buildCartItemKey(p){
+  const item = p || {};
+  return [item.code, item.category, item.name].map(normalizeCartKeyPart).join('||');
+}
+function buildProductCartIndexes(){
+  PRODUCT_CART_KEY_MAP = new Map();
+  PRODUCT_ID_MAP = new Map();
+  (PRODUCTS || []).forEach(p => {
+    if(!p) return;
+    p.cart_item_key = buildCartItemKey(p);
+    p.source_category = p.category;
+    p.source_name = p.name;
+    p.source_is_addon = String(p.category || '').includes('加價購');
+    PRODUCT_ID_MAP.set(String(p._id), p);
+    if(p.cart_item_key && !PRODUCT_CART_KEY_MAP.has(p.cart_item_key)) PRODUCT_CART_KEY_MAP.set(p.cart_item_key, p);
+  });
+}
+function stampCartItem(item, source){
+  const base = source || item || {};
+  if(!item) item = {};
+  item.cart_item_key = item.cart_item_key || buildCartItemKey(base);
+  item.source_category = item.source_category || base.category || item.category || '';
+  item.source_name = item.source_name || base.name || item.name || '';
+  item.source_is_addon = !!(item.source_is_addon || String(item.source_category || item.category || '').includes('加價購'));
+  return item;
+}
+function findProductForCartRestore(oldItem){
+  try{
+    if(!oldItem) return null;
+    const savedKey = String(oldItem.cart_item_key || '').trim();
+    if(savedKey && PRODUCT_CART_KEY_MAP && PRODUCT_CART_KEY_MAP.has(savedKey)) return PRODUCT_CART_KEY_MAP.get(savedKey);
+
+    const code = normalizeCartKeyPart(oldItem.code);
+    const cat = normalizeCartKeyPart(oldItem.source_category || oldItem.category);
+    const name = normalizeCartKeyPart(oldItem.source_name || oldItem.name);
+
+    // Backward-compatible fallback for carts saved before V7.42.6.
+    // Prefer code + category + name before _id, because _id may shift when the Sheet sort changes.
+    if(code && (cat || name)){
+      const exact = (PRODUCTS || []).find(p =>
+        normalizeCartKeyPart(p.code) === code &&
+        (!cat || normalizeCartKeyPart(p.category) === cat) &&
+        (!name || normalizeCartKeyPart(p.name) === name)
+      );
+      if(exact) return exact;
+    }
+
+    const oid = String(oldItem._id ?? '').trim();
+    if(oid && PRODUCT_ID_MAP && PRODUCT_ID_MAP.has(oid)) {
+      const byId = PRODUCT_ID_MAP.get(oid);
+      if(byId && String(byId.code) === String(oldItem.code || byId.code)) {
+        if(cat && normalizeCartKeyPart(byId.category) !== cat) return null;
+        if(name && normalizeCartKeyPart(byId.name) !== name) return null;
+        return byId;
+      }
+    }
+
+    // Last fallback only. This may be ambiguous for duplicated product_code, but preserves very old carts.
+    return PRODUCT_MAP.get(oldItem.code) || null;
+  }catch(e){
+    return PRODUCT_MAP.get(oldItem && oldItem.code) || null;
+  }
+}
+
+// V7.42.6: client-side submit idempotency helpers.
+function makeClientSubmitKey(){
+  try{
+    if(window.crypto && typeof crypto.randomUUID === 'function') return 'TTLBT-' + crypto.randomUUID();
+  }catch(e){}
+  return 'TTLBT-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+function getOrCreateClientSubmitKey(){
+  try{
+    let key = localStorage.getItem(CLIENT_SUBMIT_KEY_STORAGE);
+    if(!key){ key = makeClientSubmitKey(); localStorage.setItem(CLIENT_SUBMIT_KEY_STORAGE, key); }
+    return key;
+  }catch(e){
+    return makeClientSubmitKey();
+  }
+}
+function clearClientSubmitKey(key){
+  try{
+    const cur = localStorage.getItem(CLIENT_SUBMIT_KEY_STORAGE);
+    if(!key || !cur || cur === key) localStorage.removeItem(CLIENT_SUBMIT_KEY_STORAGE);
+  }catch(e){}
+}
+function showSubmitLock(title, sub){
+  try{
+    const o = document.getElementById('submit-lock-overlay');
+    const t = document.getElementById('submitLockTitle');
+    const d = document.getElementById('submitLockSub');
+    if(t) t.textContent = title || '訂單資料傳送中';
+    if(d) d.textContent = sub || '系統正在確認訂單，請勿關閉視窗或重複送出。';
+    if(o) o.classList.add('show');
+  }catch(e){}
+}
+function hideSubmitLock(){
+  try{ document.getElementById('submit-lock-overlay')?.classList.remove('show'); }catch(e){}
 }
 
 function getFlatPriceRule(code, zoneText) {
@@ -5806,7 +5980,7 @@ window.updateQty = function(btnEl, pid, delta) {
     item.qty += delta;
     if(item.qty <= 0) CART = CART.filter(x => x !== item);
   } else if (delta > 0) {
-    CART.push({ ...p, qty: 1 });
+    CART.push(stampCartItem({ ...p, qty: 1 }, p));
   }
   
   if(delta > 0 && btnEl) animateFly(btnEl);
@@ -6034,19 +6208,29 @@ function checkNewGifts(currentGifts) {
 // --- LOGIC FUNCTIONS ---
 
 function saveState() {
+  try{
+    CART = (CART || []).map(it => stampCartItem(it, (it && it._id != null && PRODUCT_ID_MAP) ? PRODUCT_ID_MAP.get(String(it._id)) : it));
+  }catch(e){}
   const state = { cart: CART }; 
-  localStorage.setItem('v17_cart_data', JSON.stringify(state));
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state));
 }
 
 function loadState() {
-  const raw = localStorage.getItem('v17_cart_data');
+  const raw = localStorage.getItem(CART_STORAGE_KEY);
   if(!raw) return;
   try {
     const data = JSON.parse(raw);
-    CART = data.cart.map(oldItem => {
-      const freshItem = PRODUCT_MAP.get(oldItem.code);
+    const savedCart = Array.isArray(data.cart) ? data.cart : [];
+    CART = savedCart.map(oldItem => {
+      const freshItem = findProductForCartRestore(oldItem);
       if(freshItem && !freshItem.is_hidden) {
-          return { ...freshItem, qty: oldItem.qty, bundleSelection: oldItem.bundleSelection };
+          const restored = stampCartItem({
+            ...freshItem,
+            qty: Number(oldItem.qty) || 1,
+            bundleSelection: oldItem.bundleSelection,
+            cartId: oldItem.cartId
+          }, freshItem);
+          return restored;
       }
       return null;
     }).filter(x => x);
@@ -9691,6 +9875,7 @@ PRODUCTS = core.products || [];
 RULES = core.rules || {};
 PRODUCT_MAP = new Map(core.productMapEntries || []);
 GIFT_MAP = new Map(core.giftMapEntries || []);
+buildProductCartIndexes();
 
 if(!PRODUCTS || PRODUCTS.length === 0) {
   throw new Error("商品資料為空（可能是連線被擋 / 代理回傳異常）");
@@ -10799,12 +10984,12 @@ window.confirmBundle = function() {
   if(!p) return;
   
   // Clone product to create new cart item
-  const cartItem = { 
+  const cartItem = stampCartItem({ 
     ...p, 
     qty: 1, 
     bundleSelection: [...tempBundleSelection], // Store selection
     cartId: Date.now() + Math.random() // Unique ID
-  };
+  }, p);
   
   // Check if EXACT same bundle exists? No, user wants separate usually. 
   // Or if same, increment? Let's check.
@@ -10841,6 +11026,7 @@ window.closeBundle = function() { document.getElementById("bundleModal").classLi
 window.clearCart = function() {
   if(confirm("確定要清空購物車嗎？")) { 
     CART = []; 
+    clearClientSubmitKey();
     SELECTED_BUNDLE.clear(); 
     achievedGifts = []; // Reset gifts memory
     try{ clearNewGiftUnviewed(); }catch(e){}
@@ -11544,7 +11730,7 @@ window.onpopstate = (e) => {
 window.addEventListener("pageshow", () => {
   try{ if(isOrderSystemClosed()) renderOrderClosedScreen(); }catch(e){}
 });
-window.onbeforeunload = (e) => { if(!isOrderSystemClosed() && CART.length > 0) return "訂單尚未送出"; };
+window.onbeforeunload = (e) => { if(__ORDER_SUBMIT_IN_FLIGHT__) return "訂單送出中，請勿關閉視窗"; if(!isOrderSystemClosed() && CART.length > 0) return "訂單尚未送出"; };
 
 // OPTIMIZATION 2: Clear Search Logic
 document.getElementById("clearSearch").addEventListener("click", () => {
@@ -11699,6 +11885,11 @@ window.addEventListener("pageshow", () => {
 
 window.submitOrder = async () => {
     if(typeof ensureOrderSystemOpenForSubmit === 'function' && !(await ensureOrderSystemOpenForSubmit())) return;
+    if(__ORDER_SUBMIT_IN_FLIGHT__) {
+        showSubmitLock('訂單確認中', '系統已收到送出動作，請勿重複點擊或關閉視窗。');
+        try { showToast('訂單確認中，請勿重複送出', 'info', 2600); } catch(e) {}
+        return;
+    }
 
     // V2 Sprint1: strict mode — if config isn't ready, don't allow submission
     if(!CONFIG_READY) {
@@ -11765,10 +11956,15 @@ window.submitOrder = async () => {
     }
 
     const btn = document.querySelector(".btn-submit");
-    const originalText = btn.innerText;
-    btn.innerText = "訂單資料傳送中...請勿關閉視窗";
-    btn.disabled = true;
-    btn.style.opacity = "0.7";
+    const originalText = btn ? btn.innerText : "確認訂購";
+    const clientSubmitKey = getOrCreateClientSubmitKey();
+    __ORDER_SUBMIT_IN_FLIGHT__ = true;
+    if(btn) {
+      btn.innerText = "訂單資料傳送中...請勿關閉視窗";
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+    }
+    showSubmitLock('訂單資料傳送中', '系統正在確認訂單，請勿關閉視窗或重複送出。');
 
     const allDiscountNotes = [];
 
@@ -11835,6 +12031,8 @@ window.submitOrder = async () => {
 
     // 組合最終 Payload
     lastOrderData = {
+        action: 'create_order',
+        client_submit_key: clientSubmitKey,
         employee_name: f("fName"),
         department: f("fDept"),
         payment_method: f("fPay"),
@@ -11852,13 +12050,14 @@ window.submitOrder = async () => {
         pickup_info: pickupInfo
     };
 
-    fetch(GAS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: "payload=" + encodeURIComponent(JSON.stringify(lastOrderData))
-    })
-    .then(response => response.json())
-    .then(res => {
+    try {
+        const res = await fetch(GAS_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(lastOrderData)),
+            cache: "no-store"
+        }).then(response => response.json());
+
         if(res.ok) {
             lastOrderId = res.order_id || null;
             lastPickupToken = res.pickup_token || '';
@@ -11866,24 +12065,31 @@ window.submitOrder = async () => {
             lastReceiptEmail = "";
             lastReceiptEmailStatus = null;
             lastReceiptEmailError = '';
+            if(res.duplicate && res.raw && Array.isArray(res.raw.items)) {
+                lastOrderData = res.raw;
+            }
             lastOrderData.order_id = lastOrderId;
             lastOrderData.pickup_token = lastPickupToken;
             lastOrderData.pickup_code = lastPickupCode;
-            showToast("訂單送出成功！");
+            lastOrderData.client_submit_key = clientSubmitKey;
+            clearClientSubmitKey(clientSubmitKey);
+            showToast(res.duplicate ? "訂單已建立，已回復原訂單資料" : "訂單送出成功！");
             openReceipt(lastOrderId, res);
         } else {
             alert("訂單送出失敗：" + (res.error || "未知錯誤"));
         }
-    })
-    .catch(err => {
+    } catch(err) {
         console.error(err);
-        alert("連線發生錯誤");
-    })
-    .finally(() => {
-        btn.innerText = originalText;
-        btn.disabled = false;
-        btn.style.opacity = "1";
-    });
+        alert("連線發生錯誤。請稍候再按一次送出，系統會使用同一筆送單識別碼確認，避免重複訂單。");
+    } finally {
+        __ORDER_SUBMIT_IN_FLIGHT__ = false;
+        hideSubmitLock();
+        if(btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.style.opacity = "1";
+        }
+    }
 };
 
 function pickupQrPayload(){ return lastPickupToken ? `TTLBT_PICKUP|v1|${lastPickupToken}` : ''; }
@@ -12033,6 +12239,7 @@ function saveReceiptCredential() {
 function closeReceipt() {
     document.getElementById("receiptModal").classList.remove("open");
     CART = [];
+    clearClientSubmitKey();
     SELECTED_BUNDLE.clear();
     achievedGifts = [];
     saveState();
@@ -12073,7 +12280,7 @@ document.querySelectorAll('input, select').forEach(input => {
 });
 
 document.getElementById("searchInp").addEventListener("input", scheduleRenderList);
-window.onbeforeunload = (e) => { if(CART.length > 0) return "訂單尚未送出"; };
+window.onbeforeunload = (e) => { if(__ORDER_SUBMIT_IN_FLIGHT__) return "訂單送出中，請勿關閉視窗"; if(!isOrderSystemClosed() && CART.length > 0) return "訂單尚未送出"; };
 
 /* ===== Diag Panel (?diag=1) ===== */
 (function(){
