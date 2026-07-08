@@ -4484,7 +4484,7 @@ body.cfg-error .btn-bundle{
 
 
 /* ==========================================================
-   V7.42.8 個資同意 + 匯款電話 + 強制宅配 + 鍵盤修正
+   V7.42.9 結帳檢查時機 + 強制宅配門檻修正
    ========================================================== */
 .privacy-box,
 .remit-box{
@@ -5186,7 +5186,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_8_remit_phone_force_delivery_keyboardfix";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_9_checkout_delivery_validation_fix";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -6731,7 +6731,7 @@ function uiGetBool(key, fallback=false){
 }
 
 
-// V7.42.8: modal keyboard guard + forced delivery helpers
+// V7.42.9: modal keyboard guard + forced delivery helpers + checkout validation timing fix
 function blurActiveElement(){
   try{
     const ae = document.activeElement;
@@ -6747,31 +6747,70 @@ function focusModalShell(id){
   }catch(e){}
 }
 function isForceDeliveryEnabled(){ return uiGetBool('ui|force_delivery_enabled', false); }
-function applyForceDeliveryMode(){
+function applyForceDeliveryMode(opts = {}){
   try{
     const forced = isForceDeliveryEnabled();
     const wrap = document.querySelector('.delivery-toggle-wrap');
     const chk = document.getElementById('chkDelivery');
     const form = document.getElementById('deliveryForm');
     const status = document.getElementById('deliveryStatusText');
+    const btn = document.getElementById('btnDeliveryCollapse');
     if(wrap) wrap.classList.toggle('force-delivery', forced);
     if(chk){
-      if(forced){ chk.checked = true; chk.disabled = true; }
-      else { chk.disabled = false; }
+      if(forced){
+        chk.checked = true;
+        // Do not disable the checkbox: keeping it interactive lets users tap the row again to reopen the form after collapsing.
+        chk.disabled = false;
+      } else {
+        chk.disabled = false;
+      }
     }
     if(forced && form){
-      form.classList.add('show');
-      const btn = document.getElementById('btnDeliveryCollapse');
-      if(btn) btn.style.display = 'inline-flex';
+      const complete = (typeof isDeliveryRequiredComplete === 'function') ? isDeliveryRequiredComplete() : false;
+      const shouldAutoOpen = !!opts.forceOpen || (!complete && opts.autoOpen !== false);
+      if(shouldAutoOpen){
+        form.classList.add('show');
+        if(btn) btn.style.display = 'inline-flex';
+      }
       if(status){
-        status.textContent = '(所有訂單皆需宅配)';
-        status.style.color = '#00695c';
-        status.style.fontWeight = '900';
+        if(complete && !form.classList.contains('show')){
+          status.textContent = '(已填妥收件資訊)';
+          status.style.color = '#2e7d32';
+          status.style.fontWeight = '700';
+        }else{
+          status.textContent = '(所有訂單皆需宅配)';
+          status.style.color = '#00695c';
+          status.style.fontWeight = '900';
+        }
       }
     }
     try{ updateDeliveryCollapseCue(); }catch(e){}
     try{ syncDeliveryHeaderUI(); }catch(e){}
   }catch(e){}
+}
+function formatForceDeliveryThresholdToast(status, total){
+  const tpl = uiGet('ui|force_delivery_threshold_toast', '本次訂單須達 {threshold} 元以上方可宅配，目前尚差 {diff} 元。');
+  const threshold = Math.round(Number(status && status.enabled ? getFreeShipThreshold() : 0) || 0);
+  const diff = Math.max(0, Math.round(Number(status && status.diff || 0)));
+  const current = Math.round(Number(total || 0));
+  return String(tpl || '')
+    .replace(/\{threshold\}/g, threshold.toLocaleString())
+    .replace(/\{diff\}/g, diff.toLocaleString())
+    .replace(/\{total\}/g, current.toLocaleString());
+}
+function checkForceDeliveryThresholdBeforeSubmit(cartData){
+  try{
+    if(!isForceDeliveryEnabled()) return true;
+    const total = Number(cartData && cartData.finalTotal || 0);
+    const st = getShipFreeStatus(total);
+    if(st && st.enabled && !st.ok){
+      try{ showToast(formatForceDeliveryThresholdToast(st, total), 'warn', 3600); }catch(e){}
+      const wrap = document.querySelector('.delivery-toggle-wrap');
+      if(wrap){ wrap.classList.remove('flash-anim'); void wrap.offsetWidth; wrap.classList.add('flash-anim'); }
+      return false;
+    }
+  }catch(e){}
+  return true;
 }
 
 // V7.42.7: privacy consent + remittance info helpers
@@ -7003,7 +7042,7 @@ function bindPrivacyAndRemitEvents(){
     ['fName','dName','dPhone','dAddr'].forEach(id=>{
       const el = document.getElementById(id);
       if(el){
-        const sync = ()=>{ try{ syncRemitButtonUI(); maybeCueRemitWhenReady(); }catch(e){} };
+        const sync = ()=>{ try{ syncRemitButtonUI(); }catch(e){} };
         el.addEventListener('input', sync, { passive:true });
         el.addEventListener('change', sync, { passive:true });
       }
@@ -12405,11 +12444,22 @@ window.toggleSum = () => { const b = document.getElementById("finalList"); const
 
 // [NEW] 切換宅配表單顯示
 window.toggleDelivery = function() {
-  if(isForceDeliveryEnabled()){ try{ applyForceDeliveryMode(); }catch(e){} return; }
   const chk = document.getElementById("chkDelivery");
   const form = document.getElementById("deliveryForm");
   const btn = document.getElementById("btnDeliveryCollapse");
   const status = document.getElementById("deliveryStatusText");
+  if(isForceDeliveryEnabled()){
+    if(chk) chk.checked = true;
+    if(form) form.classList.add("show");
+    if(btn) btn.style.display = "inline-flex";
+    if(status){
+      status.textContent = "(所有訂單皆需宅配)";
+      status.style.color = "#00695c";
+      status.style.fontWeight = "900";
+    }
+    try{ applyForceDeliveryMode({ forceOpen:true }); }catch(e){}
+    return;
+  }
 
   const isComplete = () => {
     const n = (document.getElementById("dName")?.value || "").trim();
@@ -12511,7 +12561,11 @@ window.syncDeliveryUI = function(opts = { collapse: true }) {
   const btn = document.getElementById("btnDeliveryCollapse");
   const status = document.getElementById("deliveryStatusText");
   if(!chk || !form || !status) return;
-  if(isForceDeliveryEnabled()){ applyForceDeliveryMode(); return; }
+  if(isForceDeliveryEnabled()){
+    const completeNow = (typeof isDeliveryRequiredComplete === 'function') ? isDeliveryRequiredComplete() : false;
+    applyForceDeliveryMode({ autoOpen: !completeNow });
+    return;
+  }
 
   const n = (document.getElementById("dName")?.value || "").trim();
   const p = (document.getElementById("dPhone")?.value || "").trim();
@@ -12610,6 +12664,7 @@ window.submitOrder = async () => {
     }
 
     const data = calcCart();
+    if(!checkForceDeliveryThresholdBeforeSubmit(data)) return;
     if(data.promoGiftMissing && data.promoGiftMissing.length > 0) {
         refreshCart();
         const first = data.promoGiftMissing[0];
