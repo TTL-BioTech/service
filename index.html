@@ -1175,6 +1175,8 @@ header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0
 .w-btn:active { transform: scale(0.95); background: #00796b; }
 
 .gamification-box { padding: 16px 20px; background: linear-gradient(to bottom, #fff, #fcfcfc); border-bottom: 1px solid #f0f0f0; }
+/* V7.42.13: Hide cart gift progress block after entering checkout stage to free mobile vertical space. */
+.gamification-box.checkout-hidden{ display:none !important; }
 .game-txt { font-size: 13px; font-weight: 700; color: #37474f; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
 .game-txt.success { color: #2e7d32; }
 .game-icon-wrap { cursor: pointer; padding: 4px 8px; background: #fff8e1; border-radius: 20px; border: 1px solid #ffe0b2; display: flex; align-items: center; gap: 4px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -4969,7 +4971,7 @@ body.cfg-error .btn-bundle{
       <span class="material-icons-round" onclick="closeCart()" style="cursor:pointer;padding:8px;color:#546e7a;background:#f5f5f5;border-radius:50%">close</span>
     </div>
     
-    <div class="gamification-box">
+    <div class="gamification-box" id="cartGiftProgressBox">
       <div class="game-txt" id="gameMsgContainer">
         <span id="gameMsg" onclick="openGiftList()" role="button" aria-label="開啟贈品進度">加油！再 $500 送贈品</span>
         <div class="game-icon-wrap" onclick="openGiftList()">
@@ -5224,7 +5226,7 @@ const GIFT_IMAGES = {};
 })();
 
 // ===== Build / Release =====
-const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_12_checkout_draft_memory";
+const BUILD_ID = "V42_FINAL_r20260222_01_v2_uxfix_v7_42_13_checkout_progress_hide";
 window.BUILD_ID = BUILD_ID;
 
 
@@ -5985,11 +5987,19 @@ function scrollToLatestUnlockedMilestone(){
 
 /* --- V2.9.3: Two-stage checkout (二階結帳 + 收合) --- */
 let __CHECKOUT_STAGE__ = 1;
+function syncCheckoutProgressVisibility(){
+  try{
+    const box = document.getElementById('cartGiftProgressBox');
+    if(!box) return;
+    box.classList.toggle('checkout-hidden', __CHECKOUT_STAGE__ === 2);
+  }catch(e){}
+}
 function setCheckoutStage(stage){
   try{
     const details = document.getElementById('checkoutDetails');
     const btn = document.getElementById('btnCheckoutSubmit');
     __CHECKOUT_STAGE__ = (stage===2 ? 2 : 1);
+    try{ syncCheckoutProgressVisibility(); }catch(e){}
 
     if(details){
       if(__CHECKOUT_STAGE__ === 2){
